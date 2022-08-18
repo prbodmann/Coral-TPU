@@ -176,10 +176,10 @@ class Dataset:
 class DatasetsManager:
     DATASETS_LIST = [
         Dataset('/home/carol/radiation-benchmarks/data/VOC2012', 100),
-        Dataset('/home/carol/oxford-pets-100'),
-        Dataset('/home/carol/subcoco14'),
-        Dataset('/home/carol/ILSVRC2012_val_100'),
-        Dataset('/home/carol/rand_coco_subset_100')
+        Dataset('./inputs/oxford-pets-100'),
+        Dataset('./inputs/subcoco14'),
+        Dataset('./inputs/ILSVRC2012_val_100'),
+        Dataset('./inputs/rand_coco_subset_100')
     ]
 
     DATASETS_MAP = { d.name: d for d in DATASETS_LIST }
@@ -301,6 +301,7 @@ def load_tensors_from_file(filename: str) -> dict:
 # Util functions
 
 def echo_run(args):
+    print(args)
     if type(args) == str:
         args = args.split(' ')
     p = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
