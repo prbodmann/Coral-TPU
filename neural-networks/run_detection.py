@@ -94,13 +94,15 @@ def set_interpreter_intput(interpreter, resized_image):
 
 def perform_inference(interpreter):
     t0 = time.perf_counter()
-
+    #print("grg")
     lh.start_iteration()
+    #print("interesting")
     interpreter.invoke()
+    #print("geg")
     lh.end_iteration()
-
+    #print("hmmmm")
     t1 = time.perf_counter()
-
+    #print("lol")
     Logger.info("Inference performed successfully")
     Logger.timing("Perform inference", t1 - t0)
 
@@ -205,8 +207,8 @@ def main():
     iterations = args.iterations
     save_golden = args.save_golden
 
-    if not save_golden:
-        init_log_file(model_file, input_file, nimages)
+    
+    init_log_file(model_file, input_file, nimages)
 
     interpreter = create_interpreter(model_file)
 

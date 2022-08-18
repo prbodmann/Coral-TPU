@@ -180,8 +180,8 @@ def main():
     iterations = args.iterations
     save_golden = args.save_golden
 
-    if not save_golden:
-        init_log_file(model_file, input_file, nimages)
+    
+    init_log_file(model_file, input_file, nimages)
 
     interpreter = create_interpreter(model_file)
 
