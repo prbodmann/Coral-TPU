@@ -13,7 +13,7 @@ if [ $# -lt 1 ]; then
 	exit 1
 fi
 
-IMGS_OUT_DIR=/Users/rubensrechjunior/Downloads/TPU/DATASETS/ILSVRC2012_val_100
+IMGS_OUT_DIR=../../inputs/ILSVRC2012_val_100
 IMGS_LIST_FILE=$(realpath $1)
 
 mkdir -p $IMGS_OUT_DIR

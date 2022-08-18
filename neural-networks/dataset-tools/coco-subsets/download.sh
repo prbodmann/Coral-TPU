@@ -14,7 +14,7 @@ if [ $# -lt 1 ]; then
 fi
 
 URLS_FILE=$(realpath $1)
-IMGS_OUT_DIR=/home/carol/rand_coco_subset_100
+IMGS_OUT_DIR=../../inputs/rand_coco_subset_100
 
 mkdir -p $IMGS_OUT_DIR
 cd $IMGS_OUT_DIR
