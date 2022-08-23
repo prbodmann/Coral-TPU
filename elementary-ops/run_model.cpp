@@ -600,9 +600,9 @@ int main(int argc, char *argv[]) {
     int iterations = util::GetIntArg(argc, argv, "--iterations", 10);
 
     // Initialize log file
-    if (!save_golden) {
+    //if (!save_golden) {
         InitLogFileOrDie(model_filename, img_filename, golden_filename);
-    }
+    //}
 
     // Find TPU devices
     size_t num_devices = 0;

@@ -19,7 +19,7 @@ class Operation(Enum):
     # Values are the model filename prefix
     Conv2d = "conv_2d"
     DepthConv2d = "depthwise_conv_2d"
-
+    Add = "add"
     def flatbuffers_code(self):
         return self.value.upper()
     

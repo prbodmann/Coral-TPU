@@ -20,7 +20,7 @@ def setup_benchmarks(model_files):
     for model_filename in model_files:
         if model_filename.endswith("edgetpu.tflite"):
             model_full_path = get_model_full_path(model_filename)
-
+            print(model_filename)
             # Generate input
             input_full_path = generate_input_filename(model_filename, "bmp")
 
