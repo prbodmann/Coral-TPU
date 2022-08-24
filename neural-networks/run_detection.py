@@ -113,7 +113,9 @@ def save_golden_output(interpreter, model_file, image_file, img_scale):
     det_out = detection.get_objects(interpreter, nparray=True)
     model_in_size = common.input_size(interpreter)
     save_output_to_file(det_out, golden_file, model_in_size, img_scale)
-
+    labels = common.ModelsManager.get_model_labels(Path(model_file).stem)
+    image_name = Path(image_file).stem
+    detection.draw_detections_and_show(image_name,det_out,labels)
     t1 = time.perf_counter()
 
     Logger.info(f"Golden output saved to file `{golden_file}`")
