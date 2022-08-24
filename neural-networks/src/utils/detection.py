@@ -271,7 +271,7 @@ def draw_detections_and_show(img_name, detections, labels, color='green'):
         draw.text((bbox.xmin + 10, bbox.ymin + 10),
                 '%s\n%.2f' % (labels.get(obj.id, obj.id), obj.score),
                 fill=color)
-    image.show()
+    image.save(img_name+"_golden.jpg")
 
 def match_detections(gold_dets: List[Object], sdc_dets: List[Object]):
     n_gold = len(gold_dets)
