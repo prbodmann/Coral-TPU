@@ -261,7 +261,7 @@ def get_objects(interpreter, img_scale=(1., 1.), threshold=-float('inf'), nobjs=
     input_size = common.input_size(interpreter)
     return get_detection_raw_output(interpreter).get_objects(input_size, img_scale, threshold, nobjs, nparray)
 
-def draw_detections_and_show(img_name, detections, labels, color='green'):
+def draw_detections_and_show(model_name,img_name, detections, labels, color='green'):
     image = Image.open(common.get_image_file_from_name(img_name)).convert('RGB')
     draw = ImageDraw.Draw(image)
     for obj in detections:
@@ -271,7 +271,7 @@ def draw_detections_and_show(img_name, detections, labels, color='green'):
         draw.text((bbox.xmin + 10, bbox.ymin + 10),
                 '%s\n%.2f' % (labels.get(obj.id, obj.id), obj.score),
                 fill=color)
-    image.save(img_name+"_golden.jpg")
+    image.save(model_name+"_"+img_name+"_golden.jpg")
 
 def match_detections(gold_dets: List[Object], sdc_dets: List[Object]):
     n_gold = len(gold_dets)
