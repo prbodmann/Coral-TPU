@@ -32,11 +32,12 @@ This repository allows user to compile and run elementary (TensorFlow) operation
     ```
 
     **Linux**
+    ```
     curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add - <br />
     echo "deb https://packages.cloud.google.com/apt coral-edgetpu-stable main" | sudo tee /etc/apt/sources.list.d/coral-edgetpu.list <br />
     sudo apt-get update <br />
     sudo apt-get install edgetpu-compiler
-
+    ```
 ### Run model
 
 For running the created models, it is enough to follow the step in [Coral AI - Get started with the USB Accelerator](https://coral.ai/docs/accelerator/get-started/#1-install-the-edge-tpu-runtime). In the end, you will have installed:
