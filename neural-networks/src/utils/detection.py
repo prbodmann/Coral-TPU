@@ -262,7 +262,7 @@ def get_objects(interpreter, img_scale=(1., 1.), threshold=-float('inf'), nobjs=
     return get_detection_raw_output(interpreter).get_objects(input_size, img_scale, threshold, nobjs, nparray)
 
 def draw_detections_and_show(model_name,img_name, detections, labels, color='green'):
-    image = Image.open(common.get_image_file_from_name(img_name)).convert('RGB')
+    image = Image.open(common.get_image_file_from_name(model_name,img_name)).convert('RGB')
     draw = ImageDraw.Draw(image)
     for obj in detections:
         bbox = obj.bbox

@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python3
 
 import sys
@@ -116,7 +117,9 @@ def save_golden_output(interpreter, model_file, image_file, img_scale):
     labels = common.ModelsManager.get_model_labels(Path(model_file).stem)
     image_name = Path(image_file).stem
     model_name = Path(model_file).stem
-    detection.draw_detections_and_show(model_name,image_name,det_out,labels)
+    gold_data = common.load_tensors_from_file(golden_file)
+    gold_dets = detection.DetectionRawOutput.objs_from_data(gold_data, DETECTION_THRESHOLD)
+    detection.draw_detections_and_show(model_name,image_name,gold_dets,labels)
     t1 = time.perf_counter()
 
     Logger.info(f"Golden output saved to file `{golden_file}`")

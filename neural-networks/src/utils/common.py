@@ -258,8 +258,8 @@ class ModelsManager:
 
 # File name functions
 
-def get_image_file_from_name(img_name: str, ext="jpg"):
-    return os.path.join(INPUTS_DIR, f"{img_name}.{ext}")
+def get_image_file_from_name(model_name,img_name: str, ext="jpg"):
+    return os.path.join(INPUTS_DIR,ModelsManager.MODELS_MAP[model_name].dataset.name, f"{img_name}.{ext}")
 
 def get_golden_filename(model_file: str, image_file: str, ext="npy") -> str:
     model_name = Path(model_file).stem
