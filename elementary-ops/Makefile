@@ -25,9 +25,9 @@ MAX_ERRORS_PER_IT=500
 CC_FLAGS=-std=c++11 -Wno-write-strings
 CC_FLAGS+=-DLOGGING_LEVEL=$(LOGGING_LEVEL) -DMAX_ERRORS_PER_IT=$(MAX_ERRORS_PER_IT)
 
-EDGETPU_RUNTIME_DIR=$(CURDIR)/../edgetpu_runtime
-TENSORFLOW_DIR=$(CURDIR)/../tensorflow
-TFLITE_AARCH64_LIB_DIR=$(CURDIR)/../tensorflow/tensorflow/lite/tools/make/gen/linux_aarch64/lib
+EDGETPU_RUNTIME_DIR=$(CURDIR)/edgetpu_runtime
+TENSORFLOW_DIR=$(CURDIR)/tensorflow
+TFLITE_AARCH64_LIB_DIR=$(CURDIR)/tensorflow/tensorflow/lite/tools/make/gen/linux_aarch64/lib
 run_model: run_model.cpp
 	aarch64-linux-gnu-g++ $^ -o $@ $(CC_FLAGS) \
 		-I$(EDGETPU_RUNTIME_DIR)/libedgetpu/ \
