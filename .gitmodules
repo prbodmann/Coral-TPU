@@ -1,9 +1,6 @@
 [submodule "libLogHelper"]
 	path = libLogHelper
 	url = https://github.com/radhelper/libLogHelper.git
-[submodule "elementary-ops/libedgetpu"]
-	path = elementary-ops/libedgetpu
-	url = https://github.com/google-coral/libedgetpu.git
 [submodule "elementary-ops/tensorflow"]
 	path = elementary-ops/tensorflow
 	url = https://github.com/tensorflow/tensorflow.git
