@@ -26,18 +26,7 @@ This repository allows user to compile and run elementary (TensorFlow) operation
 
 * EdgeTPU Compiler
 
-    **Mac** (Docker required!)
-    ```
-    docker build --tag edgetpu_compiler https://github.com/tomassams/docker-edgetpu-compiler.git
-    ```
-
-    **Linux** (Docker required!)
-    ```
-    cd tflite-aarch64
-    sudo ./build.sh
-    cd ../elementary-ops/libedgetpu
-    TFROOT=../tensorflow make -f makefile_build/Makefile -j$(nproc) libedgetpu
-    ```
+    **See README inside folder elemntary-ops** 
 ### Run model
 
 For running the created models, it is enough to follow the step in [Coral AI - Get started with the USB Accelerator](https://coral.ai/docs/accelerator/get-started/#1-install-the-edge-tpu-runtime). In the end, you will have installed:
