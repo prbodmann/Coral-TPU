@@ -4,7 +4,7 @@ This is a Makefile to cross-compile run_model.cpp.
      wget https://dl.google.com/coral/edgetpu_api/edgetpu_runtime_20200710.zip  
      unzip edgetpu_runtime_20200710.zip  
  ```
- 3. Cross-compile TensorFlow Lite for aarch64: 
+ 3. Cross-compile TensorFlow Lite for aarch64:  
     3.a. Using Docker (recommended):  
     ``` 
     sudo ../tflite-aarch64/build.sh  
