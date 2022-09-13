@@ -31,12 +31,12 @@ This repository allows user to compile and run elementary (TensorFlow) operation
     docker build --tag edgetpu_compiler https://github.com/tomassams/docker-edgetpu-compiler.git
     ```
 
-    **Linux**
+    **Linux** (Docker required!)
     ```
-    curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add - 
-    echo "deb https://packages.cloud.google.com/apt coral-edgetpu-stable main" | sudo tee /etc/apt/sources.list.d/coral-edgetpu.list 
-    sudo apt-get update 
-    sudo apt-get install edgetpu-compiler
+    cd tflite-aarch64
+    sudo ./build.sh
+    cd ../elementary-ops/libedgetpu
+    TFROOT=../tensorflow make -f makefile_build/Makefile -j$(nproc) libedgetpu
     ```
 ### Run model
 
