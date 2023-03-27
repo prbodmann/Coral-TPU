@@ -156,11 +156,11 @@ def save_sdc_output(interpreter, interpreter2, model_file, img_file, img_scale):
     t0 = time.perf_counter()
     sdc_out_file = common.get_sdc_out_filename_dmr(model_file, img_file,ext="npy",id=0)
     sdc_out_file2 = common.get_sdc_out_filename_dmr(model_file, img_file,ext="npy",id=1)
-    raw_out = detection.get_detection_raw_output(interpreter)._asdict()
-    raw_out2 = detection.get_detection_raw_output(interpreter2)._asdict()
-    model_in_size = common.input_size(interpreter)
-    save_output_to_file(raw_out, sdc_out_file, model_in_size, img_scale)
-    save_output_to_file(raw_out2, sdc_out_file2, model_in_size, img_scale)
+    
+    scores1 = classification.get_scores(interpreter)
+    save_output_to_file(scores1, sdc_out_file)
+    scores2 = classification.get_scores(interpreter2)
+    save_output_to_file(scores2, sdc_out_file2)
     t1 = time.perf_counter()
 
     Logger.info(f"SDC output saved to file {sdc_out_file} and {sdc_out_file2}")
