@@ -8,7 +8,7 @@ from prepare_input_for_model import generate_random_input
 
 from src.util import INSTALL_DIR, MODELS_DIR, echo_run, generate_input_filename, get_golden_filename
 
-JSON_DIR = "/home/carol/radiation-benchmarks/scripts/json_files"
+JSON_DIR = "./"
 
 def get_model_full_path(model_file):
     return os.path.join(MODELS_DIR, os.path.basename(model_file))

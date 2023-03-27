@@ -9,7 +9,7 @@ from typing import List
 
 from src.utils.common import MODELS_DIR, Model, ModelsManager, echo_run
 
-JSON_FILES_PATH = "/home/carol/radiation-benchmarks/scripts/json_files"
+JSON_FILES_PATH = "./"
 
 def sudo_user():
     try:
