@@ -124,8 +124,8 @@ def check_output_against_golden(interpreter, interpreter2):
     t0 = time.perf_counter()
 
     try:
-        gold = detection.get_objects(interpreter2, nparray=True)
-        out = detection.get_objects(interpreter, nparray=True)
+        gold =  classification.get_scores(interpreter2)
+        out =  classification.get_scores(interpreter)
     except:
         log_exception_and_exit("Could not open golden file")
 
