@@ -213,7 +213,7 @@ def main():
 
 
             golden_file = common.get_golden_filename(model_file, image_file)
-            errs_abv_thresh, errs_blw_thresh = check_output_against_golden(interpreter, golden_file)
+            errs_abv_thresh, errs_blw_thresh = check_output_against_golden(interpreter, interpreter2)
             errs_count = errs_abv_thresh + errs_blw_thresh
             info_count = 0
             if errs_count > 0:
