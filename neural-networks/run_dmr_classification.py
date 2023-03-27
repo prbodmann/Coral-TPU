@@ -152,7 +152,7 @@ def check_output_against_golden(interpreter, interpreter2):
             
     return errs_above_thresh, errs_below_thresh
 
-def save_sdc_output(interpreter, interpreter2, model_file, img_file, img_scale):
+def save_sdc_output(interpreter, interpreter2, model_file, img_file):
     t0 = time.perf_counter()
     sdc_out_file = common.get_sdc_out_filename_dmr(model_file, img_file,ext="npy",id=0)
     sdc_out_file2 = common.get_sdc_out_filename_dmr(model_file, img_file,ext="npy",id=1)
