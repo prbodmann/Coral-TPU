@@ -113,13 +113,13 @@ def read_label_file(file_path):
     return ret
 
 
-def create_interpreter(model_file, cpu=False):
+def create_interpreter(model_file, cpu=False, device=":0"):
     if cpu:
         from tensorflow import lite as tflite
         interpreter = tflite.Interpreter(model_file)
     else:
         from pycoral.utils.edgetpu import make_interpreter
-        interpreter = make_interpreter(model_file)
+        interpreter = make_interpreter(model_file, device=device)
 
     return interpreter
 
