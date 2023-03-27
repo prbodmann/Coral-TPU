@@ -152,7 +152,7 @@ def check_output_against_golden(interpreter, golden_file):
 def save_sdc_output(interpreter, interpreter2, model_file, img_file):
     t0 = time.perf_counter()
 
-    sdc_out_file = common.get_sdc_out_filename_dmr(model_file, img_file,ext="npy",id=0)
+    sdc_out_file = common.get_sdc_out_filename(model_file, img_file)
 
     scores1 = classification.get_scores(interpreter)
     save_output_to_file(scores1, sdc_out_file)
