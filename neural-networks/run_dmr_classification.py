@@ -232,7 +232,10 @@ def main():
                     Logger.info(f"Recreating interpreter...")
                     if interpreter is not None:
                         del interpreter
-                    interpreter = create_interpreter(model_file)
+                    interpreter = create_interpreter(model_file,device=':0')
+                    if interpreter2 is not None:
+                        del interpreter2
+                    interpreter2 =create_interpreter(model_file,device=':1')
 
             lh.log_info_count(int(info_count))
             lh.log_error_count(int(errs_count))
