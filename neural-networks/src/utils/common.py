@@ -279,6 +279,12 @@ def get_sdc_out_filename(model_file: str, image_file: str, ext="npy") -> str:
     timestap_ms = int(time.time() * 1000)
     return os.path.join(OUTPUTS_DIR, f"sdc--{model_name}--{image_name}--{timestap_ms}.{ext}")
 
+def get_sdc_out_filename_dmr(model_file: str, image_file: str, ext="npy",id=0) -> str:
+    model_name = Path(model_file).stem
+    image_name = Path(image_file).stem
+    timestap_ms = int(time.time() * 1000)
+    return os.path.join(OUTPUTS_DIR, f"sdc--{model_name}--{image_name}--{timestap_ms}--{id}.{ext}")
+
 def parse_sdc_out_filename(sdc_file: str) -> tuple:
     sdc_name = Path(sdc_file).stem
     parts = sdc_name.split("--")
