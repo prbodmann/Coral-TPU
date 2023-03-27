@@ -46,10 +46,10 @@ def init_log_file(model_file, input_file, nimages):
 
     # Logger.info(f"Log file is `{lh.get_log_file_name()}`")
 
-def create_interpreter(model_file):
+def create_interpreter(model_file,device=':0'):
     t0 = time.perf_counter()
 
-    interpreter = common.create_interpreter(model_file)
+    interpreter = common.create_interpreter(model_file,device=device)
     interpreter.allocate_tensors()
 
     t1 = time.perf_counter()
