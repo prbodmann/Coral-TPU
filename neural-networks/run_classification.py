@@ -149,16 +149,18 @@ def check_output_against_golden(interpreter, golden_file):
             
     return errs_above_thresh, errs_below_thresh
 
-def save_sdc_output(interpreter, model_file, img_file):
+def save_sdc_output(interpreter, interpreter2, model_file, img_file):
     t0 = time.perf_counter()
 
-    sdc_out_file = common.get_sdc_out_filename(model_file, img_file)
-    scores = classification.get_scores(interpreter)
-    save_output_to_file(scores, sdc_out_file)
-
+    sdc_out_file = common.get_sdc_out_filename_dmr(model_file, img_file,ext="npy",id=0)
+    sdc_out_file2 = common.get_sdc_out_filename_dmr(model_file, img_file,ext="npy",id=1)
+    scores1 = classification.get_scores(interpreter)
+    save_output_to_file(scores1, sdc_out_file)
+    scores2 = classification.get_scores(interpreter2)
+    save_output_to_file(scores2, sdc_out_file2)
     t1 = time.perf_counter()
 
-    Logger.info(f"SDC output saved to file `{sdc_out_file}`")
+    Logger.info(f"SDC output saved to file {sdc_out_file} and {sdc_out_file2}")
     Logger.timing("Save SDC output", t1 - t0)
 
     return sdc_out_file
