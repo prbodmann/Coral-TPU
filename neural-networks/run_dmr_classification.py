@@ -92,16 +92,18 @@ def set_interpreter_intput(interpreter, resized_image):
     Logger.info("Interpreter input set successfully")
     Logger.timing("Set interpreter input", t1 - t0)
 
-def perform_inference(interpreter):
+def perform_inference(interpreter,id=0):
     t0 = time.perf_counter()
-
-    lh.start_iteration()
+    #print("grg")
+    #lh.start_iteration()
+    #print("interesting")
     interpreter.invoke()
-    lh.end_iteration()
-
+    #print("geg")
+    #lh.end_iteration()
+    #print("hmmmm")
     t1 = time.perf_counter()
-
-    Logger.info("Inference performed successfully")
+    #print("lol")
+    Logger.info("Inference performed successfully on thread "+str(id))
     Logger.timing("Perform inference", t1 - t0)
 
 def save_golden_output(interpreter, model_file, image_file):
