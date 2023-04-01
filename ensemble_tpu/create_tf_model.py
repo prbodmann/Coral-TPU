@@ -99,6 +99,15 @@ def nin_cnn(model_input: Tensor) -> training.Model:
     
     return model
 
+def ensemble(models: List [training.Model], model_input: Tensor) -> training.Model:
+    
+    outputs = [model.outputs[0] for model in models]
+    y = Average()(outputs)
+    
+    model = Model(model_input, y, name='ensemble')
+    
+    return model
+
 x_train, x_test, y_train, y_test = load_data()
 print('x_train shape: {} | y_train shape: {}\nx_test shape : {} | y_test shape : {}'.format(x_train.shape, y_train.shape,
                                                                                           x_test.shape, y_test.shape))
