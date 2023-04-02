@@ -14,7 +14,7 @@ import glob
 import numpy as np
 import os
 import sys
-
+import tensorflow as tf
 CONV_POOL_CNN_WEIGHT_FILE = os.path.join(os.getcwd(), 'weights', 'conv_pool_cnn_pretrained_weights.hdf5')
 ALL_CNN_WEIGHT_FILE = os.path.join(os.getcwd(), 'weights', 'all_cnn_pretrained_weights.hdf5')
 NIN_CNN_WEIGHT_FILE = os.path.join(os.getcwd(), 'weights', 'nin_cnn_pretrained_weights.hdf5')
@@ -140,19 +140,25 @@ evaluate_error(nin_cnn_model)
 
 models = [conv_pool_cnn_model, all_cnn_model, nin_cnn_model]
 
-def ensemble(models: List [training.Model], model_input: Tensor) -> training.Model:
-    
-    outputs = [model.outputs[0] for model in models]
-    y = Average()(outputs)
-    
-    model = Model(model_input, y, name='ensemble')
-    
-    return model
-
 
 ensemble_model = ensemble(models, model_input)
-
+ensemble_model.compile()
+#ensemble_model.evaluate()
 evaluate_error(ensemble_model)
 
-ensamble_model.save(sys.argv[1])
-
+#ensemble_model.save(sys.argv[1])
+def representative_data_gen():
+        global obs
+        for i in range(100000):
+            yield [tf.cast(x_train,tf.uint8)]
+converter_quant = tf.lite.TFLiteConverter.from_keras_model(ensemble_model)
+converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
+converter_quant.representative_dataset = representative_data_gen
+converter_quant.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
+converter_quant.target_spec.supported_types = [tf.int8]
+# Just accept that observations and actions are inherently floaty, let Coral handle that on the CPU
+converter_quant.inference_input_type = tf.int8
+converter_quant.inference_output_type = tf.int8
+tflite_quant_model = converter_quant.convert()
+with open(sys.argv[1], 'wb') as f:
+    f.write(tflite_quant_model)
