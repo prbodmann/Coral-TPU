@@ -170,9 +170,9 @@ converter_quant.target_spec.supported_types = [tf.int8]
 # Just accept that observations and actions are inherently floaty, let Coral handle that on the CPU
 converter_quant.inference_input_type = tf.float32
 converter_quant.inference_output_type = tf.float32
-tflite_quant_model3 = converter_quant.convert()
+ensemble_model_lol = converter_quant.convert()
 
-ensemble_model.save(sys.argv[1])
+ensemble_model_lol.save(sys.argv[1])
 
 
 
