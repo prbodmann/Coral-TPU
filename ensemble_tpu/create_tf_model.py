@@ -124,6 +124,7 @@ input_shape = x_train[0,:,:,:].shape
 model_input = Input(shape=input_shape)
 
 conv_pool_cnn_model = conv_pool_cnn(model_input)
+conv_pool_cnn_model.compile()
 #conv_pool_cnn_model.summary()
 
 try:
