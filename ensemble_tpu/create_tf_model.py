@@ -25,7 +25,7 @@ NIN_CNN_WEIGHT_FILE = os.path.join(os.getcwd(), 'weights', 'nin_cnn_pretrained_w
 
 def load_data() -> Tuple [np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     (x_train, y_train), (x_test, y_test) = cifar10.load_data()
-    print(x_train)
+    #print(x_train)
     x_train = x_train / 255.
     x_test = x_test / 255.
     y_train = to_categorical(y_train, num_classes=10)
@@ -139,7 +139,7 @@ conv_pool_cnn_model.summary()
 
 converter_quant = tf.lite.TFLiteConverter.from_keras_model(conv_pool_cnn_model)
 #converter_quant.optimizations = [tf.lite.Optimize.OPTIMIZE_FOR_SIZE]
-#converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
+converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
 converter_quant.representative_dataset = representative_data_gen
 converter_quant.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
 converter_quant.target_spec.supported_types = [tf.int8]
