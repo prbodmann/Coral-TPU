@@ -132,7 +132,7 @@ try:
 except NameError:
     conv_pool_cnn_model.load_weights(CONV_POOL_CNN_WEIGHT_FILE)
 
-conv_pool_cnn_model.compile()
+#conv_pool_cnn_model.compile()
 #conv_pool_cnn_model.summary()
 conv_pool_cnn_model.evaluate(x_test,y_test,batch_size=32)
 conv_pool_cnn_model.summary()
