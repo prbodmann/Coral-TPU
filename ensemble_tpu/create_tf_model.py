@@ -41,7 +41,7 @@ def evaluate_error(model: training.Model) -> np.float64:
 def representative_data_gen():
         global x_train
         for i in range(10000):
-            yield [x_x_train]
+            yield [x_train]
 
 def conv_pool_cnn(model_input: Tensor) -> training.Model:
 
