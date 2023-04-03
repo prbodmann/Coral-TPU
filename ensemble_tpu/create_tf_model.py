@@ -133,51 +133,34 @@ try:
 except NameError:
     conv_pool_cnn_model.load_weights(CONV_POOL_CNN_WEIGHT_FILE)
 
-converter_quant = tf.lite.TFLiteConverter.from_keras_model(conv_pool_cnn_model)
-converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
-converter_quant.representative_dataset = representative_data_gen
-converter_quant.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
-converter_quant.target_spec.supported_types = [tf.int8]
-# Just accept that observations and actions are inherently floaty, let Coral handle that on the CPU
-#converter_quant.inference_input_type = tf.float32
-#converter_quant.inference_output_type = tf.float32
-tflite_quant_model1 = converter_quant.convert()
-
-#with open(sys.argv[1], 'wb') as f:
-#    f.write(tflite_quant_model)
-#evaluate_error(conv_pool_cnn_model)
-
 all_cnn_model = all_cnn(model_input)
-#all_cnn_model.summary()
+
 
 
 try:
     all_cnn_weight_file
 except NameError:
     all_cnn_model.load_weights(ALL_CNN_WEIGHT_FILE)
-#evaluate_error(all_cnn_model)
-
-converter_quant = tf.lite.TFLiteConverter.from_keras_model(all_cnn_model)
-converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
-converter_quant.representative_dataset = representative_data_gen
-converter_quant.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
-converter_quant.target_spec.supported_types = [tf.int8]
-
-# Just accept that observations and actions are inherently floaty, let Coral handle that on the CPU
-converter_quant.inference_input_type = tf.float32
-converter_quant.inference_output_type = tf.float32
-tflite_quant_model2 = converter_quant.convert()
+all_cnn_model.evaluate(x_test,y_test,batch_size=32)
+all_cnn_model.summary()
 
 nin_cnn_model = nin_cnn(model_input)
-nin_cnn_model.summary()
-
 try:
     nin_cnn_weight_file
 except NameError:
     nin_cnn_model.load_weights(NIN_CNN_WEIGHT_FILE)
 #evaluate_error(nin_cnn_model)
+nin_cnn_model.evaluate(x_test,y_test,batch_size=32)
+nin_cnn_model.summary()
 
-converter_quant = tf.lite.TFLiteConverter.from_keras_model(nin_cnn_model)
+models = [conv_pool_cnn_model, all_cnn_model, nin_cnn_model]
+
+
+ensemble_model = ensemble(models, model_input)
+ensemble_model.compile()
+ensemble_model.evaluate(x_test,y_test,batch_size=32)
+#evaluate_error(ensemble_model)
+converter_quant = tf.lite.TFLiteConverter.from_keras_model(ensemble_model)
 converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
 converter_quant.representative_dataset = representative_data_gen
 converter_quant.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
@@ -186,13 +169,6 @@ converter_quant.target_spec.supported_types = [tf.int8]
 converter_quant.inference_input_type = tf.float32
 converter_quant.inference_output_type = tf.float32
 tflite_quant_model3 = converter_quant.convert()
-models = [tflite_quant_model1, tflite_quant_model2, tflite_quant_model3]
-
-
-ensemble_model = ensemble(models, model_input)
-ensemble_model.compile()
-#ensemble_model.evaluate()
-#evaluate_error(ensemble_model)
 
 ensemble_model.save(sys.argv[1])
 
