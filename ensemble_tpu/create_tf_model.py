@@ -36,6 +36,10 @@ def evaluate_error(model: training.Model) -> np.float64:
     error = np.sum(np.not_equal(pred, y_test)) / y_test.shape[0]
     return error
 
+def representative_data_gen():
+        global obs
+        for i in range(10000):
+            yield [tf.cast(x_train,tf.float32)]
 
 def conv_pool_cnn(model_input: Tensor) -> training.Model:
     
@@ -120,22 +124,45 @@ input_shape = x_train[0,:,:,:].shape
 model_input = Input(shape=input_shape)
 
 conv_pool_cnn_model = conv_pool_cnn(model_input)
-conv_pool_cnn_model.summary()
+#conv_pool_cnn_model.summary()
 
 try:
     conv_pool_cnn_weight_file
 except NameError:
     conv_pool_cnn_model.load_weights(CONV_POOL_CNN_WEIGHT_FILE)
+
+converter_quant = tf.lite.TFLiteConverter.from_keras_model(conv_pool_cnn_model)
+converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
+converter_quant.representative_dataset = representative_data_gen
+converter_quant.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
+converter_quant.target_spec.supported_types = [tf.int8]
+# Just accept that observations and actions are inherently floaty, let Coral handle that on the CPU
+converter_quant.inference_input_type = tf.float32
+converter_quant.inference_output_type = tf.float32
+tflite_quant_model1 = converter_quant.convert()
+
+with open(sys.argv[1], 'wb') as f:
+    f.write(tflite_quant_model)
 #evaluate_error(conv_pool_cnn_model)
 
 all_cnn_model = all_cnn(model_input)
-all_cnn_model.summary()
+#all_cnn_model.summary()
+
 
 try:
     all_cnn_weight_file
 except NameError:
     all_cnn_model.load_weights(ALL_CNN_WEIGHT_FILE)
 #evaluate_error(all_cnn_model)
+converter_quant = tf.lite.TFLiteConverter.from_keras_model(all_cnn_model)
+converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
+converter_quant.representative_dataset = representative_data_gen
+converter_quant.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
+converter_quant.target_spec.supported_types = [tf.int8]
+# Just accept that observations and actions are inherently floaty, let Coral handle that on the CPU
+converter_quant.inference_input_type = tf.float32
+converter_quant.inference_output_type = tf.float32
+tflite_quant_model2 = converter_quant.convert()
 
 nin_cnn_model = nin_cnn(model_input)
 nin_cnn_model.summary()
@@ -145,22 +172,7 @@ try:
 except NameError:
     nin_cnn_model.load_weights(NIN_CNN_WEIGHT_FILE)
 #evaluate_error(nin_cnn_model)
-
-models = [conv_pool_cnn_model, all_cnn_model, nin_cnn_model]
-
-
-ensemble_model = ensemble(models, model_input)
-ensemble_model.compile()
-#ensemble_model.evaluate()
-#evaluate_error(ensemble_model)
-
-#ensemble_model.save(sys.argv[1])
-def representative_data_gen():
-        global obs
-        for i in range(10000):
-            yield [tf.cast(x_train,tf.float32)]
-
-converter_quant = tf.lite.TFLiteConverter.from_keras_model(ensemble_model)
+converter_quant = tf.lite.TFLiteConverter.from_keras_model(nin_cnn_model)
 converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
 converter_quant.representative_dataset = representative_data_gen
 converter_quant.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
@@ -168,6 +180,16 @@ converter_quant.target_spec.supported_types = [tf.int8]
 # Just accept that observations and actions are inherently floaty, let Coral handle that on the CPU
 converter_quant.inference_input_type = tf.float32
 converter_quant.inference_output_type = tf.float32
-tflite_quant_model = converter_quant.convert()
-with open(sys.argv[1], 'wb') as f:
-    f.write(tflite_quant_model)
+tflite_quant_model3 = converter_quant.convert()
+models = [tflite_quant_model1, tflite_quant_model2, tflite_quant_model3]
+
+
+ensemble_model = ensemble(models, model_input)
+ensemble_model.compile()
+#ensemble_model.evaluate()
+#evaluate_error(ensemble_model)
+
+ensemble_model.save(sys.argv[1])
+
+
+
