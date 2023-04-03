@@ -84,7 +84,7 @@ def all_cnn(model_input: Tensor) -> training.Model:
 def nin_cnn(model_input: Tensor) -> training.Model:
     x = Input(shape=(32, 32, 3))
     #mlpconv block 1
-    x = Conv2D(32, (5, 5), activation='relu',padding='valid')(model_input)
+    x = Conv2D(32, (5, 5), activation='relu',padding='valid')(x)
     x = Conv2D(32, (1, 1), activation='relu')(x)
     x = Conv2D(32, (1, 1), activation='relu')(x)
     x = MaxPooling2D((2,2))(x)
