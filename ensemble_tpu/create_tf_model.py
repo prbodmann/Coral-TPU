@@ -171,8 +171,8 @@ converter_quant.target_spec.supported_types = [tf.int8]
 converter_quant.inference_input_type = tf.float32
 converter_quant.inference_output_type = tf.float32
 ensemble_model_lol = converter_quant.convert()
-
-ensemble_model_lol.save(sys.argv[1])
+with open('model.tflite', 'wb') as f:
+  f.write(ensemble_model_lol)
 
 
 
