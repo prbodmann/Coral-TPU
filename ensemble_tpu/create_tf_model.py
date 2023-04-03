@@ -125,14 +125,16 @@ input_shape = x_train[0,:,:,:].shape
 model_input = Input(shape=input_shape)
 
 conv_pool_cnn_model = conv_pool_cnn(model_input)
-conv_pool_cnn_model.compile()
-#conv_pool_cnn_model.summary()
-conv_pool_cnn_model.evaluate(x_test,y_test,batch_size=32)
-conv_pool_cnn_model.summary()
+
 try:
     conv_pool_cnn_weight_file
 except NameError:
     conv_pool_cnn_model.load_weights(CONV_POOL_CNN_WEIGHT_FILE)
+
+conv_pool_cnn_model.compile()
+#conv_pool_cnn_model.summary()
+conv_pool_cnn_model.evaluate(x_test,y_test,batch_size=32)
+conv_pool_cnn_model.summary()
 
 converter_quant = tf.lite.TFLiteConverter.from_keras_model(conv_pool_cnn_model)
 #converter_quant.optimizations = [tf.lite.Optimize.OPTIMIZE_FOR_SIZE]
@@ -144,18 +146,17 @@ converter_quant.target_spec.supported_types = [tf.int8]
 converter_quant.inference_input_type = tf.float32
 converter_quant.inference_output_type = tf.float32
 ensemble_model_lol = converter_quant.convert()
+
 with open('model1.tflite', 'wb') as f:
   f.write(ensemble_model_lol)
 
-
-
-
 all_cnn_model = all_cnn(model_input)
-all_cnn_model.compile()
+
 try:
     all_cnn_weight_file
 except NameError:
     all_cnn_model.load_weights(ALL_CNN_WEIGHT_FILE)
+all_cnn_model.compile()
 all_cnn_model.evaluate(x_test,y_test,batch_size=32)
 all_cnn_model.summary()
 
@@ -171,11 +172,6 @@ converter_quant.inference_output_type = tf.float32
 ensemble_model_lol = converter_quant.convert()
 with open('model2.tflite', 'wb') as f:
   f.write(ensemble_model_lol)
-
-
-
-
-
 
 nin_cnn_model = nin_cnn(model_input)
 nin_cnn_model.compile()
