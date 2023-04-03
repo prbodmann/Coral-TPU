@@ -28,7 +28,7 @@ def load_data() -> Tuple [np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     #print(x_train)
     x_train = x_train #/ 255.
     x_test = x_test #/ 255.
-    y_train = to_categorical(y_train, num_classes=10,dtype=tf.int8)
+    y_train = to_categorical(y_train, num_classes=10,dtype='int8')
     return x_train, x_test, y_train, y_test
 
 def evaluate_error(model: training.Model) -> np.float64:
