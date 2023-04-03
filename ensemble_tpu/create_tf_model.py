@@ -28,7 +28,7 @@ def load_data() -> Tuple [np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     x_train = x_train / 255
     x_test = x_test / 255
     y_train = to_categorical(y_train, num_classes=10)
-    return x_train, x_test, y_train, y_test
+    return tf.cast(x_train,dtype=tf.float32), x_test, y_train, y_test
 
 def evaluate_error(model: training.Model) -> np.float64:
     pred = model.predict(x_test, batch_size = 32)
