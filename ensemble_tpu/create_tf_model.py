@@ -24,7 +24,7 @@ NIN_CNN_WEIGHT_FILE = os.path.join(os.getcwd(), 'weights', 'nin_cnn_pretrained_w
 
 def load_data() -> Tuple [np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     (x_train, y_train), (x_test, y_test) = cifar10.load_data()
-    print(xtrain)
+    print(x_train)
     x_train = x_train / 255.
     x_test = x_test / 255.
     y_train = to_categorical(y_train, num_classes=10)
