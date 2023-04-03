@@ -144,7 +144,7 @@ print('x_train shape: {} | y_train shape: {}\nx_test shape : {} | y_test shape :
                                                                                           x_test.shape, y_test.shape))
 input_shape = x_train[0,:,:,:].shape
 print(x_train[0,:,:,:].dtype)
-print(y_train[0,:,:,:].dtype)
+print(y_train[0,:].dtype)
 model_input = Input(shape=input_shape)
 
 conv_pool_cnn_model = conv_pool_cnn(model_input)
