@@ -141,8 +141,8 @@ converter_quant.inference_input_type = tf.float32
 converter_quant.inference_output_type = tf.float32
 tflite_quant_model1 = converter_quant.convert()
 
-with open(sys.argv[1], 'wb') as f:
-    f.write(tflite_quant_model)
+#with open(sys.argv[1], 'wb') as f:
+#    f.write(tflite_quant_model)
 #evaluate_error(conv_pool_cnn_model)
 
 all_cnn_model = all_cnn(model_input)
