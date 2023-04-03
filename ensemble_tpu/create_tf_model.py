@@ -43,8 +43,8 @@ def representative_data_gen():
             yield [tf.cast(x_train,tf.float32)]
 
 def conv_pool_cnn(model_input: Tensor) -> training.Model:
-    
-    x = Conv2D(96, kernel_size=(3, 3), activation='relu', padding = 'same')(model_input)
+    x = Input(shape=(32, 32, 3))
+    x = Conv2D(96, kernel_size=(3, 3), activation='relu', padding = 'same')(x)
     x = Conv2D(96, (3, 3), activation='relu', padding = 'same')(x)
     x = Conv2D(96, (3, 3), activation='relu', padding = 'same')(x)
     x = MaxPooling2D(pool_size=(3, 3), strides = 2)(x)
@@ -64,8 +64,8 @@ def conv_pool_cnn(model_input: Tensor) -> training.Model:
 
 
 def all_cnn(model_input: Tensor) -> training.Model:
-    
-    x = Conv2D(96, kernel_size=(3, 3), activation='relu', padding = 'same')(model_input)
+    x = Input(shape=(32, 32, 3))
+    x = Conv2D(96, kernel_size=(3, 3), activation='relu', padding = 'same')(x)
     x = Conv2D(96, (3, 3), activation='relu', padding = 'same')(x)
     x = Conv2D(96, (3, 3), activation='relu', padding = 'same', strides = 2)(x)
     x = Conv2D(192, (3, 3), activation='relu', padding = 'same')(x)
@@ -82,7 +82,7 @@ def all_cnn(model_input: Tensor) -> training.Model:
     return model
 
 def nin_cnn(model_input: Tensor) -> training.Model:
-    
+    x = Input(shape=(32, 32, 3))
     #mlpconv block 1
     x = Conv2D(32, (5, 5), activation='relu',padding='valid')(model_input)
     x = Conv2D(32, (1, 1), activation='relu')(x)
