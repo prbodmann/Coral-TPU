@@ -117,9 +117,8 @@ def ensemble(models: List [training.Model], model_input: Tensor) -> training.Mod
 def tflite_converter(model,x_train,name):
 
     def representative_data_gen():
-            global x_train
-            for i in range(10):
-                yield [x_train]
+            for i in x_train:
+                yield [i]
 
     converter_quant = tf.lite.TFLiteConverter.from_keras_model(model)
     converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
