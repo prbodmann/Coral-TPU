@@ -28,7 +28,7 @@ def load_data() -> Tuple [np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     #print(x_train)
     x_train = x_train #/ 255.
     x_test = x_test #/ 255.
-    y_train = to_categorical(y_train, num_classes=10,dtype='int8')
+    y_train = to_categorical(y_train, num_classes=10,dtype='uint8')
     return x_train, x_test, y_train, y_test
 
 def evaluate_error(model: training.Model) -> np.float64:
@@ -126,11 +126,11 @@ def tflite_converter(model,x_train,name):
     #converter_quant.optimizations = [tf.lite.Optimize.OPTIMIZE_FOR_SIZE]
     #converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
     converter_quant.representative_dataset = representative_data_gen
-    converter_quant.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
-    converter_quant.target_spec.supported_types = [tf.int8]
+    #converter_quant.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
+    converter_quant.target_spec.supported_types = [tf.uint8]
     # Just accept that observations and actions are inherently floaty, let Coral handle that on the CPU
-    converter_quant.inference_input_type = tf.int8
-    converter_quant.inference_output_type = tf.int8
+    converter_quant.inference_input_type = tf.uint8
+    converter_quant.inference_output_type = tf.uint8
     conveeted_model = converter_quant.convert()
 
     with open(name, 'wb') as f:
