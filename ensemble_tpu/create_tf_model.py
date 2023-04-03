@@ -134,7 +134,7 @@ def tflite_converter(model,x_train,name):
     conveeted_model = converter_quant.convert()
 
     with open(name, 'wb') as f:
-    f.write(conveeted_model)
+        f.write(conveeted_model)
     return conveeted_model
 
 
