@@ -40,7 +40,7 @@ def evaluate_error(model: training.Model) -> np.float64:
 def representative_data_gen():
         global x_train
         for i in range(10000):
-            yield [tf.cast(x_train,tf.float32)]
+            yield [tf.cast(x_train,tf.int8)]
 
 def conv_pool_cnn(model_input: Tensor) -> training.Model:
 
@@ -143,8 +143,8 @@ converter_quant.representative_dataset = representative_data_gen
 converter_quant.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
 converter_quant.target_spec.supported_types = [tf.int8]
 # Just accept that observations and actions are inherently floaty, let Coral handle that on the CPU
-converter_quant.inference_input_type = tf.float32
-converter_quant.inference_output_type = tf.float32
+converter_quant.inference_input_type = tf.int8
+converter_quant.inference_output_type = tf.int8
 ensemble_model_lol = converter_quant.convert()
 
 with open('model1.tflite', 'wb') as f:
@@ -167,8 +167,8 @@ converter_quant.representative_dataset = representative_data_gen
 converter_quant.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
 converter_quant.target_spec.supported_types = [tf.int8]
 # Just accept that observations and actions are inherently floaty, let Coral handle that on the CPU
-converter_quant.inference_input_type = tf.float32
-converter_quant.inference_output_type = tf.float32
+converter_quant.inference_input_type = tf.int8
+converter_quant.inference_output_type = tf.int8
 ensemble_model_lol = converter_quant.convert()
 with open('model2.tflite', 'wb') as f:
   f.write(ensemble_model_lol)
@@ -190,8 +190,8 @@ converter_quant.representative_dataset = representative_data_gen
 converter_quant.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
 converter_quant.target_spec.supported_types = [tf.int8]
 # Just accept that observations and actions are inherently floaty, let Coral handle that on the CPU
-converter_quant.inference_input_type = tf.float32
-converter_quant.inference_output_type = tf.float32
+converter_quant.inference_input_type = tf.int8
+converter_quant.inference_output_type = tf.int8
 ensemble_model_lol = converter_quant.convert()
 with open('model3.tflite', 'wb') as f:
   f.write(ensemble_model_lol)
@@ -213,8 +213,8 @@ converter_quant.representative_dataset = representative_data_gen
 converter_quant.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
 converter_quant.target_spec.supported_types = [tf.int8]
 # Just accept that observations and actions are inherently floaty, let Coral handle that on the CPU
-converter_quant.inference_input_type = tf.float32
-converter_quant.inference_output_type = tf.float32
+converter_quant.inference_input_type = tf.int8
+converter_quant.inference_output_type = tf.int8
 ensemble_model_lol = converter_quant.convert()
 with open('model.tflite', 'wb') as f:
   f.write(ensemble_model_lol)
