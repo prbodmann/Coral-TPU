@@ -26,9 +26,9 @@ NIN_CNN_WEIGHT_FILE = os.path.join(os.getcwd(), 'weights', 'nin_cnn_pretrained_w
 def load_data() -> Tuple [np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     (x_train, y_train), (x_test, y_test) = cifar10.load_data()
     #print(x_train)
-    x_train = x_train #/ 255.
-    x_test = x_test #/ 255.
-    y_train = to_categorical(y_train, num_classes=10,dtype='uint8')
+    x_train = x_train / 255.
+    x_test = x_test / 255.
+    y_train = to_categorical(y_train, num_classes=10)
     return x_train, x_test, y_train, y_test
 
 def evaluate_error(model: training.Model) -> np.float64:
@@ -127,10 +127,10 @@ def tflite_converter(model,x_train,name):
     #converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
     converter_quant.representative_dataset = representative_data_gen
     #converter_quant.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
-    converter_quant.target_spec.supported_types = [tf.uint8]
+    converter_quant.target_spec.supported_types = [tf.int8]
     # Just accept that observations and actions are inherently floaty, let Coral handle that on the CPU
-    converter_quant.inference_input_type = tf.uint8
-    converter_quant.inference_output_type = tf.uint8
+    converter_quant.inference_input_type = tf.float32
+    converter_quant.inference_output_type = tf.float32
     conveeted_model = converter_quant.convert()
 
     with open(name, 'wb') as f:
@@ -145,7 +145,7 @@ print('x_train shape: {} | y_train shape: {}\nx_test shape : {} | y_test shape :
 input_shape = x_train[0,:,:,:].shape
 print(x_train[0,:,:,:].dtype)
 print(y_train[0,:].dtype)
-model_input = Input(shape=input_shape,dtype='uint8')
+model_input = Input(shape=input_shape)
 
 conv_pool_cnn_model = conv_pool_cnn(model_input)
 
