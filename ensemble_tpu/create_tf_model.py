@@ -139,8 +139,8 @@ converter_quant.representative_dataset = representative_data_gen
 converter_quant.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
 converter_quant.target_spec.supported_types = [tf.int8]
 # Just accept that observations and actions are inherently floaty, let Coral handle that on the CPU
-converter_quant.inference_input_type = tf.float32
-converter_quant.inference_output_type = tf.float32
+#converter_quant.inference_input_type = tf.float32
+#converter_quant.inference_output_type = tf.float32
 tflite_quant_model1 = converter_quant.convert()
 
 #with open(sys.argv[1], 'wb') as f:
