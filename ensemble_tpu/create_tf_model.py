@@ -131,7 +131,7 @@ try:
     conv_pool_cnn_weight_file
 except NameError:
     conv_pool_cnn_model.load_weights(CONV_POOL_CNN_WEIGHT_FILE)
-
+keras.clear_session()
 converter_quant = tf.lite.TFLiteConverter.from_keras_model(conv_pool_cnn_model)
 converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
 converter_quant.representative_dataset = representative_data_gen
@@ -155,6 +155,7 @@ try:
 except NameError:
     all_cnn_model.load_weights(ALL_CNN_WEIGHT_FILE)
 #evaluate_error(all_cnn_model)
+keras.clear_session()
 converter_quant = tf.lite.TFLiteConverter.from_keras_model(all_cnn_model)
 converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
 converter_quant.representative_dataset = representative_data_gen
@@ -173,6 +174,7 @@ try:
 except NameError:
     nin_cnn_model.load_weights(NIN_CNN_WEIGHT_FILE)
 #evaluate_error(nin_cnn_model)
+keras.clear_session()
 converter_quant = tf.lite.TFLiteConverter.from_keras_model(nin_cnn_model)
 converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
 converter_quant.representative_dataset = representative_data_gen
