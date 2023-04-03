@@ -139,7 +139,7 @@ except NameError:
 
 converter_quant = tf.lite.TFLiteConverter.from_keras_model(conv_pool_cnn_model)
 #converter_quant.optimizations = [tf.lite.Optimize.OPTIMIZE_FOR_SIZE]
-#converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
+converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
 converter_quant.representative_dataset = representative_data_gen
 converter_quant.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
 converter_quant.target_spec.supported_types = [tf.int8]
