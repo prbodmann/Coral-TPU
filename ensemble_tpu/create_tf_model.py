@@ -134,8 +134,8 @@ except NameError:
 
 #conv_pool_cnn_model.compile()
 #conv_pool_cnn_model.summary()
-conv_pool_cnn_model.evaluate(x_test,y_test,batch_size=32)
-conv_pool_cnn_model.summary()
+#conv_pool_cnn_model.evaluate(x_test,y_test,batch_size=32)
+#conv_pool_cnn_model.summary()
 
 converter_quant = tf.lite.TFLiteConverter.from_keras_model(conv_pool_cnn_model)
 #converter_quant.optimizations = [tf.lite.Optimize.OPTIMIZE_FOR_SIZE]
