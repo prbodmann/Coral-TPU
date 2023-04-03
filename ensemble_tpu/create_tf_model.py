@@ -4,7 +4,6 @@ from keras.datasets import cifar10
 from keras.engine import training
 from keras.layers import Conv2D, MaxPooling2D, GlobalAveragePooling2D, Dropout, Activation, Average, Flatten, AveragePooling2D
 from keras.losses import categorical_crossentropy
-from keras.layers import Input
 from keras.models import Model
 from keras.optimizers import Adam
 from keras.utils import to_categorical
@@ -25,6 +24,7 @@ NIN_CNN_WEIGHT_FILE = os.path.join(os.getcwd(), 'weights', 'nin_cnn_pretrained_w
 
 def load_data() -> Tuple [np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     (x_train, y_train), (x_test, y_test) = cifar10.load_data()
+    print(xtrain)
     x_train = x_train / 255.
     x_test = x_test / 255.
     y_train = to_categorical(y_train, num_classes=10)
@@ -43,8 +43,8 @@ def representative_data_gen():
             yield [tf.cast(x_train,tf.float32)]
 
 def conv_pool_cnn(model_input: Tensor) -> training.Model:
-    x = Input(shape=(32, 32, 3))
-    x = Conv2D(96, kernel_size=(3, 3), activation='relu', padding = 'same')(x)
+
+    x = Conv2D(96, kernel_size=(3, 3), activation='relu', padding = 'same')(model_input)
     x = Conv2D(96, (3, 3), activation='relu', padding = 'same')(x)
     x = Conv2D(96, (3, 3), activation='relu', padding = 'same')(x)
     x = MaxPooling2D(pool_size=(3, 3), strides = 2)(x)
@@ -64,8 +64,8 @@ def conv_pool_cnn(model_input: Tensor) -> training.Model:
 
 
 def all_cnn(model_input: Tensor) -> training.Model:
-    x = Input(shape=(32, 32, 3))
-    x = Conv2D(96, kernel_size=(3, 3), activation='relu', padding = 'same')(x)
+
+    x = Conv2D(96, kernel_size=(3, 3), activation='relu', padding = 'same')(model_input)
     x = Conv2D(96, (3, 3), activation='relu', padding = 'same')(x)
     x = Conv2D(96, (3, 3), activation='relu', padding = 'same', strides = 2)(x)
     x = Conv2D(192, (3, 3), activation='relu', padding = 'same')(x)
@@ -82,9 +82,9 @@ def all_cnn(model_input: Tensor) -> training.Model:
     return model
 
 def nin_cnn(model_input: Tensor) -> training.Model:
-    x = Input(shape=(32, 32, 3))
+
     #mlpconv block 1
-    x = Conv2D(32, (5, 5), activation='relu',padding='valid')(x)
+    x = Conv2D(32, (5, 5), activation='relu',padding='valid')(model_input)
     x = Conv2D(32, (1, 1), activation='relu')(x)
     x = Conv2D(32, (1, 1), activation='relu')(x)
     x = MaxPooling2D((2,2))(x)
