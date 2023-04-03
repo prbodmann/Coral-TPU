@@ -11,6 +11,7 @@ from keras.utils import to_categorical
 from tensorflow.python.framework.ops import Tensor
 from typing import Tuple, List
 import glob
+import keras
 import numpy as np
 import os
 import sys
