@@ -42,18 +42,18 @@ def evaluate_error(model: training.Model) -> np.float64:
 def conv_pool_cnn(model_input: Tensor) -> training.Model:
 
     x = Conv2D(96, kernel_size=(3, 3), activation='relu', padding = 'same')(model_input)
-    x = Conv2D(96, (3, 3), activation='relu', padding = 'same')(x)
-    x = Conv2D(96, (3, 3), activation='relu', padding = 'same')(x)
-    x = MaxPooling2D(pool_size=(3, 3), strides = 2)(x)
-    x = Conv2D(192, (3, 3), activation='relu', padding = 'same')(x)
-    x = Conv2D(192, (3, 3), activation='relu', padding = 'same')(x)
-    x = Conv2D(192, (3, 3), activation='relu', padding = 'same')(x)
-    x = MaxPooling2D(pool_size=(3, 3), strides = 2)(x)
-    x = Conv2D(192, (3, 3), activation='relu', padding = 'same')(x)
-    x = Conv2D(192, (1, 1), activation='relu')(x)
-    x = Conv2D(10, (1, 1))(x)
-    x = AveragePooling2D(pool_size=(7,7))(x)
-    x = Activation(activation='softmax')(x)
+    #x = Conv2D(96, (3, 3), activation='relu', padding = 'same')(x)
+    #x = Conv2D(96, (3, 3), activation='relu', padding = 'same')(x)
+    #x = MaxPooling2D(pool_size=(3, 3), strides = 2)(x)
+    #x = Conv2D(192, (3, 3), activation='relu', padding = 'same')(x)
+    #x = Conv2D(192, (3, 3), activation='relu', padding = 'same')(x)
+    #x = Conv2D(192, (3, 3), activation='relu', padding = 'same')(x)
+    #x = MaxPooling2D(pool_size=(3, 3), strides = 2)(x)
+    #x = Conv2D(192, (3, 3), activation='relu', padding = 'same')(x)
+    #x = Conv2D(192, (1, 1), activation='relu')(x)
+    #x = Conv2D(10, (1, 1))(x)
+    #x = AveragePooling2D(pool_size=(7,7))(x)
+    #x = Activation(activation='softmax')(x)
     
     model = Model(model_input, x, name='conv_pool_cnn')
     
@@ -124,10 +124,10 @@ def tflite_converter(model,x_train,name):
 
     converter_quant = tf.lite.TFLiteConverter.from_keras_model(model)
     #converter_quant.optimizations = [tf.lite.Optimize.OPTIMIZE_FOR_SIZE]
-    #converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
+    converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
     converter_quant.representative_dataset = representative_data_gen
     converter_quant.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
-    converter_quant.target_spec.supported_types = [tf.int8]
+    converter_quant.target_spec.supported_types = [tf.uint8]
     # Just accept that observations and actions are inherently floaty, let Coral handle that on the CPU
     converter_quant.inference_input_type = tf.uint8
     converter_quant.inference_output_type = tf.uint8
