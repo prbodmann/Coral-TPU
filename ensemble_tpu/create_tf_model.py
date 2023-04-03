@@ -147,10 +147,10 @@ model_input = Input(shape=input_shape)
 
 conv_pool_cnn_model = conv_pool_cnn(model_input)
 
-try:
-    conv_pool_cnn_weight_file
-except NameError:
-    conv_pool_cnn_model.load_weights(CONV_POOL_CNN_WEIGHT_FILE)
+#try:
+#    conv_pool_cnn_weight_file
+#except NameError:
+#    conv_pool_cnn_model.load_weights(CONV_POOL_CNN_WEIGHT_FILE)
 
 #conv_pool_cnn_model.compile()
 #conv_pool_cnn_model.summary()
