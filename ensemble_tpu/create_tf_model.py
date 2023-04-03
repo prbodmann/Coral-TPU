@@ -157,8 +157,10 @@ models = [conv_pool_cnn_model, all_cnn_model, nin_cnn_model]
 
 
 ensemble_model = ensemble(models, model_input)
-ensemble_model.compile()
-ensemble_model.evaluate(x_test,y_test,batch_size=32)
+#ensemble_model.compile()
+#ensemble_model.evaluate(x_test,y_test,batch_size=32)
+
+
 #evaluate_error(ensemble_model)
 converter_quant = tf.lite.TFLiteConverter.from_keras_model(ensemble_model)
 converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
