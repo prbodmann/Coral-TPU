@@ -115,7 +115,7 @@ def ensemble(models: List [training.Model], model_input: Tensor) -> training.Mod
     
     return model
 
-def tflite_converter(model,x_train,name)
+def tflite_converter(model,x_train,name):
 
     def representative_data_gen():
             global x_train
