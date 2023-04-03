@@ -118,7 +118,7 @@ def tflite_converter(model,x_train,name):
 
     def representative_data_gen():
             global x_train
-            for i in range(10000):
+            for i in range(100):
                 yield [x_train]
 
     converter_quant = tf.lite.TFLiteConverter.from_keras_model(model)
