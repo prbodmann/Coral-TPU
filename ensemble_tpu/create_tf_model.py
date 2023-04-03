@@ -5,6 +5,7 @@ from keras.engine import training
 from keras.layers import Conv2D, MaxPooling2D, GlobalAveragePooling2D, Dropout, Activation, Average, Flatten, AveragePooling2D
 from keras.losses import categorical_crossentropy
 from keras.models import Model
+from keras import Input
 from keras.optimizers import Adam
 from keras.utils import to_categorical
 from tensorflow.python.framework.ops import Tensor
