@@ -170,11 +170,11 @@ def main():
         for index,img in enumerate(images):
 
             #Logger.info(f"Predicting image: {image_file}")
-            data = im.fromarray((img * 255).astype(np.uint8))
+            #data = im.fromarray((img * 255).astype(np.uint8))
 
             # saving the final output
             # as a PNG file
-            data.save(f'image_{index}.png')
+            #data.save(f'image_{index}.png')
             set_interpreter_intput(interpreter, img)
 
             perform_inference(interpreter)
