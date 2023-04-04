@@ -184,6 +184,7 @@ def main():
             perform_inference(interpreter)
 
             if save_golden:
+                print("lol")
                 golden.append(classification.get_scores(interpreter))
             else:
                 errs_abv_thresh, errs_blw_thresh = check_output_against_golden(interpreter, golden)
