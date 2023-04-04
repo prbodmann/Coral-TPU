@@ -170,7 +170,7 @@ def main():
         with open(input_file,'rb') as input_imgs:
             images=pickle.load(images,input_imgs)
         with open(golden_file,'rb') as golden_fd:
-            golden=pickle.load(images,golden_fd)
+            golden=pickle.load(golden_fd)
 
     for i in range(iterations):
         Logger.info(f"Iteration {i}")
