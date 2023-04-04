@@ -127,7 +127,7 @@ def check_output_against_golden(interpreter, gold):
 
 
 def load_data(num_images) -> Tuple [np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    (-, -), (x_test, -) = cifar10.load_data()
+    (x_train, y_train), (x_test, y_test) = cifar10.load_data()
     x_test = x_test / 255.
     return  random.sample(x_test,num_images)
 
