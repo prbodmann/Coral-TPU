@@ -66,7 +66,7 @@ def create_interpreter(model_file):
 def set_interpreter_intput(interpreter, resized_image):
     t0 = time.perf_counter()
 
-    #common.set_resized_input(interpreter, resized_image)
+    common.set_resized_input(interpreter, resized_image)
 
     t1 = time.perf_counter()
 
@@ -159,6 +159,7 @@ def main():
     images=[]
     golden=[]
     if save_golden:
+        print("grgrg")
         images = load_data()
         with open(input_file,'wb') as input_imgs:
             pickle.dump(images,input_imgs)
@@ -193,15 +194,6 @@ def main():
                         Logger.info(f"SDC output saved to file `{sdc_file}`")
                         lh.log_info_detail(f"SDC output saved to file `{sdc_file}`")
                         info_count += 1
-
-                    # Recreate interpreter (avoid repeated errors in case of weights corruption)
-                    if RECREATE_INTERPRETER_ON_ERROR:
-                        lh.log_info_detail(f"Recreating interpreter")
-                        info_count += 1
-                        Logger.info(f"Recreating interpreter...")
-                        if interpreter is not None:
-                            del interpreter
-                        interpreter = create_interpreter(model_file)
 
                 lh.log_info_count(int(info_count))
                 lh.log_error_count(int(errs_count))
