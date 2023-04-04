@@ -15,7 +15,7 @@ Logger.setLevel(Logger.Level.TIMING)
 
 FILE_FULL_PATH = Path(__file__).parent.absolute()
 sys.path.insert(0, f'{FILE_FULL_PATH}/../libLogHelper/build')
-sys.path.insert(0, f'{FILE_FULL_PATH}/../neural-networks')
+sys.path.apend(f'{FILE_FULL_PATH}/../neural-networks')
 import log_helper as lh
 
 MAX_ERR_PER_IT = 500
