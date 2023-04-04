@@ -12,6 +12,8 @@ import pickle
 from typing import Tuple, List
 import random
 import numpy
+from PIL import Image as im
+
 
 FILE_FULL_PATH = Path(__file__).parent.absolute()
 sys.path.insert(0, f'{FILE_FULL_PATH}/../libLogHelper/build')
@@ -168,7 +170,11 @@ def main():
         for index,img in enumerate(images):
 
             #Logger.info(f"Predicting image: {image_file}")
+            data = im.fromarray(img)
 
+            # saving the final output
+            # as a PNG file
+            data.save(f'image_{index}.png')
             set_interpreter_intput(interpreter, img)
 
             perform_inference(interpreter)
