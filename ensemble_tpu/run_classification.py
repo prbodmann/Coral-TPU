@@ -157,7 +157,7 @@ def main():
     interpreter = create_interpreter(model_file)
     images=[]
     golden=[]
-    if generate:
+    if save_golden:
         images = load_data()
         with open(input_file,'wb') as input_imgs:
             pickle.dump(images,input_imgs)
