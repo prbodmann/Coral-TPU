@@ -10,7 +10,7 @@ from keras.datasets import cifar10
 from keras.utils import to_categorical
 import pickle
 from typing import Tuple, List
-
+import random
 
 FILE_FULL_PATH = Path(__file__).parent.absolute()
 sys.path.insert(0, f'{FILE_FULL_PATH}/../libLogHelper/build')
@@ -126,12 +126,10 @@ def check_output_against_golden(interpreter, gold):
     return errs_above_thresh, errs_below_thresh
 
 
-def load_data() -> Tuple [np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    (x_train, y_train), (x_test, y_test) = cifar10.load_data()
-    x_train = x_train / 255.
+def load_data(num_images) -> Tuple [np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    (-, -), (x_test, -) = cifar10.load_data()
     x_test = x_test / 255.
-    y_train = to_categorical(y_train, num_classes=10)
-    return x_train, x_test, y_train, y_test
+    return  random.sample(x_test,num_images)
 
 def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -160,7 +158,7 @@ def main():
     golden=[]
     if save_golden:
         print("grgrg")
-        images = load_data()
+        images = load_data(nimages)
         with open(input_file,'wb') as input_imgs:
             pickle.dump(images,input_imgs)
     else:
