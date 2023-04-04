@@ -175,6 +175,7 @@ def main():
             golden=pickle.load(golden_fd)
 
     for i in range(iterations):
+        t0 = time.perf_counter()
         Logger.info(f"Iteration {i}")
 
         for index,img in enumerate(images):
@@ -202,7 +203,9 @@ def main():
 
                 lh.log_info_count(int(info_count))
                 lh.log_error_count(int(errs_count))
+         t1 = time.perf_counter()
 
+        Logger.timing("Iteration duration:", t1 - t0)
         if save_golden:
 
             with open(golden_file,'wb') as golden_fd:
