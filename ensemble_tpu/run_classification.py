@@ -124,7 +124,7 @@ def check_output_against_golden(interpreter, gold):
     total_errs = errs_above_thresh + errs_below_thresh
     if total_errs > 0:
         Logger.info(f"Output doesn't match golden")
-    Logger.timing("Check output", t1 - t0)
+    #Logger.timing("Check output", t1 - t0)
             
     return errs_above_thresh, errs_below_thresh
 
