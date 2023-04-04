@@ -103,8 +103,8 @@ def save_golden_output(interpreter, model_file, image_file):
 def check_output_against_golden(interpreter, gold):
     t0 = time.perf_counter()
     out = classification.get_scores(interpreter)
-    print(out)
-    print(gold)
+    #print(out)
+    #print(gold)
     diff = out != gold
 
     errs_above_thresh = np.count_nonzero(diff & (gold >= CLASSIFICATION_THRESHOLD))
