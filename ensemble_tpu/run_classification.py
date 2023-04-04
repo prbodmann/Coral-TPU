@@ -203,7 +203,7 @@ def main():
 
                 lh.log_info_count(int(info_count))
                 lh.log_error_count(int(errs_count))
-         t1 = time.perf_counter()
+        t1 = time.perf_counter()
 
         Logger.timing("Iteration duration:", t1 - t0)
         if save_golden:
