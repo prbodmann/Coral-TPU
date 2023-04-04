@@ -8,7 +8,7 @@ from pathlib import Path
 from PIL import Image
 from keras.datasets import cifar10
 import pickle
-
+from typing import Tuple, List
 
 
 FILE_FULL_PATH = Path(__file__).parent.absolute()
