@@ -179,7 +179,7 @@ def main():
 
             #Logger.info(f"Predicting image: {image_file}")
 
-            set_interpreter_intput(interpreter, img)
+            set_intput(interpreter, img)
 
             perform_inference(interpreter)
 
