@@ -162,7 +162,7 @@ def main():
     images=[]
     golden=[]
     if save_golden:
-        print("grgrg")
+        #print("grgrg")
         images = load_data(nimages)
         with open(input_file,'wb') as input_imgs:
             pickle.dump(images,input_imgs)
@@ -184,7 +184,6 @@ def main():
             perform_inference(interpreter)
 
             if save_golden:
-                print("lol")
                 golden.append(classification.get_scores(interpreter))
             else:
                 errs_abv_thresh, errs_blw_thresh = check_output_against_golden(interpreter, golden)
@@ -203,7 +202,8 @@ def main():
                 lh.log_error_count(int(errs_count))
 
         if save_golden:
-            with open(input_file,'wb') as golden_fd:
+
+            with open(golden_file,'wb') as golden_fd:
                 pickle.dump(golden,golden_fd)
             break
     
