@@ -7,15 +7,15 @@ import numpy as np
 from pathlib import Path
 from PIL import Image
 from keras.datasets import cifar10
-from src.utils import common, classification
-from src.utils.logger import Logger
 import pickle
 Logger.setLevel(Logger.Level.TIMING)
 
 
 FILE_FULL_PATH = Path(__file__).parent.absolute()
 sys.path.insert(0, f'{FILE_FULL_PATH}/../libLogHelper/build')
-sys.path.apend(f'{FILE_FULL_PATH}/../neural-networks')
+sys.path.append(f'{FILE_FULL_PATH}/../neural-networks')
+from src.utils import common, classification
+from src.utils.logger import Logger
 import log_helper as lh
 
 MAX_ERR_PER_IT = 500
