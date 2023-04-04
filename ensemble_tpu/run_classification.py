@@ -67,7 +67,7 @@ def create_interpreter(model_file):
 def set_interpreter_intput(interpreter, resized_image):
     t0 = time.perf_counter()
 
-    common.set_resized_input(interpreter, resized_image)
+    common.set_input(interpreter, resized_image)
 
     t1 = time.perf_counter()
 
@@ -179,7 +179,7 @@ def main():
 
             #Logger.info(f"Predicting image: {image_file}")
 
-            set_intput(interpreter, img)
+            set_interpreter_intput(interpreter, img)
 
             perform_inference(interpreter)
 
