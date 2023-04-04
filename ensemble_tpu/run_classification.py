@@ -86,24 +86,11 @@ def perform_inference(interpreter):
     #Logger.info("Inference performed successfully")
     #Logger.timing("Perform inference", t1 - t0)
 
-def save_golden_output(interpreter, model_file, image_file):
-    t0 = time.perf_counter()
-
-    golden_file = common.get_golden_filename(model_file, image_file)
-    scores = classification.get_scores(interpreter)
-    save_output_to_file(scores, golden_file)
-
-    t1 = time.perf_counter()
-
-    Logger.info(f"Golden output saved to file `{golden_file}`")
-    Logger.timing("Save golden output", t1 - t0)
-
-    return golden_file
 
 def check_output_against_golden(interpreter, gold):
     t0 = time.perf_counter()
     out = classification.get_scores(interpreter)
-    #print(out)
+    print(out)
     #print(gold)
     diff = out != gold
 
