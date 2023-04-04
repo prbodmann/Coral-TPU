@@ -8,7 +8,7 @@ from pathlib import Path
 from PIL import Image
 from keras.datasets import cifar10
 import pickle
-Logger.setLevel(Logger.Level.TIMING)
+
 
 
 FILE_FULL_PATH = Path(__file__).parent.absolute()
@@ -17,7 +17,7 @@ sys.path.append(f'{FILE_FULL_PATH}/../neural-networks')
 from src.utils import common, classification
 from src.utils.logger import Logger
 import log_helper as lh
-
+Logger.setLevel(Logger.Level.TIMING)
 MAX_ERR_PER_IT = 500
 RECREATE_INTERPRETER_ON_ERROR = True
 CLASSIFICATION_THRESHOLD = 0.3
