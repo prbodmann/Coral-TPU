@@ -11,6 +11,7 @@ from keras.utils import to_categorical
 import pickle
 from typing import Tuple, List
 import random
+import numpy
 
 FILE_FULL_PATH = Path(__file__).parent.absolute()
 sys.path.insert(0, f'{FILE_FULL_PATH}/../libLogHelper/build')
