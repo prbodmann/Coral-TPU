@@ -19,7 +19,7 @@ sys.path.append(f'{FILE_FULL_PATH}/../neural-networks')
 from src.utils import common, classification
 from src.utils.logger import Logger
 import log_helper as lh
-Logger.setLevel(Logger.Level.ERROR)
+Logger.setLevel(Logger.Level.TIMING)
 MAX_ERR_PER_IT = 500
 RECREATE_INTERPRETER_ON_ERROR = True
 CLASSIFICATION_THRESHOLD = 0.3
@@ -71,8 +71,8 @@ def set_interpreter_intput(interpreter, resized_image):
 
     t1 = time.perf_counter()
 
-    Logger.info("Interpreter input set successfully")
-    Logger.timing("Set interpreter input", t1 - t0)
+    #Logger.info("Interpreter input set successfully")
+    #Logger.timing("Set interpreter input", t1 - t0)
 
 def perform_inference(interpreter):
     t0 = time.perf_counter()
@@ -83,8 +83,8 @@ def perform_inference(interpreter):
 
     t1 = time.perf_counter()
 
-    Logger.info("Inference performed successfully")
-    Logger.timing("Perform inference", t1 - t0)
+    #Logger.info("Inference performed successfully")
+    #Logger.timing("Perform inference", t1 - t0)
 
 def save_golden_output(interpreter, model_file, image_file):
     t0 = time.perf_counter()
