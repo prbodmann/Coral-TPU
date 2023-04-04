@@ -7,6 +7,7 @@ import numpy as np
 from pathlib import Path
 from PIL import Image
 from keras.datasets import cifar10
+from keras.utils import to_categorical
 import pickle
 from typing import Tuple, List
 
