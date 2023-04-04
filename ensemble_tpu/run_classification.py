@@ -102,7 +102,9 @@ def save_golden_output(interpreter, model_file, image_file):
 
 def check_output_against_golden(interpreter, gold):
     t0 = time.perf_counter()
-    out = classification.get_scores(interpreter)
+
+    print(out)
+    print(gold)
     diff = out != gold
 
     errs_above_thresh = np.count_nonzero(diff & (gold >= CLASSIFICATION_THRESHOLD))
@@ -175,7 +177,7 @@ def main():
     for i in range(iterations):
         Logger.info(f"Iteration {i}")
 
-        for img in images:
+        for index,img in enumerate(images):
 
             #Logger.info(f"Predicting image: {image_file}")
 
@@ -186,6 +188,8 @@ def main():
             if save_golden:
                 golden.append(classification.get_scores(interpreter))
             else:
+                out = classification.get_scores(interpreter)
+                print(out)
                 errs_abv_thresh, errs_blw_thresh = check_output_against_golden(interpreter, golden)
                 errs_count = errs_abv_thresh + errs_blw_thresh
                 info_count = 0
