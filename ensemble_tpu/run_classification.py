@@ -102,7 +102,7 @@ def save_golden_output(interpreter, model_file, image_file):
 
 def check_output_against_golden(interpreter, gold):
     t0 = time.perf_counter()
-
+    out = classification.get_scores(interpreter)
     print(out)
     print(gold)
     diff = out != gold
@@ -188,9 +188,7 @@ def main():
             if save_golden:
                 golden.append(classification.get_scores(interpreter))
             else:
-                out = classification.get_scores(interpreter)
-                print(out)
-                errs_abv_thresh, errs_blw_thresh = check_output_against_golden(interpreter, golden)
+                errs_abv_thresh, errs_blw_thresh = check_output_against_golden(interpreter, golden[index])
                 errs_count = errs_abv_thresh + errs_blw_thresh
                 info_count = 0
                 if errs_count > 0:
