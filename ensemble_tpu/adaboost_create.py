@@ -3,11 +3,8 @@ import sys
 from keras import Input
 from src.models import conv_pool_cnn, all_cnn, nin_cnn, ensemble
 from src.utils import tflite_converter, load_data, xgb_model, get_feature_layer
-from sklearn.ensemble import AdaBoostClassifier
-from sklearn.metrics import accuracy_score
 import tensorflow as tf
 import numpy as np
-from scikeras.wrappers import KerasClassifier
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
@@ -27,22 +24,14 @@ model_input = Input(shape=input_shape)
 conv_pool_cnn_model = conv_pool_cnn(model_input)
 conv_pool_cnn_model.load_weights(CONV_POOL_CNN_WEIGHT_FILE)
 
-
 X_train_cnn =  get_feature_layer(conv_pool_cnn_model,x_train)
 print("Features extracted of training data")
 X_test_cnn = get_feature_layer(conv_pool_cnn_model,x_test)
 print("Features extracted of test data\n")
-
 print("Build and save of CNN-XGBoost Model.")
 model = xgb_model(X_train_cnn, y_train, X_test_cnn, y_test)
 tflite_converter(model,x_train,"lol.tflite")
 
 
-def main():
-
-
-
-if __name__ == '__main__':
-	main()
 
 
