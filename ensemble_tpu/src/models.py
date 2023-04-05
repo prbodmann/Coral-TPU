@@ -2,7 +2,10 @@ from keras.layers import Conv2D, MaxPooling2D, GlobalAveragePooling2D, Dropout, 
 from keras.models import Model
 from tensorflow.python.framework.ops import Tensor
 from keras.engine import training
+import keras
 from typing import List
+
+cce = keras.losses.CategoricalCrossentropy()
 
 def conv_pool_cnn(model_input: Tensor) -> training.Model:
 
@@ -21,7 +24,7 @@ def conv_pool_cnn(model_input: Tensor) -> training.Model:
     x = Activation(activation='softmax')(x)
 
     model = Model(model_input, x, name='conv_pool_cnn')
-    model.compile()
+    model.compile(loss=cce)
     return model
 
 
@@ -40,7 +43,7 @@ def all_cnn(model_input: Tensor) -> training.Model:
     x = Activation(activation='softmax')(x)
 
     model = Model(model_input, x, name='all_cnn')
-    model.compile()
+    model.compile(loss=cce)
     return model
 
 def nin_cnn(model_input: Tensor) -> training.Model:
@@ -68,7 +71,7 @@ def nin_cnn(model_input: Tensor) -> training.Model:
     x = Activation(activation='softmax')(x)
 
     model = Model(model_input, x, name='nin_cnn')
-    model.compile()
+    model.compile(loss=cce)
     return model
 
 def ensemble(models: List [training.Model], model_input: Tensor) -> training.Model:
@@ -77,5 +80,5 @@ def ensemble(models: List [training.Model], model_input: Tensor) -> training.Mod
     y = Average()(outputs)
 
     model = Model(model_input, y, name='ensemble')
-
+    model.compile(loss=cce)
     return model

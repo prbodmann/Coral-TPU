@@ -5,7 +5,9 @@ from src.models import conv_pool_cnn, all_cnn, nin_cnn, ensemble
 from src.utils import tflite_converter, load_data
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.metrics import accuracy_score
-
+import tensorflow as tf
+import numpy as np
+from scikeras.wrappers import KerasClassifier
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
@@ -25,16 +27,15 @@ model_input = Input(shape=input_shape)
 conv_pool_cnn_model = conv_pool_cnn(model_input)
 conv_pool_cnn_model.load_weights(CONV_POOL_CNN_WEIGHT_FILE)
 
-dtclf_train_sc = accuracy_score(y_train, conv_pool_cnn_model.predict(x_train))
-dtclf_test_sc = accuracy_score(y_test, conv_pool_cnn_model.predict(x_test))
-print('Decision tree train/test accuracies %.3f/%.3f' % (dtclf_train_sc, dtclf_test_sc))
-
-
-
-cnn_boosted = AdaBoostClassifier(base_estimator=conv_pool_cnn_model,
+#dtclf_train_sc = accuracy_score(y_train, conv_pool_cnn_model.predict(x_train))
+#dtclf_test_sc = accuracy_score(y_test, conv_pool_cnn_model.predict(x_test))
+#print('Decision tree train/test accuracies %.3f/%.3f' % (dtclf_train_sc, dtclf_test_sc))
+keras_clf = KerasClassifier(model = conv_pool_cnn_model, optimizer="adam", epochs=10, verbose=0)
+cnn_boosted = AdaBoostClassifier(base_estimator=keras_clf,
                             n_estimators=50,
                             learning_rate=0.5,
-                            algorithm='SAMME.R',
+                            algorithm='SAMME',
                             random_state=1)
-cnn_boosted.fit(x_train, y_train)
+lol = [np.argmax(elem) for elem in y_train]
+cnn_boosted.fit(x_train, lol)
 tflite_converter(cnn_boosted,x_train,"lol.tflite")
