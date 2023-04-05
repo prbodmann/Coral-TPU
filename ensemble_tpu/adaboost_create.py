@@ -30,7 +30,7 @@ conv_pool_cnn_model.load_weights(CONV_POOL_CNN_WEIGHT_FILE)
 #dtclf_train_sc = accuracy_score(y_train, conv_pool_cnn_model.predict(x_train))
 #dtclf_test_sc = accuracy_score(y_test, conv_pool_cnn_model.predict(x_test))
 #print('Decision tree train/test accuracies %.3f/%.3f' % (dtclf_train_sc, dtclf_test_sc))
-keras_clf = KerasClassifier(model = conv_pool_cnn_model, optimizer="adam", epochs=10, verbose=0)
+keras_clf = KerasClassifier(model = conv_pool_cnn_model, epochs=100, verbose=0)
 cnn_boosted = AdaBoostClassifier(base_estimator=keras_clf,
                             n_estimators=50,
                             learning_rate=0.5,
