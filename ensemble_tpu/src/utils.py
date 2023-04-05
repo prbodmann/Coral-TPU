@@ -4,6 +4,8 @@ from keras.utils import to_categorical
 import tensorflow as tf
 import numpy as np
 from typing import Tuple
+import xgboost as xgb
+import keras
 def evaluate_error(model: training.Model) -> np.float64:
     pred = model.predict(x_test, batch_size = 32)
     pred = np.argmax(pred, axis=1)
@@ -41,3 +43,55 @@ def load_data() -> Tuple [np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     x_test = x_test / 255.
     y_train = to_categorical(y_train, num_classes=10)
     return x_train, x_test, y_train, y_test
+
+
+def xgb_model(X_train, y_train, X_test, y_test):
+
+	dtrain = xgb.DMatrix(
+		X_train,
+		label=y_train
+	)
+
+	dtest = xgb.DMatrix(
+		X_test,
+		label=y_test
+	)
+
+	results = {}
+
+	params = {
+		'max_depth':12,
+		'eta':0.05,
+		'objective':'multi:softprob',
+		'num_class':10,
+		'early_stopping_rounds':10,
+		'eval_metric':'merror'
+	}
+
+	watchlist = [(dtrain, 'train'),(dtest, 'eval')]
+	n_round = 400
+
+	model = xgb.train(
+		params,
+		dtrain,
+		n_round,
+		watchlist,
+		evals_result=results)
+
+	#pickle.dump(model, open("cnn_xgboost_final.pickle.dat", "wb"))
+
+	return model
+
+def get_feature_layer(model, data):
+
+	total_layers = len(model.layers)
+
+	fl_index = total_layers-2
+
+	feature_layer_model = keras.Model(
+		inputs=model.input,
+		outputs=model.get_layer(index=fl_index).output)
+
+	feature_layer_output = feature_layer_model.predict(data)
+
+	return feature_layer_output
