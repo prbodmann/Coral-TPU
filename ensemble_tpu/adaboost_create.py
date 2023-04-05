@@ -2,7 +2,7 @@ import os
 import sys
 from keras import Input
 from src.models import conv_pool_cnn, all_cnn, nin_cnn, ensemble
-from src.utils import tflite_converter, load_data
+from src.utils import tflite_converter, load_data, xgb_model, get_feature_layer
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.metrics import accuracy_score
 import tensorflow as tf
@@ -27,15 +27,22 @@ model_input = Input(shape=input_shape)
 conv_pool_cnn_model = conv_pool_cnn(model_input)
 conv_pool_cnn_model.load_weights(CONV_POOL_CNN_WEIGHT_FILE)
 
-#dtclf_train_sc = accuracy_score(y_train, conv_pool_cnn_model.predict(x_train))
-#dtclf_test_sc = accuracy_score(y_test, conv_pool_cnn_model.predict(x_test))
-#print('Decision tree train/test accuracies %.3f/%.3f' % (dtclf_train_sc, dtclf_test_sc))
-keras_clf = KerasClassifier(model = conv_pool_cnn_model, epochs=100, verbose=0)
-cnn_boosted = AdaBoostClassifier(base_estimator=keras_clf,
-                            n_estimators=50,
-                            learning_rate=0.5,
-                            algorithm='SAMME',
-                            random_state=1)
-lol = [np.argmax(elem) for elem in y_train]
-cnn_boosted.fit(x_train, lol)
-tflite_converter(cnn_boosted,x_train,"lol.tflite")
+
+X_train_cnn =  get_feature_layer(conv_pool_cnn_model,x_train)
+print("Features extracted of training data")
+X_test_cnn = get_feature_layer(conv_pool_cnn_model,x_test)
+print("Features extracted of test data\n")
+
+print("Build and save of CNN-XGBoost Model.")
+model = xgb_model(X_train_cnn, y_train, X_test_cnn, y_test)
+tflite_converter(model,x_train,"lol.tflite")
+
+
+def main():
+
+
+
+if __name__ == '__main__':
+	main()
+
+
