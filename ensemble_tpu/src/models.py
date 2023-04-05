@@ -24,7 +24,7 @@ def conv_pool_cnn(model_input: Tensor) -> training.Model:
     x = Activation(activation='softmax')(x)
 
     model = Model(model_input, x, name='conv_pool_cnn')
-    model.compile(loss=cce)
+    model.compile(loss=cce, optimizer="adam")
     return model
 
 
@@ -43,7 +43,7 @@ def all_cnn(model_input: Tensor) -> training.Model:
     x = Activation(activation='softmax')(x)
 
     model = Model(model_input, x, name='all_cnn')
-    model.compile(loss=cce)
+    model.compile(loss=cce, optimizer="adam")
     return model
 
 def nin_cnn(model_input: Tensor) -> training.Model:
@@ -71,7 +71,7 @@ def nin_cnn(model_input: Tensor) -> training.Model:
     x = Activation(activation='softmax')(x)
 
     model = Model(model_input, x, name='nin_cnn')
-    model.compile(loss=cce)
+    model.compile(loss=cce, optimizer="adam")
     return model
 
 def ensemble(models: List [training.Model], model_input: Tensor) -> training.Model:
@@ -80,5 +80,5 @@ def ensemble(models: List [training.Model], model_input: Tensor) -> training.Mod
     y = Average()(outputs)
 
     model = Model(model_input, y, name='ensemble')
-    model.compile(loss=cce)
+    model.compile(loss=cce, optimizer="adam")
     return model
