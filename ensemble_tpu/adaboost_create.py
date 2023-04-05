@@ -29,6 +29,7 @@ print("Features extracted of training data")
 X_test_cnn = get_feature_layer(conv_pool_cnn_model,x_test)
 print("Features extracted of test data\n")
 print("Build and save of CNN-XGBoost Model.")
+print(X_train_cnn.shape())
 model = xgb_model(X_train_cnn, y_train, X_test_cnn, y_test)
 tflite_converter(model,x_train,"lol.tflite")
 
