@@ -17,8 +17,7 @@ def evaluate_error(model: training.Model) -> np.float64:
 def tflite_converter(model,x_train,name):
 
     def representative_data_gen():
-        #print(x_test[0])
-        for x in x_test:
+        for x in x_train:
             data = tf.reshape(x, shape=[-1, 32, 32, 3])
             yield [tf.cast(data,tf.float32)]
 
@@ -44,43 +43,6 @@ def load_data() -> Tuple [np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     y_train = to_categorical(y_train, num_classes=10)
     return x_train, x_test, y_train, y_test
 
-
-def xgb_model(X_train, y_train, X_test, y_test):
-
-	dtrain = xgb.DMatrix(
-		X_train,
-		label=y_train
-	)
-
-	dtest = xgb.DMatrix(
-		X_test,
-		label=y_test
-	)
-
-	results = {}
-
-	params = {
-		'max_depth':12,
-		'eta':0.05,
-		'objective':'multi:softprob',
-		'num_class':10,
-		'early_stopping_rounds':10,
-		'eval_metric':'merror'
-	}
-
-	watchlist = [(dtrain, 'train'),(dtest, 'eval')]
-	n_round = 400
-
-	model = xgb.train(
-		params,
-		dtrain,
-		n_round,
-		watchlist,
-		evals_result=results)
-
-	#pickle.dump(model, open("cnn_xgboost_final.pickle.dat", "wb"))
-
-	return model
 
 def get_feature_layer(model, data):
 
