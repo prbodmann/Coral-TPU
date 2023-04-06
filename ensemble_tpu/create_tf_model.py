@@ -52,11 +52,20 @@ except NameError:
 
 
 models = [conv_pool_cnn_model, all_cnn_model, nin_cnn_model]
-
-
 ensemble_model = ensemble(models, model_input)
-tflite_converter(ensemble_model,x_train,"example.tflite")
+tflite_converter(ensemble_model,x_train,"ensemble.tflite")
 
+models = [conv_pool_cnn_model, all_cnn_model]
+ensemble_model = conv_all(models, model_input)
+tflite_converter(ensemble_model,x_train,"conv_all.tflite")
+
+models = [conv_pool_cnn_model, nin_cnn_model]
+ensemble_model = conv_nin(models, model_input)
+tflite_converter(ensemble_model,x_train,"ensemble.tflite")
+
+models = [ all_cnn_model, nin_cnn_model]
+ensemble_model = all_nin(models, model_input)
+tflite_converter(ensemble_model,x_train,"ensemble.tflite")
 
 
 
