@@ -82,3 +82,28 @@ def ensemble(models: List [training.Model], model_input: Tensor) -> training.Mod
     model = Model(model_input, y, name='ensemble')
     model.compile(loss=cce, optimizer="adam")
     return model
+
+def conv_all(models: List [training.Model], model_input: Tensor) -> training.Model:
+
+    outputs = [model.outputs[0] for model in models]
+    y = Average()(outputs)
+
+    model = Model(model_input, y, name='ensemble')
+    model.compile(loss=cce, optimizer="adam")
+    return model
+def conv_nin(models: List [training.Model], model_input: Tensor) -> training.Model:
+
+    outputs = [model.outputs[0] for model in models]
+    y = Average()(outputs)
+
+    model = Model(model_input, y, name='ensemble')
+    model.compile(loss=cce, optimizer="adam")
+    return model
+def all_nin(models: List [training.Model], model_input: Tensor) -> training.Model:
+
+    outputs = [model.outputs[0] for model in models]
+    y = Average()(outputs)
+
+    model = Model(model_input, y, name='ensemble')
+    model.compile(loss=cce, optimizer="adam")
+    return model
