@@ -24,15 +24,12 @@ model_input = Input(shape=input_shape)
 conv_pool_cnn_model = conv_pool_cnn(model_input)
 conv_pool_cnn_model.load_weights(CONV_POOL_CNN_WEIGHT_FILE)
 
-X_train_cnn =  get_feature_layer(conv_pool_cnn_model,x_train)
+
+X_train_cnn =  get_feature_layer(cnn_model,X_train)
 print("Features extracted of training data")
-X_test_cnn = get_feature_layer(conv_pool_cnn_model,x_test)
+X_test_cnn = get_feature_layer(cnn_model,X_test)
 print("Features extracted of test data\n")
+
 print("Build and save of CNN-XGBoost Model.")
-print(X_train_cnn.shape)
 model = xgb_model(X_train_cnn, y_train, X_test_cnn, y_test)
-tflite_converter(model,x_train,"lol.tflite")
-
-
-
-
+tflite_converter(ensemble_model,x_train,"boosted_conv.tflite")

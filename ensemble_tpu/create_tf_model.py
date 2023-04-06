@@ -9,7 +9,7 @@ import os
 import sys
 import tensorflow as tf
 from src.models import conv_pool_cnn, all_cnn, nin_cnn, ensemble
-from src.utils import tflite_converter, load_data, evaluate_error
+from src.utils import tflite_converter, load_data, evaluate_error, conv_all, conv_nin, all_nin
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
