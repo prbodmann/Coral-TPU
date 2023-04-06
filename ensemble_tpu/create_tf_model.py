@@ -1,7 +1,7 @@
 from keras.callbacks import History
 from keras.engine import training
 from keras.losses import categorical_crossentropy
-
+from keras import Input
 import glob
 import keras
 import numpy as np
@@ -61,11 +61,11 @@ tflite_converter(ensemble_model,x_train,"conv_all.tflite")
 
 models = [conv_pool_cnn_model, nin_cnn_model]
 ensemble_model = conv_nin(models, model_input)
-tflite_converter(ensemble_model,x_train,"ensemble.tflite")
+tflite_converter(ensemble_model,x_train,"conv_nin.tflite")
 
 models = [ all_cnn_model, nin_cnn_model]
 ensemble_model = all_nin(models, model_input)
-tflite_converter(ensemble_model,x_train,"ensemble.tflite")
+tflite_converter(ensemble_model,x_train,"all_nin.tflite")
 
 
 
