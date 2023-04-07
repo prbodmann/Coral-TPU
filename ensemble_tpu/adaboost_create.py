@@ -96,7 +96,7 @@ model_input = Input(shape=input_shape)
 
 conv_pool_cnn_model = conv_pool_cnn(model_input)
 conv_pool_cnn_model.load_weights(CONV_POOL_CNN_WEIGHT_FILE)
-model_json = model.to_json()
+model_json = conv_pool_cnn_model.to_json()
 with open('model.json', 'w') as json_file:
     json_file.write(model_json)
 model.save_weights('model.h5')
