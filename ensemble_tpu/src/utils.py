@@ -28,7 +28,7 @@ def get_feature_layer(model, data):
 	return feature_layer_output
 
 def xgb_model(X_train, y_train, X_test, y_test):
-	print(X_train.shape)
+	print(tf.reshape(X_train,(50000,10)))
 	print(y_train)
 	dtrain = xgb.DMatrix(
 		X_train,
