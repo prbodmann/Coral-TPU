@@ -99,7 +99,7 @@ conv_pool_cnn_model.load_weights(CONV_POOL_CNN_WEIGHT_FILE)
 model_json = conv_pool_cnn_model.to_json()
 with open('model.json', 'w') as json_file:
     json_file.write(model_json)
-model.save_weights('model.h5')
+conv_pool_cnn_model.save_weights('model.h5')
 
 (X_train, y_train), (X_test, y_test) = cifar10.load_data()
 
