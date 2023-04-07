@@ -26,7 +26,7 @@ conv_pool_cnn_model = conv_pool_cnn(model_input)
 conv_pool_cnn_model.load_weights(CONV_POOL_CNN_WEIGHT_FILE)
 ann_estimator = KerasClassifier(build_fn= conv_pool_cnn_model, epochs=100, batch_size=10, verbose=0)
 boosted_ann = AdaBoostClassifier(algorithm='SAMME',base_estimator= ann_estimator)
-boosted_ann.fit(rescaledX, y_train.values.ravel())# scale your training data
+boosted_ann.fit(x_train, y_train)# scale your training data
 boosted_ann.predict(rescaledX_Test)
 
 
