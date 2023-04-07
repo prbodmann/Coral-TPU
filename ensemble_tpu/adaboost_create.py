@@ -2,7 +2,7 @@ import os
 import sys
 from keras import Input
 from src.models import conv_pool_cnn, all_cnn, nin_cnn, ensemble
-from src.utils import tflite_converter, load_data, xgb_model, get_feature_layer
+from src.utils import tflite_converter, load_data, get_feature_layer
 import tensorflow as tf
 import numpy as np
 from sklearn.ensemble import AdaBoostClassifier
