@@ -25,9 +25,9 @@ conv_pool_cnn_model = conv_pool_cnn(model_input)
 conv_pool_cnn_model.load_weights(CONV_POOL_CNN_WEIGHT_FILE)
 
 
-X_train_cnn =  get_feature_layer(cnn_model,X_train)
+X_train_cnn =  get_feature_layer(conv_pool_cnn_model,X_train)
 print("Features extracted of training data")
-X_test_cnn = get_feature_layer(cnn_model,X_test)
+X_test_cnn = get_feature_layer(conv_pool_cnn_model,X_test)
 print("Features extracted of test data\n")
 
 print("Build and save of CNN-XGBoost Model.")
