@@ -91,6 +91,8 @@ def load_data() -> Tuple [np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     x_train = x_train / 255.
     x_test = x_test / 255.
     y_train = to_categorical(y_train, num_classes=10)
+    x_train = x_train.astype('float32')
+	x_test = x_test.astype('float32')
     return x_train, x_test, y_train, y_test
 
 
