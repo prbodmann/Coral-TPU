@@ -32,4 +32,5 @@ print("Features extracted of test data\n")
 
 print("Build and save of CNN-XGBoost Model.")
 model = xgb_model(X_train_cnn, y_train, X_test_cnn, y_test)
+
 tflite_converter(ensemble_model,x_train,"boosted_conv.tflite")
