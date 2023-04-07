@@ -6,7 +6,7 @@ from src.utils import tflite_converter, load_data
 import tensorflow as tf
 import numpy as np
 from sklearn.ensemble import AdaBoostClassifier
-
+from scikeras.wrappers import KerasClassifier
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 CONV_POOL_CNN_WEIGHT_FILE = os.path.join(os.getcwd(), 'weights', 'conv_pool_cnn_pretrained_weights.hdf5')
@@ -24,7 +24,7 @@ model_input = Input(shape=input_shape)
 
 conv_pool_cnn_model = conv_pool_cnn(model_input)
 conv_pool_cnn_model.load_weights(CONV_POOL_CNN_WEIGHT_FILE)
-ann_estimator = KerasRegressor(build_fn= conv_pool_cnn_model, epochs=100, batch_size=10, verbose=0)
+ann_estimator = KerasClassifier(build_fn= conv_pool_cnn_model, epochs=100, batch_size=10, verbose=0)
 boosted_ann = AdaBoostClassifier(algorithm='SAMME',base_estimator= ann_estimator)
 boosted_ann.fit(rescaledX, y_train.values.ravel())# scale your training data
 boosted_ann.predict(rescaledX_Test)
