@@ -28,8 +28,8 @@ def get_feature_layer(model, data):
 	return feature_layer_output
 
 def xgb_model(X_train, y_train, X_test, y_test):
-    print(X_train)
-    print(y_train)
+	print(X_train)
+	print(y_train)
 	dtrain = xgb.DMatrix(
 		X_train,
 		label=y_train
