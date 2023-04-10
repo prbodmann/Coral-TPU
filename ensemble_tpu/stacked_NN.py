@@ -84,7 +84,7 @@ def fit_stacked_model(model, inputX, inputy):
     # encode output data
     inputy_enc = to_categorical(inputy)
     # fit model
-    model.fit(inputX, inputy_enc, epochs=300, verbose=0)
+    model.fit(inputX, inputy_enc, epochs=300, verbose=1)
 
 # make a prediction with a stacked model
 def predict_stacked_model(model, inputX):
