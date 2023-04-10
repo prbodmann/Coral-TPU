@@ -107,7 +107,7 @@ with tf.device('/cpu:0'):
     # define ensemble model
     stacked_model = define_stacked_model(members)
     # fit stacked model on test dataset
-    fit_stacked_model(stacked_model, testX, testy)
+    fit_stacked_model(stacked_model, testX[100:], testy[100:])
     # make predictions and evaluate
     yhat = predict_stacked_model(stacked_model, testX)
     yhat = argmax(yhat, axis=1)
