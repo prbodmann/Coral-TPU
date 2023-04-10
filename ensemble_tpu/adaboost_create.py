@@ -7,7 +7,8 @@ import tensorflow as tf
 import numpy as np
 from keras.models import model_from_json
 from src.models import AdaBoostClassifier as Ada_CNN
-
+from numpy.core.umath_tests import inner1d
+from copy import deepcopy
 with tf.device('/gpu:0'):
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
