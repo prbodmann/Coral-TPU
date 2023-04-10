@@ -10,6 +10,9 @@ from keras.callbacks import LearningRateScheduler
 import os
 import tensorflow as tf
 from sklearn.preprocessing import OneHotEncoder #LabelBinarizer
+from numpy.core.umath_tests import inner1d
+
+
 cce = keras.losses.CategoricalCrossentropy()
 
 CONV_POOL_CNN_WEIGHT_FILE = os.path.join(os.getcwd(), 'weights', 'conv_pool_cnn_pretrained_weights.hdf5')
