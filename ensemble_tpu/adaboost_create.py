@@ -8,7 +8,7 @@ import numpy as np
 from keras.models import model_from_json
 from src.models import AdaBoostClassifier as Ada_CNN
 
-with tf.device('/cpu:0'):
+with tf.device('/gpu:0'):
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
     CONV_POOL_CNN_WEIGHT_FILE = os.path.join(os.getcwd(), 'weights', 'conv_pool_cnn_pretrained_weights.hdf5')
@@ -38,7 +38,7 @@ with tf.device('/cpu:0'):
         epochs=epochs)
     #######discreat:
 
-    bdt_real_test_CNN.fit(x_train, y_train, batch_size)
+    bdt_real_test_CNN.fit(x_train, y_train, 20)
     test_real_errors_CNN=bdt_real_test_CNN.estimator_errors_[:]
 
 
