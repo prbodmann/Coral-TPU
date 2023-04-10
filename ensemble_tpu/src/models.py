@@ -161,7 +161,7 @@ class AdaBoostClassifier(object):
         algorithm = 'SAMME'
         random_state = None
         #### CNN (5)
-        epochs = 6
+        epochs = 20
 
         if kwargs and not args:
             if 'base_estimator' in kwargs:
