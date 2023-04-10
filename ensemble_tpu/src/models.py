@@ -342,11 +342,11 @@ class AdaBoostClassifier(object):
         # lb=LabelBinarizer()
         # y_b = lb.fit_transform(y)
 
-        lb=OneHotEncoder(sparse=False)
-        y_b=y.reshape(len(y),10)
-        y_b=lb.fit_transform(y_b)
+        #lb=OneHotEncoder(sparse=False)
+        #y_b=y.reshape(len(y),10)
+        #y_b=lb.fit_transform(y_b)
 
-        estimator.fit(X, y_b, sample_weight=sample_weight, epochs = self.epochs, batch_size = self.batch_size)
+        estimator.fit(X, y, sample_weight=sample_weight, epochs = self.epochs, batch_size = self.batch_size)
 ############################################################
         y_pred = estimator.predict(X)
 
