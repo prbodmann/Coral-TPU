@@ -34,8 +34,7 @@ with tf.device('/gpu:0'):
     bdt_real_test_CNN = Ada_CNN(
         base_estimator=conv_pool_cnn_model,
         n_estimators=n_estimators,
-        learning_rate=1,
-        epochs=epochs)
+        learning_rate=1)
     #######discreat:
 
     bdt_real_test_CNN.fit(x_train, y_train, 20)
