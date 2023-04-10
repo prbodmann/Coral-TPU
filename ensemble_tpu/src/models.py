@@ -9,6 +9,7 @@ from keras.preprocessing.image import ImageDataGenerator
 from keras.callbacks import LearningRateScheduler
 import os
 import tensorflow as tf
+from sklearn.preprocessing import OneHotEncoder #LabelBinarizer
 cce = keras.losses.CategoricalCrossentropy()
 
 CONV_POOL_CNN_WEIGHT_FILE = os.path.join(os.getcwd(), 'weights', 'conv_pool_cnn_pretrained_weights.hdf5')
@@ -154,7 +155,7 @@ class AdaBoostClassifier(object):
 
         n_estimators = 50
         learning_rate = 1
-        algorithm = 'SAMME.R'
+        algorithm = 'SAMME'
         random_state = None
         #### CNN (5)
         epochs = 6
