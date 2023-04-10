@@ -283,7 +283,7 @@ class AdaBoostClassifier(object):
         #if estimator_error >= 1.0 - 1 / self.n_classes_:
         #    return None, None, None
 
-        y_predict_proba = estimator.predict_proba(X)
+        y_predict_proba = np.argmax(estimator.predict(X), axis=-1)
 
         # repalce zero
         y_predict_proba[y_predict_proba < np.finfo(y_predict_proba.dtype).eps] = np.finfo(y_predict_proba.dtype).eps
