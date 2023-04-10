@@ -113,4 +113,4 @@ with tf.device('/gpu:0'):
     yhat = argmax(yhat, axis=1)
     acc = accuracy_score(testy, yhat)
     print('Stacked Test Accuracy: %.3f' % acc)
-    tflite_converter(stacked_model,x_train,"stacked_model.tflite")
+    tflite_converter(stacked_model,trainX,"stacked_model.tflite")
