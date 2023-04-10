@@ -218,7 +218,7 @@ class AdaBoostClassifier(object):
         ############for CNN (2):
         yl = np.argmax(y)
         self.classes_ = np.array(y.shape[1])
-
+        print(self.classes_)
         self.n_classes_ = len(self.classes_)
         for iboost in range(self.n_estimators_):
             if iboost == 0:
