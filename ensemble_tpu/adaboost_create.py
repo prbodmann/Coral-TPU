@@ -6,7 +6,7 @@ from src.utils import tflite_converter, load_data, xgb_model, get_feature_layer,
 import tensorflow as tf
 import numpy as np
 from keras.models import model_from_json
-import xgboost as xgb
+from src.models import AdaBoostClassifier as Ada_CNN
 
 with tf.device('/cpu:0'):
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -26,25 +26,34 @@ with tf.device('/cpu:0'):
 
     conv_pool_cnn_model = conv_pool_cnn(model_input)
     conv_pool_cnn_model.load_weights(CONV_POOL_CNN_WEIGHT_FILE)
-    model_json = conv_pool_cnn_model.to_json()
-    with open('model.json', 'w') as json_file:
-        json_file.write(model_json)
-    conv_pool_cnn_model.save_weights('model.h5')
 
-    mean = np.mean(x_train,axis=(0,1,2,3))
-    std = np.std(x_train,axis=(0,1,2,3))
-    X_train = (x_train-mean)/(std+1e-7)
-    X_test = (x_test-mean)/(std+1e-7)
 
-    cnn_model = load_cnn_model(X_test, y_test)
-    print("Loaded CNN model from disk")
 
-    X_train_cnn =  get_feature_layer(cnn_model,X_train)
-    print("Features extracted of training data")
-    X_test_cnn = get_feature_layer(cnn_model,X_test)
-    print("Features extracted of test data\n")
+    n_estimators =10
+    epochs =1
+    bdt_real_test_CNN = Ada_CNN(
+        base_estimator=conv_pool_cnn_model,
+        n_estimators=n_estimators,
+        learning_rate=1,
+        epochs=epochs)
+    #######discreat:
 
-    print("Build and save of CNN-XGBoost Model.")
-    model = xgb_model(X_train_cnn, y_train, X_test_cnn, y_test)
+    bdt_real_test_CNN.fit(X_train_r, y_train, batch_size)
+    test_real_errors_CNN=bdt_real_test_CNN.estimator_errors_[:]
+
+
+    y_pred_CNN = bdt_real_test_CNN.predict(X_train_r)
+    print('\n Training accuracy of bdt_real_test_CNN (AdaBoost+CNN): {}'.format(accuracy_score(bdt_real_test_CNN.predict(X_train_r),y_train)))
+
+    y_pred_CNN = bdt_real_test_CNN.predict(X_test_r)
+    print('\n Testing accuracy of bdt_real_test_CNN (AdaBoost+CNN): {}'.format(accuracy_score(bdt_real_test_CNN.predict(X_test_r),y_test)))
+
+##########################################single CNN:
+
+'''
+Refrence to the original AdaBoost(__author__ = 'Xin'):
+
+Multi-class AdaBoosted Decision Trees:
+http://scikit-learn.org/stable/auto_examples/ensemble/plot_adaboost_multiclass.html
 
 
