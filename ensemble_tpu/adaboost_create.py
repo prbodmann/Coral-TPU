@@ -38,14 +38,14 @@ with tf.device('/cpu:0'):
         epochs=epochs)
     #######discreat:
 
-    bdt_real_test_CNN.fit(X_train_r, y_train, batch_size)
+    bdt_real_test_CNN.fit(x_train, y_train, batch_size)
     test_real_errors_CNN=bdt_real_test_CNN.estimator_errors_[:]
 
 
-    y_pred_CNN = bdt_real_test_CNN.predict(X_train_r)
+    y_pred_CNN = bdt_real_test_CNN.predict(x_train)
     print('\n Training accuracy of bdt_real_test_CNN (AdaBoost+CNN): {}'.format(accuracy_score(bdt_real_test_CNN.predict(X_train_r),y_train)))
 
-    y_pred_CNN = bdt_real_test_CNN.predict(X_test_r)
+    y_pred_CNN = bdt_real_test_CNN.predict(x_test)
     print('\n Testing accuracy of bdt_real_test_CNN (AdaBoost+CNN): {}'.format(accuracy_score(bdt_real_test_CNN.predict(X_test_r),y_test)))
-    tflite_converter(bdt_real_test_CNN,x_test,"adaboosted_model.tflite")
+    tflite_converter(bdt_real_test_CNN,x_train,"adaboosted_model.tflite")
 
