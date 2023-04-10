@@ -92,7 +92,7 @@ def predict_stacked_model(model, inputX):
     X = [inputX for _ in range(len(model.input))]
     # make prediction
     return model.predict(X, verbose=0)
-with tf.device('/cpu:0'):
+with tf.device('/gpu:0'):
     # generate 2d classification dataset
     trainX, testX, trainy, testy = load_data()
     # split into train and test
