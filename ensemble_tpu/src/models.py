@@ -355,6 +355,8 @@ class AdaBoostClassifier(object):
         y_pred_l = np.argmax(y_pred, axis=1)
         incorrect = y_pred_l != y
 #######################################################
+        print(incorrect)
+        print(sample_weight)
         estimator_error = np.dot(incorrect, sample_weight) / np.sum(sample_weight, axis=0)
         print(estimator_error)
         # if worse than random guess, stop boosting
