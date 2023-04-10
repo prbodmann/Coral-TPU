@@ -89,7 +89,7 @@ def fit_stacked_model(model, inputX, inputy):
 # make a prediction with a stacked model
 def predict_stacked_model(model, inputX):
     # prepare input data
-    X = [inputX for _ in range(len(model.input))]
+    X = inputX #[inputX for _ in range(len(model.input))]
     # make prediction
     return model.predict(X, verbose=0)
 with tf.device('/gpu:0'):
@@ -113,3 +113,4 @@ with tf.device('/gpu:0'):
     yhat = argmax(yhat, axis=1)
     acc = accuracy_score(testy, yhat)
     print('Stacked Test Accuracy: %.3f' % acc)
+    tflite_converter(stacked_model,x_train,"stacked_model.tflite")
