@@ -25,7 +25,7 @@ with tf.device('/gpu:0'):
     #print(y_train[0,:].dtype)
     model_input = Input(shape=input_shape)
 
-    conv_pool_cnn_model = conv_pool_cnn(model_input)
+    conv_pool_cnn_model = all_cnn(model_input)
     #conv_pool_cnn_model.load_weights(CONV_POOL_CNN_WEIGHT_FILE)
 
 
