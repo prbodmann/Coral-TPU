@@ -214,7 +214,7 @@ class AdaBoostClassifier(object):
         # So in boost we have to ensure that the predict results have the same classes sort
 
         self.classes_ = y.shape[0]
-
+        print(self.classes_)
         ############for CNN (2):
 #        yl = np.argmax(y)
 #        self.classes_ = np.array(sorted(list(set(yl))))
