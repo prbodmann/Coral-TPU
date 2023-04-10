@@ -353,11 +353,11 @@ class AdaBoostClassifier(object):
         estimator.fit(X, y, sample_weight=sample_weight, epochs = self.epochs, batch_size = self.batch_size)
 ############################################################
         y_pred = estimator.predict(X)
-
+        y_pred=np.argmax(y_pred, axis=1)
         #incorrect = y_pred != y
  ############################################ (4) CNN :
         #y_pred_l = np.argmax(y_pred, axis=1)
-        incorrect = y_pred_l != y
+        incorrect = y_pred != np.argmax(y, axis=1)
 #######################################################
         #print(incorrect)
         #print(sample_weight)
