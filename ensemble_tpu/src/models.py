@@ -213,11 +213,11 @@ class AdaBoostClassifier(object):
         # There is hidden trouble for classes, here the classes will be sorted.
         # So in boost we have to ensure that the predict results have the same classes sort
 
-        self.classes_ = np.zeros(y.shape[1])
-        print(self.classes_)
+        #self.classes_ = np.zeros(y.shape[1])
+        #print(self.classes_)
         ############for CNN (2):
-#        yl = np.argmax(y)
-#        self.classes_ = np.array(sorted(list(set(yl))))
+        yl = np.argmax(y)
+        self.classes_ = np.array(sorted(list(set(yl))))
 
         self.n_classes_ = len(self.classes_)
         for iboost in range(self.n_estimators_):
