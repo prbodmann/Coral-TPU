@@ -56,4 +56,4 @@ Refrence to the original AdaBoost(__author__ = 'Xin'):
 Multi-class AdaBoosted Decision Trees:
 http://scikit-learn.org/stable/auto_examples/ensemble/plot_adaboost_multiclass.html
 
-
+'''
