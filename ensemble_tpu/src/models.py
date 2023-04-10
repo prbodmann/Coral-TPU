@@ -274,8 +274,9 @@ class AdaBoostClassifier(object):
         y_pred = estimator.predict(X)
         ############################################ (4) CNN :
         y_pred_l =y_pred
-        print(y_pred_l)
+        #print(y_pred_l)
         incorrect = y_pred_l != y
+        print(incorrect)
 #########################################################
         estimator_error = np.dot(incorrect, sample_weight) / np.sum(sample_weight, axis=0)
 
