@@ -5,6 +5,8 @@ import tensorflow as tf
 import numpy as np
 from typing import Tuple
 import keras
+from keras.models import model_from_json
+import xgboost as xgb
 
 def evaluate_error(model: training.Model) -> np.float64:
     pred = model.predict(x_test, batch_size = 32)
@@ -54,7 +56,7 @@ def load_cnn_model(X_test, y_test):
 	loaded_model.load_weights("model.h5")
 
 	# evaluate loaded model on test data
-	opt_rms = keras.optimizers.rmsprop(lr=0.001,decay=1e-6)
+	opt_rms = "adam"
 	loaded_model.compile(
 		loss='categorical_crossentropy',
 		optimizer=opt_rms,
@@ -77,7 +79,7 @@ def get_feature_layer(model, data):
 		outputs=model.get_layer(index=fl_index).output)
 
 	feature_layer_output = feature_layer_model.predict(data)
-
+	print(feature_layer_output.shape)
 	return feature_layer_output
 
 def xgb_model(X_train, y_train, X_test, y_test):
@@ -116,3 +118,11 @@ def xgb_model(X_train, y_train, X_test, y_test):
 	pickle.dump(model, open("cnn_xgboost_final.pickle.dat", "wb"))
 
 	return model
+def one_hot_encode(x):
+
+	encoded = np.zeros((len(x), 10))
+
+	for idx, val in enumerate(x):
+		encoded[idx][val] = 1
+
+	return encoded
