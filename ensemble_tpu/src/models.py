@@ -343,7 +343,7 @@ class AdaBoostClassifier(object):
         # y_b = lb.fit_transform(y)
 
         lb=OneHotEncoder(sparse=False)
-        y_b=y.reshape(len(y),1)
+        y_b=y.reshape(len(y),10)
         y_b=lb.fit_transform(y_b)
 
         estimator.fit(X, y_b, sample_weight=sample_weight, epochs = self.epochs, batch_size = self.batch_size)
