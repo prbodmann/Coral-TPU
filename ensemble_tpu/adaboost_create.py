@@ -48,12 +48,4 @@ with tf.device('/cpu:0'):
     y_pred_CNN = bdt_real_test_CNN.predict(X_test_r)
     print('\n Testing accuracy of bdt_real_test_CNN (AdaBoost+CNN): {}'.format(accuracy_score(bdt_real_test_CNN.predict(X_test_r),y_test)))
     tflite_converter(bdt_real_test_CNN,x_test,"adaboosted_model.tflite")
-##########################################single CNN:
 
-'''
-Refrence to the original AdaBoost(__author__ = 'Xin'):
-
-Multi-class AdaBoosted Decision Trees:
-http://scikit-learn.org/stable/auto_examples/ensemble/plot_adaboost_multiclass.html
-
-'''
