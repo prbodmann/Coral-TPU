@@ -241,7 +241,7 @@ class AdaBoostClassifier(object):
 
         y_pred = estimator.predict(X)
         incorrect = y_pred != y
-        estimator_error = np.dot(incorrect, sample_weight) / np.sum(sample_weight, axis=0)
+        estimator_error = np.dot(incorrect, sample_weight) / np.sum(sample_weight, axis=1)
 
         # if worse than random guess, stop boosting
         if estimator_error >= 1.0 - 1 / self.n_classes_:
