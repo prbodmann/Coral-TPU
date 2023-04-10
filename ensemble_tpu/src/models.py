@@ -158,7 +158,7 @@ class AdaBoostClassifier(object):
 
         n_estimators = 50
         learning_rate = 1
-        algorithm = 'SAMME.R'
+        algorithm = 'SAMME'
         random_state = None
         #### CNN (5)
         epochs = 6
