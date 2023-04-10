@@ -155,7 +155,7 @@ class AdaBoostClassifier(object):
 
         n_estimators = 50
         learning_rate = 1
-        algorithm = 'SAMME'
+        algorithm = 'SAMME.R'
         random_state = None
         #### CNN (5)
         epochs = 6
@@ -352,7 +352,7 @@ class AdaBoostClassifier(object):
 
         #incorrect = y_pred != y
  ############################################ (4) CNN :
-        y_pred_l = np.argmax(y_pred, axis=1)
+        #y_pred_l = np.argmax(y_pred, axis=1)
         incorrect = y_pred_l != y
 #######################################################
         print(incorrect)
