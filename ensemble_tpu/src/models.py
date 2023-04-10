@@ -10,10 +10,6 @@ from keras.callbacks import LearningRateScheduler
 import os
 import tensorflow as tf
 from sklearn.preprocessing import OneHotEncoder #LabelBinarizer
-from numpy.core.umath_tests import inner1d
-from copy import deepcopy
-
-
 cce = keras.losses.CategoricalCrossentropy()
 
 CONV_POOL_CNN_WEIGHT_FILE = os.path.join(os.getcwd(), 'weights', 'conv_pool_cnn_pretrained_weights.hdf5')
@@ -151,7 +147,7 @@ class AdaBoostClassifier(object):
                 '''AdaBoostClassifier can only be called with keyword
                    arguments for the following keywords: base_estimator ,n_estimators,
                     learning_rate,algorithm,random_state''')
-        allowed_keys = ['base_estimator', 'n_estimators', 'learning_rate', 'algorithm', 'random_state']
+        allowed_keys = ['base_estimator', 'n_estimators', 'learning_rate', 'algorithm', 'random_state', 'epochs']
         keywords_used = kwargs.keys()
         for keyword in keywords_used:
             if keyword not in allowed_keys:
@@ -161,6 +157,8 @@ class AdaBoostClassifier(object):
         learning_rate = 1
         algorithm = 'SAMME.R'
         random_state = None
+        #### CNN (5)
+        epochs = 6
 
         if kwargs and not args:
             if 'base_estimator' in kwargs:
@@ -171,6 +169,9 @@ class AdaBoostClassifier(object):
             if 'learning_rate' in kwargs: learning_rate = kwargs.pop('learning_rate')
             if 'algorithm' in kwargs: algorithm = kwargs.pop('algorithm')
             if 'random_state' in kwargs: random_state = kwargs.pop('random_state')
+            ### CNN:
+            if 'epochs' in kwargs: epochs = kwargs.pop('epochs')
+
 
         self.base_estimator_ = base_estimator
         self.n_estimators_ = n_estimators
@@ -180,6 +181,8 @@ class AdaBoostClassifier(object):
         self.estimators_ = list()
         self.estimator_weights_ = np.zeros(self.n_estimators_)
         self.estimator_errors_ = np.ones(self.n_estimators_)
+
+        self.epochs= epochs
 
 
     def _samme_proba(self, estimator, n_classes, X):
@@ -200,11 +203,22 @@ class AdaBoostClassifier(object):
                                   * log_proba.sum(axis=1)[:, np.newaxis])
 
 
-    def fit(self, X, y):
+    def fit(self, X, y, batch_size):
+
+        ## CNN:
+        self.batch_size = batch_size
+
+#        self.epochs = epochs
         self.n_samples = X.shape[0]
         # There is hidden trouble for classes, here the classes will be sorted.
         # So in boost we have to ensure that the predict results have the same classes sort
-        self.classes_ = np.zeros(10)
+
+        #self.classes_ = np.zeros(y.shape[1])
+        #print(self.classes_)
+        ############for CNN (2):
+        yl = np.argmax(y)
+        self.classes_ = np.zeros(y.shape[1])
+        print(self.classes_)
         self.n_classes_ = len(self.classes_)
         for iboost in range(self.n_estimators_):
             if iboost == 0:
@@ -232,22 +246,45 @@ class AdaBoostClassifier(object):
         elif self.algorithm_ == 'SAMME.R':
             return self.real_boost(X, y, sample_weight)
 
+
     def real_boost(self, X, y, sample_weight):
-        estimator = deepcopy(self.base_estimator_)
+        #            estimator = deepcopy(self.base_estimator_)
+        ############################################### my code:
+
+        if len(self.estimators_) == 0:
+            #Copy CNN to estimator:
+            estimator = self.deepcopy_CNN(self.base_estimator_)#deepcopy of self.base_estimator_
+        else:
+            #estimator = deepcopy(self.estimators_[-1])
+            estimator = self.deepcopy_CNN(self.estimators_[-1])#deepcopy CNN
+    ###################################################
         if self.random_state_:
-            estimator.set_params(random_state=1)
+                estimator.set_params(random_state=1)
+#        estimator.fit(X, y, sample_weight=sample_weight)
+ #################################### CNN (3) binery label:
+        # lb=LabelBinarizer()
+        # y_b = lb.fit_transform(y)
 
-        estimator.fit(X, y, sample_weight=sample_weight)
+        #lb=OneHotEncoder(sparse=False)
+        #y_b=y.reshape(len(y),1)
+        #y_b=lb.fit_transform(y_b)
 
+        estimator.fit(X, y, sample_weight=sample_weight, epochs = self.epochs, batch_size = self.batch_size)
+############################################################
         y_pred = estimator.predict(X)
-        incorrect = y_pred != y
-        estimator_error = np.dot(incorrect, sample_weight) / np.sum(sample_weight, axis=1)
+        ############################################ (4) CNN :
+        y_pred_l = np.argmax(y_pred, axis=1)
+        print(y_pred_l)
+        incorrect = y_pred_l != y
+#########################################################
+        estimator_error = np.dot(incorrect, sample_weight) / np.sum(sample_weight, axis=0)
 
         # if worse than random guess, stop boosting
         if estimator_error >= 1.0 - 1 / self.n_classes_:
             return None, None, None
 
         y_predict_proba = estimator.predict_proba(X)
+
         # repalce zero
         y_predict_proba[y_predict_proba < np.finfo(y_predict_proba.dtype).eps] = np.finfo(y_predict_proba.dtype).eps
 
@@ -274,25 +311,62 @@ class AdaBoostClassifier(object):
 
         return sample_weight, 1, estimator_error
 
+    def deepcopy_CNN(self, base_estimator0):
+        #Copy CNN (self.base_estimator_) to estimator:
+        config=base_estimator0.get_config()
+        #estimator = Models.model_from_config(config)
+        estimator = Sequential.from_config(config)
+
+
+        weights = base_estimator0.get_weights()
+        estimator.set_weights(weights)
+        estimator.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+
+        return estimator
 
     def discrete_boost(self, X, y, sample_weight):
-        estimator = deepcopy(self.base_estimator_)
+#        estimator = deepcopy(self.base_estimator_)
+         ############################################### my code:
+
+        if len(self.estimators_) == 0:
+            #Copy CNN to estimator:
+            estimator = self.deepcopy_CNN(self.base_estimator_)#deepcopy of self.base_estimator_
+        else:
+            #estimator = deepcopy(self.estimators_[-1])
+            estimator = self.deepcopy_CNN(self.estimators_[-1])#deepcopy CNN
+    ###################################################
+
         if self.random_state_:
             estimator.set_params(random_state=1)
+#        estimator.fit(X, y, sample_weight=sample_weight)
+#################################### CNN (3) binery label:
+        # lb=LabelBinarizer()
+        # y_b = lb.fit_transform(y)
 
-        estimator.fit(X, y, sample_weight=sample_weight)
+        #lb=OneHotEncoder(sparse=False)
+        #y_b=y.reshape(len(y),10)
+        #y_b=lb.fit_transform(y_b)
 
+        estimator.fit(X, y, sample_weight=sample_weight, epochs = self.epochs, batch_size = self.batch_size)
+############################################################
         y_pred = estimator.predict(X)
-        incorrect = y_pred != y
-        estimator_error = np.dot(incorrect, sample_weight) / np.sum(sample_weight, axis=0)
 
+        #incorrect = y_pred != y
+ ############################################ (4) CNN :
+        #y_pred_l = np.argmax(y_pred, axis=1)
+        incorrect = y_pred_l != y
+#######################################################
+        #print(incorrect)
+        #print(sample_weight)
+        estimator_error = np.dot(incorrect, sample_weight) / np.sum(sample_weight, axis=0)
+        print(estimator_error)
         # if worse than random guess, stop boosting
         if estimator_error >= 1 - 1 / self.n_classes_:
             return None, None, None
 
         # update estimator_weight
-#        estimator_weight = self.learning_rate_ * np.log((1. - estimator_error) / estimator_error) + np.log(
-#            self.n_classes_ - 1.)
+#        estimator_weight = self.learning_rate_ * np.log((1 - estimator_error) / estimator_error) + np.log(
+#            self.n_classes_ - 1)
         estimator_weight = self.learning_rate_ * (np.log((1. - estimator_error) / estimator_error) + np.log(self.n_classes_ - 1.))
 
         if estimator_weight <= 0:
@@ -322,10 +396,14 @@ class AdaBoostClassifier(object):
             # The weights are all 1. for SAMME.R
             pred = sum(self._samme_proba(estimator, n_classes, X) for estimator in self.estimators_)
         else:  # self.algorithm == "SAMME"
-            pred = sum((estimator.predict(X) == classes).T * w
+#            pred = sum((estimator.predict(X) == classes).T * w
+#                       for estimator, w in zip(self.estimators_,
+#                                               self.estimator_weights_))
+########################################CNN disc
+            pred = sum((estimator.predict(X).argmax(axis=1) == classes).T * w
                        for estimator, w in zip(self.estimators_,
                                                self.estimator_weights_))
-
+###########################################################
         pred /= self.estimator_weights_.sum()
         if n_classes == 2:
             pred[:, 0] *= -1
