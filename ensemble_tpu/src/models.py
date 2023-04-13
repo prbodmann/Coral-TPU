@@ -119,6 +119,7 @@ def all_nin(models: List [training.Model], model_input: Tensor) -> training.Mode
     model = Model(model_input, y, name='ensemble')
     model.compile(loss=cce, optimizer="adam")
     return model
+
 class AdaBoostClassifier(object):
     '''
     Parameters
@@ -276,9 +277,9 @@ class AdaBoostClassifier(object):
 ############################################################
         y_pred = estimator.predict(X)
         ############################################ (4) CNN :
-        y_pred_l = np.argmax(y_pred, axis=1)
+        y_pred_l = np.argmax(y_pred)
         print(y_pred_l)
-        incorrect = y_pred_l != np.argmax(y, axis=1)
+        incorrect = y_pred_l != np.argmax(y)
 #########################################################
         estimator_error = np.dot(incorrect, sample_weight) / np.sum(sample_weight, axis=0)
 
@@ -286,7 +287,7 @@ class AdaBoostClassifier(object):
         if estimator_error >= 1.0 - 1 / self.n_classes_:
             return None, None, None
 
-        y_predict_proba = estimator.predict(X)
+        y_predict_proba = np.amax(estimator.predict(X))
 
         # repalce zero
         y_predict_proba[y_predict_proba < np.finfo(y_predict_proba.dtype).eps] = np.finfo(y_predict_proba.dtype).eps
@@ -353,11 +354,11 @@ class AdaBoostClassifier(object):
         estimator.fit(X, y, sample_weight=sample_weight, epochs = self.epochs, batch_size = self.batch_size)
 ############################################################
         y_pred = estimator.predict(X)
-        y_pred=np.argmax(y_pred, axis=1)
+        y_pred=np.argmax(y_pred)
         #incorrect = y_pred != y
  ############################################ (4) CNN :
         #y_pred_l = np.argmax(y_pred, axis=1)
-        incorrect = y_pred != np.argmax(y, axis=1)
+        incorrect = y_pred != np.argmax(y)
 #######################################################
         #print(incorrect)
         #print(sample_weight)
