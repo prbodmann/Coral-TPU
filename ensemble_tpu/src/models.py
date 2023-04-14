@@ -279,11 +279,11 @@ class AdaBoostClassifier(object):
         print(y_pred)
         ############################################ (4) CNN :
         y_pred_l = np.argmax(y_pred,axis=1)
-        print(y_pred_l)
+        #print(y_pred_l)
         incorrect = y_pred_l != np.argmax(y)
 #########################################################
         estimator_error = np.dot(incorrect, sample_weight) / np.sum(sample_weight, axis=0)
-        print()
+        #print()
         # if worse than random guess, stop boosting
         if estimator_error >= 1.0 - 1 / self.n_classes_:
             return None, None, None
@@ -301,7 +301,7 @@ class AdaBoostClassifier(object):
 
         y_codes = np.array([-1. / (self.n_classes_ - 1), 1.])
         y_coding = y_codes.take(self.classes_ == y[:, np.newaxis])
-
+        print(y_coding.shape)
         # for sample weight update
         intermediate_variable = (-1. * self.learning_rate_ * (((self.n_classes_ - 1) / self.n_classes_) *
                                                               inner1d(y_coding, np.log(y_predict_proba))))  #dot iterate for each row
@@ -369,7 +369,7 @@ class AdaBoostClassifier(object):
         #print(incorrect)
         #print(sample_weight)
         estimator_error = np.dot(incorrect, sample_weight) / np.sum(sample_weight, axis=0)
-        print(estimator_error)
+        #print(estimator_error)
         #print(len(estimator_error))
         # if worse than random guess, stop boosting
         if estimator_error >= 1 - 1 / self.n_classes_:
