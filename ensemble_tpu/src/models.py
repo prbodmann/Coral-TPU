@@ -292,8 +292,9 @@ class AdaBoostClassifier(object):
 
         # repalce zero
         for idx,i in enumerate(y_predict_proba):
-            if i==0:
-                y_predict_proba=np.finfo(float).eps
+            for jdx,j in enumerate(i):
+                if j==0:
+                    y_predict_proba[i][j]=np.finfo(float).eps
 
         #y_predict_proba[int(y_predict_proba < np.finfo(float).eps)] = np.finfo(float).eps
 
