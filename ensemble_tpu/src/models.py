@@ -276,13 +276,14 @@ class AdaBoostClassifier(object):
         estimator.fit(X, y, sample_weight=sample_weight, epochs = self.epochs, batch_size = self.batch_size)
 ############################################################
         y_pred = estimator.predict(X)
+        print(y_pred)
         ############################################ (4) CNN :
         y_pred_l = np.argmax(y_pred)
         print(y_pred_l)
         incorrect = y_pred_l != np.argmax(y)
 #########################################################
         estimator_error = np.dot(incorrect, sample_weight) / np.sum(sample_weight, axis=0)
-
+        print()
         # if worse than random guess, stop boosting
         if estimator_error >= 1.0 - 1 / self.n_classes_:
             return None, None, None
