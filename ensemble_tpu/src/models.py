@@ -291,7 +291,7 @@ class AdaBoostClassifier(object):
         y_predict_proba = [y_pred[x] for x in y_pred_l]
 
         # repalce zero
-        y_predict_proba[y_predict_proba < np.finfo(y_predict_proba.dtype).eps] = np.finfo(y_predict_proba.dtype).eps
+        y_predict_proba[y_predict_proba < np.finfo(tf.float32).eps] = np.finfo(y_predict_proba.dtype).eps
 
         y_codes = np.array([-1. / (self.n_classes_ - 1), 1.])
         y_coding = y_codes.take(self.classes_ == y[:, np.newaxis])
