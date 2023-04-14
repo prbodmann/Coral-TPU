@@ -43,9 +43,9 @@ with tf.device('/gpu:0'):
 
 
     y_pred_CNN = bdt_real_test_CNN.predict(x_train)
-    print('\n Training accuracy of bdt_real_test_CNN (AdaBoost+CNN): {}'.format(accuracy_score(bdt_real_test_CNN.predict(X_train_r),y_train)))
+    print('\n Training accuracy of bdt_real_test_CNN (AdaBoost+CNN): {}'.format(accuracy_score(bdt_real_test_CNN.predict(x_train),y_train)))
 
     y_pred_CNN = bdt_real_test_CNN.predict(x_test)
-    print('\n Testing accuracy of bdt_real_test_CNN (AdaBoost+CNN): {}'.format(accuracy_score(bdt_real_test_CNN.predict(X_test_r),y_test)))
+    print('\n Testing accuracy of bdt_real_test_CNN (AdaBoost+CNN): {}'.format(accuracy_score(bdt_real_test_CNN.predict(x_test),y_test)))
     tflite_converter(bdt_real_test_CNN,x_train,"adaboosted_model.tflite")
 
