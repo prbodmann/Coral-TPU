@@ -7,7 +7,7 @@ import tensorflow as tf
 import numpy as np
 from keras.models import model_from_json
 from src.models import AdaBoostClassifier as Ada_CNN
-
+from sklearn.metrics import accuracy_score
 
 with tf.device('/gpu:0'):
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
