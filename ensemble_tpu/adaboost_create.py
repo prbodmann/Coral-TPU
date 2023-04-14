@@ -38,7 +38,7 @@ with tf.device('/gpu:0'):
         learning_rate=1)
     #######discreat:
 
-    bdt_real_test_CNN.fit(x_train, y_train, 20)
+    bdt_real_test_CNN.fit(x_train, y_train, 10)
     test_real_errors_CNN=bdt_real_test_CNN.estimator_errors_[:]
 
 
