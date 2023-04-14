@@ -416,7 +416,7 @@ class AdaBoostClassifier(object):
             pred = pred.sum(axis=1)
             return self.classes_.take(pred > 0, axis=0)
 
-        return self.classes_.take(np.argmax(pred, axis=1), axis=0)
+        return self.classes_.take(np.argmax(pred, axis=0), axis=0)
 
 
     def predict_proba(self, X):
