@@ -276,7 +276,7 @@ class AdaBoostClassifier(object):
         estimator.fit(X, y, sample_weight=sample_weight, epochs = self.epochs, batch_size = self.batch_size)
 ############################################################
         y_pred = estimator.predict(X)
-        print(y_pred)
+        print(y_pred.shape)
         ############################################ (4) CNN :
         y_pred_l = np.argmax(y_pred,axis=1)
         #print(y_pred_l)
