@@ -300,7 +300,7 @@ class AdaBoostClassifier(object):
         #y_predict_proba[int(y_predict_proba < np.finfo(float).eps)] = np.finfo(float).eps
 
         y_codes = np.array([-1. / (self.n_classes_ - 1), 1.])
-        y_coding = y_codes.take(self.classes_ == y[:, np.newaxis])
+        y_coding = y_codes.take(self.classes_ == y)
         print(y_coding.shape)
         # for sample weight update
         intermediate_variable = (-1. * self.learning_rate_ * (((self.n_classes_ - 1) / self.n_classes_) *
