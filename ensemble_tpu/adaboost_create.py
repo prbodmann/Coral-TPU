@@ -42,7 +42,7 @@ with tf.device('/gpu:0'):
     test_real_errors_CNN=bdt_real_test_CNN.estimator_errors_[:]
 
 
-    y_pred_CNN = bdt_real_test_CNN.predict(x_train)
+    y_pred_CNN = bdt_real_test_CNN.predict_proba(x_train)
     print(y_train.shape)
     print(y_pred_CNN.shape)
     print('\n Training accuracy of bdt_real_test_CNN (AdaBoost+CNN): {}'.format(accuracy_score(y_pred_CNN,y_train)))
