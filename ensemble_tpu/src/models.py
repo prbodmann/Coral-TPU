@@ -435,7 +435,7 @@ class AdaBoostClassifier(object):
                                                 self.estimator_weights_))
 
         proba /= self.estimator_weights_.sum()
-        proba = np.exp((1. / (n_classes - 1)) * proba)
+        proba = np.exp((1. / (10 - 1)) * proba)
         normalizer = proba.sum(axis=1)[:, np.newaxis]
         normalizer[normalizer == 0.0] = 1.0
         proba /= normalizer
