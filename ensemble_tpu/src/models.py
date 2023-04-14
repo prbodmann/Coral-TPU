@@ -263,7 +263,7 @@ class AdaBoostClassifier(object):
             estimator = self.deepcopy_CNN(self.estimators_[-1])#deepcopy CNN
     ###################################################
         if self.random_state_:
-                estimator.set_params(random_state=1)
+            estimator.set_params(random_state=1)
 #        estimator.fit(X, y, sample_weight=sample_weight)
  #################################### CNN (3) binery label:
         # lb=LabelBinarizer()
@@ -293,6 +293,7 @@ class AdaBoostClassifier(object):
         # repalce zero
         for idx,i in enumerate(y_predict_proba):
             for jdx,j in enumerate(i):
+                print(f"{i} {j}")
                 if j==0:
                     y_predict_proba[idx][jdx]=np.finfo(float).eps
 
@@ -303,8 +304,7 @@ class AdaBoostClassifier(object):
 
         # for sample weight update
         intermediate_variable = (-1. * self.learning_rate_ * (((self.n_classes_ - 1) / self.n_classes_) *
-                                                              inner1d(y_coding, np.log(
-                                                                  y_predict_proba))))  #dot iterate for each row
+                                                              inner1d(y_coding, np.log(y_predict_proba))))  #dot iterate for each row
 
         # update sample weight
         sample_weight *= np.exp(intermediate_variable)
