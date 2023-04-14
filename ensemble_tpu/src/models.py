@@ -278,7 +278,7 @@ class AdaBoostClassifier(object):
         y_pred = estimator.predict(X)
         print(y_pred)
         ############################################ (4) CNN :
-        y_pred_l = np.argmax(y_pred)
+        y_pred_l = np.argmax(y_pred,axis=1)
         print(y_pred_l)
         incorrect = y_pred_l != np.argmax(y)
 #########################################################
