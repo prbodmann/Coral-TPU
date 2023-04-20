@@ -77,15 +77,6 @@ def check_output_against_golden(interpreter, gold):
     return errs_above_thresh, errs_below_thresh
 
 
-def load_data(num_images) -> Tuple [np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    (x_train, y_train), (x_test, y_test) = cifar10.load_data()
-    x_test = x_test / 255.
-    randomRows = numpy.random.randint(len(x_test), size=num_images)
-    temp=[]
-    for i in randomRows:
-        temp.append(x_test[i])
-    return  temp
-
 def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     # Required
