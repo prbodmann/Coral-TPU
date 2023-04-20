@@ -14,7 +14,7 @@ from typing import Tuple, List
 import random
 import numpy
 from PIL import Image as im
-from src.utils import tflite_converter, load_data, xgb_model, get_feature_layer, load_cnn_model,reshape_for_CNN
+
 
 FILE_FULL_PATH = Path(__file__).parent.absolute()
 sys.path.insert(0, f'{FILE_FULL_PATH}/../libLogHelper/build')
@@ -76,6 +76,15 @@ def check_output_against_golden(interpreter, gold):
             
     return errs_above_thresh, errs_below_thresh
 
+
+def load_data(num_images):
+    (x_train, y_train), (x_test, y_test) = cifar10.load_data()
+    x_test = x_test / 255.
+    randomRows = numpy.random.randint(len(x_test), size=num_images)
+    temp=[]
+    for i in randomRows:
+        temp.append(x_test[i])
+    return  temp
 
 def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
