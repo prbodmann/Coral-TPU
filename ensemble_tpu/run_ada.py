@@ -80,10 +80,8 @@ def check_output_against_golden(interpreter, gold):
 def load_data(num_images):
     (x_train, y_train), (x_test, y_test) = cifar10.load_data()
     x_test = x_test / 255.
-    randomRows = numpy.random.randint(len(x_test), size=num_images)
-    temp=[]
-    for i in randomRows:
-        temp.append(x_test[i])
+    temp = random.sample(x_test, num_images)
+
     return  temp
 
 def main():
