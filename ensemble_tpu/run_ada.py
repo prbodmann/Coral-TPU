@@ -109,10 +109,8 @@ def main():
     init_log_file(model_file, input_file, nimages)
 
     boosted_model = Ada_CNN(
-        base_estimator=conv_pool_cnn_model,
-        n_estimators=n_estimators,
-        learning_rate=1,
-        epochs=epochs)
+        base_estimator=None,
+        n_estimators=3)
     boosted_model.load_tflite_model(model_name)
     images=[]
     golden=[]
