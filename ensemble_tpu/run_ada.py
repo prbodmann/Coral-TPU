@@ -19,7 +19,7 @@ from PIL import Image as im
 FILE_FULL_PATH = Path(__file__).parent.absolute()
 sys.path.insert(0, f'{FILE_FULL_PATH}/../libLogHelper/build')
 sys.path.append(f'{FILE_FULL_PATH}/../neural-networks')
-from src.utils import common, classification
+from src.utils import classification
 from src.utils.logger import Logger
 import log_helper as lh
 Logger.setLevel(Logger.Level.TIMING)
@@ -34,9 +34,6 @@ def log_exception_and_exit(err_msg):
     lh.end_log_file()
     raise Exception(err_msg)
 
-def save_output_to_file(scores, filename):
-    data = { 'scores': scores }
-    common.save_tensors_to_file(data, filename)
 
 # Main functions
 
@@ -51,32 +48,6 @@ def init_log_file(model_file, input_file, nimages):
     lh.set_iter_interval_print(1)
 
     # Logger.info(f"Log file is `{lh.get_log_file_name()}`")
-
-
-
-
-def set_interpreter_intput(interpreter, resized_image):
-    t0 = time.perf_counter()
-
-    common.set_input(interpreter, resized_image)
-
-    t1 = time.perf_counter()
-
-    #Logger.info("Interpreter input set successfully")
-    #Logger.timing("Set interpreter input", t1 - t0)
-
-def perform_inference(interpreter):
-    t0 = time.perf_counter()
-
-    lh.start_iteration()
-    interpreter.invoke()
-    lh.end_iteration()
-
-    t1 = time.perf_counter()
-
-    #Logger.info("Inference performed successfully")
-    #Logger.timing("Perform inference", t1 - t0)
-
 
 def check_output_against_golden(interpreter, gold):
     t0 = time.perf_counter()
