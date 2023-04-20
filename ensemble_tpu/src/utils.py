@@ -145,16 +145,10 @@ def create_interpreter(model_file, cpu=False, device=":0"):
     else:
         from pycoral.utils.edgetpu import make_interpreter
         interpreter = make_interpreter(model_file, device=device)
-
-    return interpreter
-
-def create_interpreter(model_file):
-
-
-    interpreter = create_interpreter(model_file)
     interpreter.allocate_tensors()
-
     return interpreter
+
+
 def output_tensor(interpreter, i):
     """Gets a model's ith output tensor.
     Args:
