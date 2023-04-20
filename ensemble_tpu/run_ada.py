@@ -111,7 +111,7 @@ def main():
     boosted_model = Ada_CNN(
         base_estimator=None,
         n_estimators=3)
-    boosted_model.load_tflite_model(model_name)
+    boosted_model.load_tflite_model(model_file)
     images=[]
     golden=[]
     if save_golden:
