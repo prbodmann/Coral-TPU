@@ -19,7 +19,7 @@ from PIL import Image as im
 FILE_FULL_PATH = Path(__file__).parent.absolute()
 sys.path.insert(0, f'{FILE_FULL_PATH}/../libLogHelper/build')
 from src import classification
-from src.utils.logger import Logger
+from src.logger import Logger
 import log_helper as lh
 Logger.setLevel(Logger.Level.TIMING)
 MAX_ERR_PER_IT = 500
