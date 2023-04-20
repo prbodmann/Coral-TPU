@@ -18,8 +18,7 @@ from PIL import Image as im
 
 FILE_FULL_PATH = Path(__file__).parent.absolute()
 sys.path.insert(0, f'{FILE_FULL_PATH}/../libLogHelper/build')
-sys.path.append(f'{FILE_FULL_PATH}/../neural-networks')
-from src.utils import classification
+from src import classification
 from src.utils.logger import Logger
 import log_helper as lh
 Logger.setLevel(Logger.Level.TIMING)
