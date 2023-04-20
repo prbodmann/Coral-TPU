@@ -2,7 +2,7 @@ import os
 import sys
 from keras import Input, Model
 from src.models import conv_pool_cnn, all_cnn, nin_cnn, ensemble
-from src.utils import tflite_converter, load_data, xgb_model, get_feature_layer, load_cnn_model
+from src.utils import tflite_converter, load_data, xgb_model, get_feature_layer, load_cnn_model,reshape_for_CNN
 import tensorflow as tf
 import numpy as np
 from keras.models import model_from_json
@@ -27,27 +27,32 @@ with tf.device('/gpu:0'):
 
     conv_pool_cnn_model = all_cnn(model_input)
     #conv_pool_cnn_model.load_weights(CONV_POOL_CNN_WEIGHT_FILE)
+    X_train_r = reshape_for_CNN(x_train)
+    X_test_r = reshape_for_CNN(x_test)
 
 
-
-    n_estimators =10
-    epochs =1
+    n_estimators =3
+    epochs=20
+    batch_size=10
     bdt_real_test_CNN = Ada_CNN(
         base_estimator=conv_pool_cnn_model,
         n_estimators=n_estimators,
-        learning_rate=1)
+        learning_rate=1,
+        epochs=epochs)
     #######discreat:
-
-    bdt_real_test_CNN.fit(x_train, y_train, 100)
+    print("fit")
+    bdt_real_test_CNN.fit(X_train_r, y_train, batch_size)
     test_real_errors_CNN=bdt_real_test_CNN.estimator_errors_[:]
 
 
     y_pred_CNN = bdt_real_test_CNN.predict_proba(x_train)
     print(y_train.shape)
     print(y_pred_CNN.shape)
-    print('\n Training accuracy of bdt_real_test_CNN (AdaBoost+CNN): {}'.format(accuracy_score(y_pred_CNN,y_train)))
+    print('\n Training accuracy of bdt_real_test_CNN (AdaBoost+CNN): {}'.format(accuracy_score(np.argmax(y_pred_CNN,axis=1),np.argmax(y_train,axis=1))))
 
-    y_pred_CNN = bdt_real_test_CNN.predict(x_test)
-    print('\n Testing accuracy of bdt_real_test_CNN (AdaBoost+CNN): {}'.format(accuracy_score(y_pred_CNN,y_test)))
-    tflite_converter(bdt_real_test_CNN,x_train,"adaboosted_model.tflite")
-
+    #y_pred_CNN = bdt_real_test_CNN.predict(x_test)
+    #print('\n Testing accuracy of bdt_real_test_CNN (AdaBoost+CNN): {}'.format(accuracy_score(y_pred_CNN,y_test)))
+    #tflite_converter(bdt_real_test_CNN,x_train,"adaboosted_model.tflite")
+    bdt_real_test_CNN.convert_tflite(x_train,"conv_pool")
+    #bdt_real_test_CNN.load_tflite_model("conv_pool")
+    #y_pred_CNN = bdt_real_test_CNN.predict_proba_tpu(x_test)

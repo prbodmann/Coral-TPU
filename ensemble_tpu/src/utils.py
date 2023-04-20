@@ -7,6 +7,16 @@ from typing import Tuple
 import keras
 from keras.models import model_from_json
 import xgboost as xgb
+import numpy
+def reshape_for_CNN(X):
+       ###########reshape input mak it to be compatibel to CNN
+       newshape=X.shape
+       newshape = list(newshape)
+       newshape.append(1)
+       newshape = tuple(newshape)
+       X_r = numpy.reshape(X, newshape)#reshat the trainig data to (2300, 10, 1) for CNN
+
+       return X_r
 
 def evaluate_error(model: training.Model) -> np.float64:
     pred = model.predict(x_test, batch_size = 32)
@@ -127,3 +137,99 @@ def one_hot_encode(x):
 		encoded[idx][val] = 1
 
 	return encoded
+
+def create_interpreter(model_file, cpu=False, device=":0"):
+    if cpu:
+        from tensorflow import lite as tflite
+        interpreter = tflite.Interpreter(model_file)
+    else:
+        from pycoral.utils.edgetpu import make_interpreter
+        interpreter = make_interpreter(model_file, device=device)
+
+    return interpreter
+
+def create_interpreter(model_file):
+
+
+    interpreter = create_interpreter(model_file)
+    interpreter.allocate_tensors()
+
+    return interpreter
+def output_tensor(interpreter, i):
+    """Gets a model's ith output tensor.
+    Args:
+      interpreter: The ``tf.lite.Interpreter`` holding the model.
+      i (int): The index position of an output tensor.
+    Returns:
+      The output tensor at the specified position.
+    """
+    return interpreter.tensor(interpreter.get_output_details()[i]['index'])()
+
+def input_details(interpreter, key):
+    """Gets a model's input details by specified key.
+    Args:
+      interpreter: The ``tf.lite.Interpreter`` holding the model.
+      key (int): The index position of an input tensor.
+    Returns:
+      The input details.
+    """
+    return interpreter.get_input_details()[0][key]
+
+def input_size(interpreter):
+    """Gets a model's input size as (width, height) tuple.
+    Args:
+      interpreter: The ``tf.lite.Interpreter`` holding the model.
+    Returns:
+      The input tensor size as (width, height) tuple.
+    """
+    _, height, width, _ = input_details(interpreter, 'shape')
+    return width, height
+
+def input_tensor(interpreter):
+    """Gets a model's input tensor view as numpy array of shape (height, width, 3).
+    Args:
+      interpreter: The ``tf.lite.Interpreter`` holding the model.
+    Returns:
+      The input tensor view as :obj:`numpy.array` (height, width, 3).
+    """
+    tensor_index = input_details(interpreter, 'index')
+    return interpreter.tensor(tensor_index)()[0]
+
+def set_input(interpreter, data):
+    """Copies data to a model's input tensor.
+    Args:
+      interpreter: The ``tf.lite.Interpreter`` to update.
+      data: The input tensor.
+    """
+    input_tensor(interpreter)[:, :] = data
+
+def set_resized_input(interpreter, resized_image):
+    tensor = input_tensor(interpreter)
+    tensor.fill(0)  # padding
+    _, _, channel = tensor.shape
+    w, h = resized_image.size
+    tensor[:h, :w] = np.reshape(resized_image, (h, w, channel))
+
+def resize_input(image, interpreter):
+    width, height = input_size(interpreter)
+    w, h = image.size
+    scale = min(width / w, height / h)
+    w, h = int(w * scale), int(h * scale)
+    resized = image.resize((w, h), Image.ANTIALIAS)
+    return resized, (scale, scale)
+def get_scores(interpreter):
+    """Gets the output (all scores) from a classification model, dequantizing it if necessary.
+    Args:
+        interpreter: The ``tf.lite.Interpreter`` to query for output.
+    Returns:
+        The output tensor (flattened and dequantized) as :obj:`numpy.array`.
+    """
+    output_details = interpreter.get_output_details()[0]
+    output_data = interpreter.tensor(output_details['index'])().flatten()
+
+    if np.issubdtype(output_details['dtype'], np.integer):
+        scale, zero_point = output_details['quantization']
+        # Always convert to np.int64 to avoid overflow on subtraction.
+        return scale * (output_data.astype(np.int64) - zero_point)
+
+    return output_data

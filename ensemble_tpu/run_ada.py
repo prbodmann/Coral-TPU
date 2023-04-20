@@ -1,3 +1,4 @@
+from src.models import AdaBoostClassifier as Ada_CNN
 #!/usr/bin/env python3
 
 import sys
@@ -51,18 +52,6 @@ def init_log_file(model_file, input_file, nimages):
 
     # Logger.info(f"Log file is `{lh.get_log_file_name()}`")
 
-def create_interpreter(model_file):
-    t0 = time.perf_counter()
-
-    interpreter = common.create_interpreter(model_file)
-    interpreter.allocate_tensors()
-
-    t1 = time.perf_counter()
-
-    Logger.info("Interpreter created successfully")
-    Logger.timing("Create interpreter", t1 - t0)
-
-    return interpreter
 
 
 
@@ -149,7 +138,12 @@ def main():
     
     init_log_file(model_file, input_file, nimages)
 
-    interpreter = create_interpreter(model_file)
+    boosted_model = Ada_CNN(
+        base_estimator=conv_pool_cnn_model,
+        n_estimators=n_estimators,
+        learning_rate=1,
+        epochs=epochs)
+    boosted_model.load_tflite_model(model_name)
     images=[]
     golden=[]
     if save_golden:
@@ -175,14 +169,14 @@ def main():
             # saving the final output
             # as a PNG file
             #data.save(f'image_{index}.png')
-            set_interpreter_intput(interpreter, img)
-
-            perform_inference(interpreter)
+            lh.start_iteration()
+            results=boosted_model.predict_proba_tpu(img)
+            lh.end_iteration()
 
             if save_golden:
-                golden.append(classification.get_scores(interpreter))
+                golden.append(results)
             else:
-                errs_abv_thresh, errs_blw_thresh = check_output_against_golden(interpreter, golden[index])
+                errs_abv_thresh, errs_blw_thresh = check_output_against_golden(results, golden[index])
                 errs_count = errs_abv_thresh + errs_blw_thresh
                 info_count = 0
                 if errs_count > 0:
