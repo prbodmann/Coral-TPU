@@ -481,7 +481,7 @@ class AdaBoostClassifier(object):
             tflite_converter(i,x,f"{model_name}_{idx}.tflite")
 
     def load_tflite_model(self,model_name):
-        for i in range(num_estimators):
+        for i in range(self.n_estimators_):
             self.tpu_estimators_.append(create_interpreter(model_file))
 
 
