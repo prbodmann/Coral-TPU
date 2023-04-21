@@ -463,7 +463,7 @@ class AdaBoostClassifier(object):
     def predict_proba_tpu(self, X):
         if self.algorithm_ == 'SAMME.R':
             # The weights are all 1. for SAMME.R
-            proba = sum(self._samme_proba_tpu(estimator, self.n_classes_, X)
+            proba = sum(self._samme_proba_tpu(self.n_classes_, X)
                         for estimator in self.tpu_estimators_)
         else:  # self.algorithm == "SAMME"
             raise NotImplementedError
