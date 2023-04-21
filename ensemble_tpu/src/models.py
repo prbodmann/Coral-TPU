@@ -187,7 +187,7 @@ class AdaBoostClassifier(object):
         self.tpu_estimators_ = list()
         self.estimator_weights_ = np.zeros(self.n_estimators_)
         self.estimator_errors_ = np.ones(self.n_estimators_)
-
+        self.n_classes_=10
         self.epochs= epochs
 
 
