@@ -448,7 +448,7 @@ class AdaBoostClassifier(object):
         proba=[]
         for img in X:
             for estimator in self.tpu_estimators_:
-                set_interpreter_intput(estimator, img)
+                set_interpreter_input(estimator, img)
                 perform_inference(estimator)
                 proba.append(get_scores(estimator))
 
