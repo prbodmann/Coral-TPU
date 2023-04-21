@@ -227,3 +227,12 @@ def get_scores(interpreter):
         return scale * (output_data.astype(np.int64) - zero_point)
 
     return output_data
+def set_interpreter_input(interpreter, resized_image):
+    t0 = time.perf_counter()
+
+    common.set_input(interpreter, resized_image)
+
+    t1 = time.perf_counter()
+
+    #Logger.info("Interpreter input set successfully")
+    #Logger.timing("Set interpreter input", t1 - t0)

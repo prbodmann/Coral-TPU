@@ -11,7 +11,7 @@ import os
 import tensorflow as tf
 from sklearn.preprocessing import OneHotEncoder #LabelBinarizer
 from numpy.core.umath_tests import inner1d
-from src.utils import tflite_converter, create_interpreter, get_scores
+from src.utils import tflite_converter, create_interpreter, get_scores, set_interpreter_input
 
 
 cce = keras.losses.CategoricalCrossentropy()
@@ -479,9 +479,14 @@ class AdaBoostClassifier(object):
 
         for idx,i in enumerate(self.estimators_):
             tflite_converter(i,x,f"{model_name}_{idx}.tflite")
+        with open(f"{model_name}_weights.npy",'wb') as fd:
+            pickle.dump(self.estimator_weights_,fd)
+        
 
     def load_tflite_model(self,model_name):
         for i in range(self.n_estimators_):
             self.tpu_estimators_.append(create_interpreter(model_name+"_"+str(i)+"_edgetpu.tflite"))
+         with open(f"{model_name}_weights.npy",'rb') as fd:
+            self.estimator_weights_=pickle.load(fd)
 
 
