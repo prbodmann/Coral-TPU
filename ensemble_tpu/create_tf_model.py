@@ -51,7 +51,13 @@ except NameError:
 #tflite_converter(nin_cnn_model,x_train,"model3.tflite")
 
 
+
 models = [conv_pool_cnn_model, all_cnn_model, nin_cnn_model]
+
+tflite_converter(conv_pool_cnn_model,x_train,"conv_pool.tflite")
+tflite_converter(all_cnn_model,x_train,"all_cnn.tflite")
+tflite_converter(nin_cnn_model,x_train,"nin_cnn.tflite")
+
 ensemble_model = ensemble(models, model_input)
 tflite_converter(ensemble_model,x_train,"ensemble.tflite")
 
