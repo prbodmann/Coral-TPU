@@ -80,9 +80,9 @@ def check_output_against_golden(interpreter, gold):
 def load_data(num_images):
     (x_train, y_train), (x_test, y_test) = cifar10.load_data()
     x_test = x_test / 255.
-    temp = random.sample(x_test, num_images)
+    
 
-    return  temp
+    return x_test[np.random.choice(x_test.shape[0], 2, replace=False), :]
 
 def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
