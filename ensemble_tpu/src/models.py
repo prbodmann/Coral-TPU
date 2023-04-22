@@ -462,7 +462,7 @@ class AdaBoostClassifier(object):
             #proba[proba < np.finfo(float).eps] = np.finfo(float).eps
             log_proba = np.log(proba)
             result.append((n_classes - 1) * (log_proba - (1. / n_classes)
-                                    * log_proba.sum(axis=1)[:, np.newaxis]))
+                                    * log_proba.sum(axis=0)[:, np.newaxis]))
         #print(log_proba.shape)
         return result
 
