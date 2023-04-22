@@ -286,7 +286,7 @@ class AdaBoostClassifier(object):
         incorrect = y_pred_l !=  np.argmax(y, axis=1)
 #########################################################
         estimator_error = np.dot(incorrect, sample_weight) / np.sum(sample_weight, axis=0)
-        print(estimator_error.shape)
+        #print(estimator_error.shape)
         # if worse than random guess, stop boosting
         if estimator_error >= 1.0 - 1 / self.n_classes_:
             return None, None, None
@@ -297,9 +297,9 @@ class AdaBoostClassifier(object):
         y_predict_proba[y_predict_proba < np.finfo(y_predict_proba.dtype).eps] = np.finfo(y_predict_proba.dtype).eps
 
         y_codes = np.array([-1. / (self.n_classes_ - 1), 1.])
-        print(y_codes)
+        #print(y_codes)
         y_coding = y_codes.take(self.classes_ == y)
-        print(y_coding.shape)
+        #print(y_coding.shape)
         # for sample weight update
         intermediate_variable = (-1. * self.learning_rate_ * (((self.n_classes_ - 1) / self.n_classes_) *
                                                               inner1d(y_coding, np.log(

@@ -141,7 +141,7 @@ def main():
             # saving the final output
             # as a PNG file
             #data.save(f'image_{index}.png')
-        print(images.shape)
+        #print(images.shape)
         lh.start_iteration()
         results=boosted_model.predict_proba_tpu(images)
         lh.end_iteration()
