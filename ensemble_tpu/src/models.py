@@ -464,8 +464,8 @@ class AdaBoostClassifier(object):
         #proba[proba < np.finfo(float).eps] = np.finfo(float).eps
         log_proba = np.log(proba)
         #print(log_proba.shape)
-        return result.append((n_classes - 1) * (log_proba - (1. / n_classes)
-                                * log_proba.sum(axis=1)[:, np.newaxis]))
+        return (n_classes - 1) * (log_proba - (1. / n_classes)
+                                * log_proba.sum(axis=1)[:, np.newaxis])
 
     def predict_proba_tpu(self, X):
         print(X.shape)
