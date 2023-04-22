@@ -471,8 +471,8 @@ class AdaBoostClassifier(object):
         print(X.shape)
         if self.algorithm_ == 'SAMME.R':
             # The weights are all 1. for SAMME.R
-            proba = [self._samme_proba_tpu(estimator,self.n_classes_, X)
-                        for estimator in self.tpu_estimators_]
+            proba = sum([self._samme_proba_tpu(estimator,self.n_classes_, X)
+                        for estimator in self.tpu_estimators_])
         else:  # self.algorithm == "SAMME"
             raise NotImplementedError
 
