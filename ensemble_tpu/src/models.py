@@ -467,16 +467,16 @@ class AdaBoostClassifier(object):
                                 * log_proba.sum(axis=1)[:, np.newaxis])
 
     def predict_proba_tpu(self, X):
+           print(X.shape)
         if self.algorithm_ == 'SAMME.R':
             # The weights are all 1. for SAMME.R
             proba = [self._samme_proba_tpu(estimator,self.n_classes_, X)
                         for estimator in self.tpu_estimators_]
-            print(proba.shape)
         else:  # self.algorithm == "SAMME"
             raise NotImplementedError
 
         proba /= self.estimator_weights_.sum()
-        print(proba)
+        #print(proba)
         #print(self.estimator_weights_)
         proba = np.exp((1. / (self.n_classes_ - 1)) * proba)
         normalizer = proba.sum(axis=0)[:, np.newaxis]
