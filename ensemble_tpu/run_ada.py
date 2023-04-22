@@ -53,10 +53,11 @@ def check_output_against_golden(out_, gold_):
     #out = classification.get_scores(interpreter)
     print(out.shape)
     #print(gold)
-    diff = out != gold
+    
     errs_above_thresh=0
     errs_below_thresh=0
     for i,out,gold in enumerate(zip(out_,gold_)):
+        diff = out != gold
         errs_above_thresh += np.count_nonzero(diff & (gold >= CLASSIFICATION_THRESHOLD))
         errs_below_thresh += np.count_nonzero(diff & (gold < CLASSIFICATION_THRESHOLD))
         g_classes = np.count_nonzero(gold >= CLASSIFICATION_THRESHOLD)
