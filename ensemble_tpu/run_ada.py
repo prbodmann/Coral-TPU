@@ -82,7 +82,7 @@ def load_data(num_images):
     x_test = x_test / 255.
     
 
-    return x_test[np.random.choice(x_test.shape[0], 2, replace=False), :]
+    return x_test[np.random.choice(x_test.shape[0], num_images, replace=False), :]
 
 def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
