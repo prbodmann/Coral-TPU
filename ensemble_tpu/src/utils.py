@@ -8,6 +8,8 @@ import keras
 from keras.models import model_from_json
 import xgboost as xgb
 import numpy
+import time
+
 def reshape_for_CNN(X):
        ###########reshape input mak it to be compatibel to CNN
        newshape=X.shape
