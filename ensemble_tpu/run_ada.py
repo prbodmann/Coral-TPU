@@ -154,7 +154,7 @@ def main():
             info_count = 0
             if errs_count > 0:
                 Logger.info(f"SDC: {errs_count} error(s) (above thresh: {errs_abv_thresh}, below thresh: {errs_blw_thresh})")
-                if errs_abv_thresh > 0:)
+                if errs_abv_thresh > 0:
                     info_count += 1
 
             lh.log_info_count(int(info_count))
