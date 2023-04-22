@@ -154,11 +154,7 @@ def main():
             info_count = 0
             if errs_count > 0:
                 Logger.info(f"SDC: {errs_count} error(s) (above thresh: {errs_abv_thresh}, below thresh: {errs_blw_thresh})")
-
-                if errs_abv_thresh > 0:
-                    sdc_file = save_sdc_output(interpreter, model_file, image_file)
-                    Logger.info(f"SDC output saved to file `{sdc_file}`")
-                    lh.log_info_detail(f"SDC output saved to file `{sdc_file}`")
+                if errs_abv_thresh > 0:)
                     info_count += 1
 
             lh.log_info_count(int(info_count))
