@@ -446,7 +446,7 @@ class AdaBoostClassifier(object):
         .. [1] J. Zhu, H. Zou, S. Rosset, T. Hastie, "Multi-class AdaBoost", 2009.
         """
         #proba=[]
-        result=[]
+        proba=[]
         for img in X:            
             set_interpreter_input(estimator, img)
             estimator.invoke()
