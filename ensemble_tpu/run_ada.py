@@ -48,9 +48,9 @@ def init_log_file(model_file, input_file, nimages):
 
     # Logger.info(f"Log file is `{lh.get_log_file_name()}`")
 
-def check_output_against_golden(interpreter, gold):
+def check_output_against_golden(out, gold):
     t0 = time.perf_counter()
-    out = classification.get_scores(interpreter)
+    #out = classification.get_scores(interpreter)
     #print(out)
     #print(gold)
     diff = out != gold
