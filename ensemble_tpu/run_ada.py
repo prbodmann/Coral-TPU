@@ -48,31 +48,33 @@ def init_log_file(model_file, input_file, nimages):
 
     # Logger.info(f"Log file is `{lh.get_log_file_name()}`")
 
-def check_output_against_golden(out, gold):
+def check_output_against_golden(out_, gold_):
     t0 = time.perf_counter()
     #out = classification.get_scores(interpreter)
     print(out.shape)
     #print(gold)
     diff = out != gold
-    
-    errs_above_thresh = np.count_nonzero(diff & (gold >= CLASSIFICATION_THRESHOLD))
-    errs_below_thresh = np.count_nonzero(diff & (gold < CLASSIFICATION_THRESHOLD))
-    g_classes = np.count_nonzero(gold >= CLASSIFICATION_THRESHOLD)
-    o_classes = np.count_nonzero(out >= CLASSIFICATION_THRESHOLD)
+    errs_above_thresh=0
+    errs_below_thresh=0
+    for i,out,gold in enumerate(zip(out_,gold_)):
+        errs_above_thresh += np.count_nonzero(diff & (gold >= CLASSIFICATION_THRESHOLD))
+        errs_below_thresh += np.count_nonzero(diff & (gold < CLASSIFICATION_THRESHOLD))
+        g_classes = np.count_nonzero(gold >= CLASSIFICATION_THRESHOLD)
+        o_classes = np.count_nonzero(out >= CLASSIFICATION_THRESHOLD)
 
-    if g_classes != o_classes:    
-        lh.log_error_detail(f"Wrong amount of classes (e: {g_classes}, r: {o_classes})")
-    if errs_above_thresh > 0:
-        lh.log_error_detail(f"Errors above thresh: {errs_above_thresh}")
-    if errs_below_thresh > 0:
-        lh.log_error_detail(f"Errors below thresh: {errs_below_thresh}")
+        if g_classes != o_classes:    
+            lh.log_error_detail(f"Wrong amount of classes for image {i} (e: {g_classes}, r: {o_classes})")
+        if errs_above_thresh > 0:
+            lh.log_error_detail(f"Errors above thresh for image {i}: {errs_above_thresh}")
+        if errs_below_thresh > 0:
+            lh.log_error_detail(f"Errors below thresh for image {i}: {errs_below_thresh}")
 
-    t1 = time.perf_counter()
+        t1 = time.perf_counter()
 
-    total_errs = errs_above_thresh + errs_below_thresh
-    if total_errs > 0:
-        Logger.info(f"Output doesn't match golden")
-    #Logger.timing("Check output", t1 - t0)
+        total_errs = errs_above_thresh + errs_below_thresh
+        if total_errs > 0:
+            Logger.info(f"Output doesn't match golden")
+        #Logger.timing("Check output", t1 - t0)
             
     return errs_above_thresh, errs_below_thresh
 
