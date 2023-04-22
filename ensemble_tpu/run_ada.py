@@ -147,7 +147,9 @@ def main():
         lh.end_iteration()
 
         if save_golden:
-            golden.append(results)
+            with open(golden_file,'wb') as golden_fd:
+                pickle.dump(results,golden_fd)
+            break
         else:
             errs_abv_thresh, errs_blw_thresh = check_output_against_golden(results, golden)
             errs_count = errs_abv_thresh + errs_blw_thresh
@@ -162,11 +164,6 @@ def main():
         t1 = time.perf_counter()
 
         Logger.timing("Iteration duration:", t1 - t0)
-        if save_golden:
-
-            with open(golden_file,'wb') as golden_fd:
-                pickle.dump(golden,golden_fd)
-            break
     
     if not save_golden:
         lh.end_log_file()
