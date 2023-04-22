@@ -485,7 +485,7 @@ class AdaBoostClassifier(object):
 
     def load_tflite_model(self,model_name):
         for i in range(self.n_estimators_):
-            self.tpu_estimators_.append(create_interpreter(model_name+"_"+str(i)+"_edgetpu.tflite"))
+            self.tpu_estimators_.append(create_interpreter(f"{model_name}_{i}_edgetpu.tflite"))
         with open(f"{model_name}_weights.npy",'rb') as fd:
             self.estimator_weights_=pickle.load(fd)
 
