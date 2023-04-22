@@ -456,8 +456,7 @@ class AdaBoostClassifier(object):
         # negative sample weights.
         for idx,i in enumerate(proba):
                 #print(i)
-                for jdx, j in enumerate(i):
-                    print(j)
+                for jdx, j in enumerate(i):                    
                     if j < np.finfo(float).eps:
                         proba[idx][jdx]=np.finfo(float).eps
         #proba[proba < np.finfo(tf.float32).eps] = np.finfo(tf.float32).eps
@@ -474,8 +473,11 @@ class AdaBoostClassifier(object):
             raise NotImplementedError
 
         proba /= self.estimator_weights_.sum()
-        proba = np.exp((1. / (10 - 1)) * proba)
+        print(proba.shape)
+        
+        proba = np.exp((1. / (self.n_classes_ - 1)) * proba)
         normalizer = proba.sum(axis=0)[:, np.newaxis]
+        print(normalizer.shape)
         normalizer[normalizer == 0.0] = 1.0
         proba /= normalizer
 
