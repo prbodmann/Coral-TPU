@@ -439,23 +439,21 @@ class AdaBoostClassifier(object):
 
         return proba
     
-    def _samme_proba_tpu(self, n_classes, X):
+    def _samme_proba_tpu(self,estimator, n_classes, X):
         """Calculate algorithm 4, step 2, equation c) of Zhu et al [1].
         References
         ----------
         .. [1] J. Zhu, H. Zou, S. Rosset, T. Hastie, "Multi-class AdaBoost", 2009.
         """
-        temp=[]
-        for img in X:
-            for estimator in self.tpu_estimators_:
-                set_interpreter_input(estimator, img)
-                estimator.invoke()
-                temp.append(get_scores(estimator))
+        proba=[]
+        for img in X:            
+            set_interpreter_input(estimator, img)
+            estimator.invoke()
+            proba.append(get_scores(estimator))
 
         # Displace zero probabilities so the log is defined.
         # Also fix negative elements which may occur with
         # negative sample weights.
-        proba=sum(temp)
         proba[proba < np.finfo(tf.float32).eps] = np.finfo(tf.float32).eps
         log_proba = np.log(proba)
 
@@ -464,7 +462,7 @@ class AdaBoostClassifier(object):
     def predict_proba_tpu(self, X):
         if self.algorithm_ == 'SAMME.R':
             # The weights are all 1. for SAMME.R
-            proba = sum(self._samme_proba_tpu(self.n_classes_, X)
+            proba = sum(self._samme_proba_tpu(estimator,self.n_classes_, X)
                         for estimator in self.tpu_estimators_)
         else:  # self.algorithm == "SAMME"
             raise NotImplementedError
