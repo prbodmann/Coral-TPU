@@ -457,6 +457,7 @@ class AdaBoostClassifier(object):
         for idx,i in enumerate(proba):
                 #print(i)
                 for jdx, j in enumerate(i):
+                    print(j)
                     if j < np.finfo(tf.float32).eps:
                         proba[idx][jdx]=np.finfo(tf.float32).eps
         #proba[proba < np.finfo(tf.float32).eps] = np.finfo(tf.float32).eps
