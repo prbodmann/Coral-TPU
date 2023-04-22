@@ -455,7 +455,7 @@ class AdaBoostClassifier(object):
         # Displace zero probabilities so the log is defined.
         # Also fix negative elements which may occur with
         # negative sample weights.
-        proba[proba < np.finfo(proba.dtype).eps] = np.finfo(proba.dtype).eps
+        proba[proba < np.finfo(tf.float32.dtype).eps] = np.finfo(tf.float32.dtype).eps
         log_proba = np.log(proba)
 
         return (n_classes - 1) * (log_proba - (1. / n_classes)
