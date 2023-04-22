@@ -127,7 +127,7 @@ def main():
         t0 = time.perf_counter()
         Logger.info(f"Iteration {i}")
 
-        for index,img in enumerate(images):
+        #for index,img in enumerate(images):
 
             #Logger.info(f"Predicting image: {image_file}")
             #data = im.fromarray((img * 255).astype(np.uint8))
@@ -135,27 +135,27 @@ def main():
             # saving the final output
             # as a PNG file
             #data.save(f'image_{index}.png')
-            lh.start_iteration()
-            results=boosted_model.predict_proba_tpu(img)
-            lh.end_iteration()
+        lh.start_iteration()
+        results=boosted_model.predict_proba_tpu(images)
+        lh.end_iteration()
 
-            if save_golden:
-                golden.append(results)
-            else:
-                errs_abv_thresh, errs_blw_thresh = check_output_against_golden(results, golden[index])
-                errs_count = errs_abv_thresh + errs_blw_thresh
-                info_count = 0
-                if errs_count > 0:
-                    Logger.info(f"SDC: {errs_count} error(s) (above thresh: {errs_abv_thresh}, below thresh: {errs_blw_thresh})")
+        if save_golden:
+            golden.append(results)
+        else:
+            errs_abv_thresh, errs_blw_thresh = check_output_against_golden(results, golden)
+            errs_count = errs_abv_thresh + errs_blw_thresh
+            info_count = 0
+            if errs_count > 0:
+                Logger.info(f"SDC: {errs_count} error(s) (above thresh: {errs_abv_thresh}, below thresh: {errs_blw_thresh})")
 
-                    if errs_abv_thresh > 0:
-                        sdc_file = save_sdc_output(interpreter, model_file, image_file)
-                        Logger.info(f"SDC output saved to file `{sdc_file}`")
-                        lh.log_info_detail(f"SDC output saved to file `{sdc_file}`")
-                        info_count += 1
+                if errs_abv_thresh > 0:
+                    sdc_file = save_sdc_output(interpreter, model_file, image_file)
+                    Logger.info(f"SDC output saved to file `{sdc_file}`")
+                    lh.log_info_detail(f"SDC output saved to file `{sdc_file}`")
+                    info_count += 1
 
-                lh.log_info_count(int(info_count))
-                lh.log_error_count(int(errs_count))
+            lh.log_info_count(int(info_count))
+            lh.log_error_count(int(errs_count))
         t1 = time.perf_counter()
 
         Logger.timing("Iteration duration:", t1 - t0)
