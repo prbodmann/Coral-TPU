@@ -445,16 +445,17 @@ class AdaBoostClassifier(object):
         ----------
         .. [1] J. Zhu, H. Zou, S. Rosset, T. Hastie, "Multi-class AdaBoost", 2009.
         """
-        proba=[]
+        temp=[]
         for img in X:
             for estimator in self.tpu_estimators_:
                 set_interpreter_input(estimator, img)
                 estimator.invoke()
-                proba.append(get_scores(estimator))
+                temp.append(get_scores(estimator))
 
         # Displace zero probabilities so the log is defined.
         # Also fix negative elements which may occur with
         # negative sample weights.
+        proba=sum(temp)
         proba[proba < np.finfo(tf.float32).eps] = np.finfo(tf.float32).eps
         log_proba = np.log(proba)
 
