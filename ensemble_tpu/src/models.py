@@ -276,8 +276,8 @@ class AdaBoostClassifier(object):
         #lb=OneHotEncoder(sparse=False)
         #y_b=y.reshape(len(y),1)
         y_b=y#lb.fit_transform(y_b)
-        print(X.shape)
-        print(y_b.shape)
+        #print(X.shape)
+        #print(y_b.shape)
         estimator.fit(X, y_b, sample_weight=sample_weight, epochs = self.epochs, batch_size = self.batch_size)
 ############################################################
         y_pred = estimator.predict(X)
@@ -455,7 +455,7 @@ class AdaBoostClassifier(object):
         # Displace zero probabilities so the log is defined.
         # Also fix negative elements which may occur with
         # negative sample weights.
-        print(proba)
+        #print(proba)
         for idx,i in enumerate(proba):
                 #
                 for jdx, j in enumerate(i):                    
@@ -468,7 +468,7 @@ class AdaBoostClassifier(object):
                                 * log_proba.sum(axis=1)[:, np.newaxis])
 
     def predict_proba_tpu(self, X):
-        print(X.shape)
+        #print(X.shape)
         if self.algorithm_ == 'SAMME.R':
             # The weights are all 1. for SAMME.R
             proba = sum([self._samme_proba_tpu(estimator,self.n_classes_, X)
@@ -481,7 +481,7 @@ class AdaBoostClassifier(object):
         #print(self.estimator_weights_)
         proba = np.exp((1. / (self.n_classes_ - 1)) * proba)
         normalizer = proba.sum(axis=1)[:, np.newaxis]
-        print(normalizer.shape)
+        #print(normalizer.shape)
         normalizer[normalizer == 0.0] = 1.0
         proba /= normalizer
 
