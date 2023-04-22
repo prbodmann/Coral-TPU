@@ -480,7 +480,7 @@ class AdaBoostClassifier(object):
         #print(proba)
         #print(self.estimator_weights_)
         proba = np.exp((1. / (self.n_classes_ - 1)) * proba)
-        normalizer = proba.sum(axis=0)[:, np.newaxis]
+        normalizer = proba.sum(axis=1)[:, np.newaxis]
         print(normalizer.shape)
         normalizer[normalizer == 0.0] = 1.0
         proba /= normalizer
