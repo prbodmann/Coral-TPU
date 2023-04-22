@@ -56,7 +56,8 @@ def check_output_against_golden(out_, gold_):
     
     errs_above_thresh=0
     errs_below_thresh=0
-    for i,out,gold in enumerate(zip(out_,gold_)):
+    i=0
+    for out,gold in zip(out_,gold_):
         diff = out != gold
         
         errs_above_thresh += np.count_nonzero(diff & (gold >= CLASSIFICATION_THRESHOLD))
@@ -76,6 +77,7 @@ def check_output_against_golden(out_, gold_):
         total_errs = errs_above_thresh + errs_below_thresh
         if total_errs > 0:
             Logger.info(f"Output doesn't match golden")
+        i+=1
         #Logger.timing("Check output", t1 - t0)
             
     return errs_above_thresh, errs_below_thresh
