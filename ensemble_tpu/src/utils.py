@@ -232,7 +232,7 @@ def get_scores(interpreter):
 def set_interpreter_input(interpreter, resized_image):
     t0 = time.perf_counter()
 
-    common.set_input(interpreter, resized_image)
+    set_input(interpreter, resized_image)
 
     t1 = time.perf_counter()
 
