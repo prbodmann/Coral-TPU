@@ -51,10 +51,10 @@ def init_log_file(model_file, input_file, nimages):
 def check_output_against_golden(out, gold):
     t0 = time.perf_counter()
     #out = classification.get_scores(interpreter)
-    #print(out)
+    print(out.shape)
     #print(gold)
     diff = out != gold
-
+    
     errs_above_thresh = np.count_nonzero(diff & (gold >= CLASSIFICATION_THRESHOLD))
     errs_below_thresh = np.count_nonzero(diff & (gold < CLASSIFICATION_THRESHOLD))
     g_classes = np.count_nonzero(gold >= CLASSIFICATION_THRESHOLD)
