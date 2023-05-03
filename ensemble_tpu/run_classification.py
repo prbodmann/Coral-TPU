@@ -49,7 +49,7 @@ def init_log_file(model_file, input_file, nimages):
     lh.set_max_errors_iter(MAX_ERR_PER_IT)
     lh.set_iter_interval_print(1)
 
-    # Logger.info(f"Log file is `{lh.get_log_file_name()}`")
+    Logger.info(f"Log file is `{lh.get_log_file_name()}`")
 
 def create_interpreter(model_file):
     t0 = time.perf_counter()
@@ -79,9 +79,9 @@ def set_interpreter_intput(interpreter, resized_image):
 def perform_inference(interpreter):
     t0 = time.perf_counter()
 
-    
+    lh.start_iteration()
     interpreter.invoke()
-    
+    lh.end_iteration()
 
     t1 = time.perf_counter()
 
@@ -113,7 +113,7 @@ def check_output_against_golden(interpreter, gold, index):
     total_errs = errs_above_thresh + errs_below_thresh
     if total_errs > 0:
         Logger.info(f"Output doesn't match golden")
-    #Logger.timing("Check output", t1 - t0)
+    Logger.timing("Check output", t1 - t0)
             
     return errs_above_thresh, errs_below_thresh
 
@@ -166,7 +166,7 @@ def main():
     for i in range(iterations):
         t0 = time.perf_counter()
         Logger.info(f"Iteration {i}")
-        lh.start_iteration()
+
         for index,img in enumerate(images):
 
             #Logger.info(f"Predicting image: {image_file}")
@@ -178,7 +178,7 @@ def main():
             set_interpreter_intput(interpreter, img)
 
             perform_inference(interpreter)
-            
+
             if save_golden:
                 golden.append(classification.get_scores(interpreter))
             else:
@@ -196,8 +196,8 @@ def main():
 
                 lh.log_info_count(int(info_count))
                 lh.log_error_count(int(errs_count))
-        lh.end_iteration()
-        t1 = time.perf_counter()        
+        t1 = time.perf_counter()
+
         Logger.timing("Iteration duration:", t1 - t0)
         if save_golden:
 
