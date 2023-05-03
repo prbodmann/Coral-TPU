@@ -89,7 +89,7 @@ def perform_inference(interpreter):
     #Logger.timing("Perform inference", t1 - t0)
 
 
-def check_output_against_golden(interpreter, gold):
+def check_output_against_golden(interpreter, gold, index):
     t0 = time.perf_counter()
     out = classification.get_scores(interpreter)
     #print(out)
@@ -102,11 +102,11 @@ def check_output_against_golden(interpreter, gold):
     o_classes = np.count_nonzero(out >= CLASSIFICATION_THRESHOLD)
 
     if g_classes != o_classes:    
-        lh.log_error_detail(f"Wrong amount of classes (e: {g_classes}, r: {o_classes})")
+        lh.log_error_detail(f"Wrong amount of classes (e: {g_classes}, r: {o_classes}) on image: {index}")
     if errs_above_thresh > 0:
-        lh.log_error_detail(f"Errors above thresh: {errs_above_thresh}")
+        lh.log_error_detail(f"Errors above thresh: {errs_above_thresh} on image: {index}")
     if errs_below_thresh > 0:
-        lh.log_error_detail(f"Errors below thresh: {errs_below_thresh}")
+        lh.log_error_detail(f"Errors below thresh: {errs_below_thresh} on image: {index}")
 
     t1 = time.perf_counter()
 
@@ -182,11 +182,11 @@ def main():
             if save_golden:
                 golden.append(classification.get_scores(interpreter))
             else:
-                errs_abv_thresh, errs_blw_thresh = check_output_against_golden(interpreter, golden[index])
+                errs_abv_thresh, errs_blw_thresh = check_output_against_golden(interpreter, golden[index],index)
                 errs_count = errs_abv_thresh + errs_blw_thresh
                 info_count = 0
                 if errs_count > 0:
-                    Logger.info(f"SDC: {errs_count} error(s) (above thresh: {errs_abv_thresh}, below thresh: {errs_blw_thresh})")
+                    Logger.info(f"SDC: {errs_count} error(s) (above thresh: {errs_abv_thresh}, below thresh: {errs_blw_thresh}) on image: {index}")
 
                     if errs_abv_thresh > 0:
                         sdc_file = save_sdc_output(interpreter, model_file, image_file)
