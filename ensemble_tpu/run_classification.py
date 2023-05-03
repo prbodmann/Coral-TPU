@@ -73,20 +73,20 @@ def set_interpreter_intput(interpreter, resized_image):
 
     t1 = time.perf_counter()
 
-    #Logger.info("Interpreter input set successfully")
-    #Logger.timing("Set interpreter input", t1 - t0)
+    Logger.info("Interpreter input set successfully")
+    Logger.timing("Set interpreter input", t1 - t0)
 
 def perform_inference(interpreter):
     t0 = time.perf_counter()
 
-    lh.start_iteration()
+    
     interpreter.invoke()
-    lh.end_iteration()
+    
 
     t1 = time.perf_counter()
 
-    #Logger.info("Inference performed successfully")
-    #Logger.timing("Perform inference", t1 - t0)
+    Logger.info("Inference performed successfully")
+    Logger.timing("Perform inference", t1 - t0)
 
 
 def check_output_against_golden(interpreter, gold, index):
@@ -166,7 +166,7 @@ def main():
     for i in range(iterations):
         t0 = time.perf_counter()
         Logger.info(f"Iteration {i}")
-
+        lh.start_iteration()
         for index,img in enumerate(images):
 
             #Logger.info(f"Predicting image: {image_file}")
@@ -178,7 +178,7 @@ def main():
             set_interpreter_intput(interpreter, img)
 
             perform_inference(interpreter)
-
+            
             if save_golden:
                 golden.append(classification.get_scores(interpreter))
             else:
@@ -196,8 +196,8 @@ def main():
 
                 lh.log_info_count(int(info_count))
                 lh.log_error_count(int(errs_count))
-        t1 = time.perf_counter()
-
+        lh.end_iteration()
+        t1 = time.perf_counter()        
         Logger.timing("Iteration duration:", t1 - t0)
         if save_golden:
 
