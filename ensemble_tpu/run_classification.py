@@ -176,9 +176,10 @@ def main():
             # as a PNG file
             #data.save(f'image_{index}.png')
             set_interpreter_intput(interpreter, img)
-
+            t01 = time.perf_counter()
             perform_inference(interpreter)
-
+            t02 = time.perf_counter()
+            Logger.timing("image duration:", t02 - t01)
             if save_golden:
                 golden.append(classification.get_scores(interpreter))
             else:
