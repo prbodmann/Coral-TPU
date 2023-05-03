@@ -148,7 +148,7 @@ def main():
 
     
     init_log_file(model_file, input_file, nimages)
-
+    lh.set_iter_interval_print(20)
     interpreter = create_interpreter(model_file)
     images=[]
     golden=[]
