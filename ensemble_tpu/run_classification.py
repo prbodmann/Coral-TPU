@@ -49,7 +49,7 @@ def init_log_file(model_file, input_file, nimages):
     lh.set_max_errors_iter(MAX_ERR_PER_IT)
     lh.set_iter_interval_print(1)
 
-    Logger.info(f"Log file is `{lh.get_log_file_name()}`")
+    #Logger.info(f"Log file is `{lh.get_log_file_name()}`")
 
 def create_interpreter(model_file):
     t0 = time.perf_counter()
