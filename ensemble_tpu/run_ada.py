@@ -149,16 +149,10 @@ def main():
                 pickle.dump(results,golden_fd)
             break
         else:
-            errs_abv_thresh, errs_blw_thresh = check_output_against_golden(results, golden)
-            errs_count = errs_abv_thresh + errs_blw_thresh
-            info_count = 0
-            if errs_count > 0:
-                Logger.info(f"SDC: {errs_count} error(s) (above thresh: {errs_abv_thresh}, below thresh: {errs_blw_thresh})")
-                if errs_abv_thresh > 0:
-                    info_count += 1
-
-            lh.log_info_count(int(info_count))
-            lh.log_error_count(int(errs_count))
+            errs = check_output_against_golden(interpreter, golden[index],index)
+            info_count = 0             
+            if errs !=0:
+                lh.log_error_count(int(errs))
         t1 = time.perf_counter()
 
         Logger.timing("Iteration duration:", t1 - t0)
