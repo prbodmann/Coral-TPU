@@ -135,7 +135,7 @@ def load_data(num_images) -> Tuple [np.ndarray, np.ndarray, np.ndarray, np.ndarr
     randomRows = numpy.random.randint(len(temp1), size=num_images)
     temp=[]
     for i in randomRows:
-        temp.append(temp1[0][i])
+        temp.append(temp1[i])
     return  temp
 
 def main():
