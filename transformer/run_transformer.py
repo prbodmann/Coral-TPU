@@ -123,17 +123,19 @@ def check_output_against_golden(interpreter, gold, index):
     return total_errs
 
 
-
 def load_data(num_images) -> Tuple [np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    val_dataset, train_dataset = tfds.load(
-    "tf_flowers", split=["train[:1000]", "train[1000:]"], as_supervised=True
+    val_dataset1, train_dataset1 = tfds.load(
+    "tf_flowers", split=["train[:1000]", "train[352:]"], as_supervised=True
     )
+    temp1=[]
+    for j in val_dataset1:
+        print(j)
+        temp1.append(j)
     
-    randomRows = numpy.random.randint(len(val_dataset), size=num_images)
+    randomRows = numpy.random.randint(len(temp1), size=num_images)
     temp=[]
     for i in randomRows:
-        print(i)
-        temp.append(val_dataset[0][i])
+        temp.append(temp1[0][i])
     return  temp
 
 def main():
