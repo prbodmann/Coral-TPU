@@ -218,7 +218,7 @@ def main():
             if save_golden:
                 golden.append(classification.get_scores(interpreter))
             else:
-                print(golden)               
+                #print(golden)               
                 errs = check_output_against_golden(interpreter, golden[index],index)
                 info_count = 0             
                 if errs !=0:
