@@ -94,9 +94,11 @@ def check_output_against_golden(interpreter, gold, index):
     out = classification.get_scores(interpreter)
     #print(out)
     #print(gold)
+    total_errs = 0
     diff = out != gold
     if not all(diff):
         lh.log_error_detail(f"Wrong classes (e: {gold}, r: {out}) on image: {index}")
+        total_errs = 1
 
     #errs_above_thresh = np.count_nonzero(diff & (gold >= CLASSIFICATION_THRESHOLD))
     #errs_below_thresh = np.count_nonzero(diff & (gold < CLASSIFICATION_THRESHOLD))
@@ -112,7 +114,7 @@ def check_output_against_golden(interpreter, gold, index):
 
     t1 = time.perf_counter()
 
-    total_errs = 1
+    
     if total_errs > 0:
         Logger.info(f"Output doesn't match golden {gold} - {out}")
     Logger.timing("Check output", t1 - t0)
