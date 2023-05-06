@@ -95,22 +95,24 @@ def check_output_against_golden(interpreter, gold, index):
     #print(out)
     #print(gold)
     diff = out != gold
+    if not all(diff):
+        lh.log_error_detail(f"Wrong classes (e: {gold}, r: {out}) on image: {index}")
 
-    errs_above_thresh = np.count_nonzero(diff & (gold >= CLASSIFICATION_THRESHOLD))
-    errs_below_thresh = np.count_nonzero(diff & (gold < CLASSIFICATION_THRESHOLD))
-    g_classes = np.count_nonzero(gold >= CLASSIFICATION_THRESHOLD)
-    o_classes = np.count_nonzero(out >= CLASSIFICATION_THRESHOLD)
+    #errs_above_thresh = np.count_nonzero(diff & (gold >= CLASSIFICATION_THRESHOLD))
+    #errs_below_thresh = np.count_nonzero(diff & (gold < CLASSIFICATION_THRESHOLD))
+    #g_classes = np.count_nonzero(gold >= CLASSIFICATION_THRESHOLD)
+    #o_classes = np.count_nonzero(out >= CLASSIFICATION_THRESHOLD)
 
-    if g_classes != o_classes:    
-        lh.log_error_detail(f"Wrong amount of classes (e: {g_classes}, r: {o_classes}) on image: {index}")
-    if errs_above_thresh > 0:
-        lh.log_error_detail(f"Errors above thresh: {errs_above_thresh} on image: {index}")
-    if errs_below_thresh > 0:
-        lh.log_error_detail(f"Errors below thresh: {errs_below_thresh} on image: {index}")
+    #if g_classes != o_classes:    
+    #    lh.log_error_detail(f"Wrong amount of classes (e: {g_classes}, r: {o_classes}) on image: {index}")
+    #if errs_above_thresh > 0:
+    #    lh.log_error_detail(f"Errors above thresh: {errs_above_thresh} on image: {index}")
+    #if errs_below_thresh > 0:
+    #    lh.log_error_detail(f"Errors below thresh: {errs_below_thresh} on image: {index}")
 
     t1 = time.perf_counter()
 
-    total_errs = errs_above_thresh + errs_below_thresh
+    total_errs = 1
     if total_errs > 0:
         Logger.info(f"Output doesn't match golden")
     Logger.timing("Check output", t1 - t0)
