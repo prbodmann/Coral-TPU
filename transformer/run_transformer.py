@@ -122,13 +122,40 @@ def check_output_against_golden(interpreter, gold, index):
             
     return total_errs
 
+image_size=224
+resize_bigger = 380
+num_classes = 5
+
+def preprocess_dataset(is_training=True):
+    def _pp(image, label):
+        if is_training:
+            # Resize to a bigger spatial resolution and take the random
+            # crops.
+            image = tf.image.resize(image, (resize_bigger, resize_bigger))
+            image = tf.image.random_crop(image, (image_size, image_size, 3))
+            image = tf.image.random_flip_left_right(image)
+        else:
+            image = tf.image.resize(image, (image_size, image_size))
+        label = tf.one_hot(label, depth=num_classes)
+        return image, label
+
+    return _pp
+
+
+def prepare_dataset(dataset, is_training=True,batch_size_=1):
+    if is_training:
+        dataset = dataset.shuffle(batch_size_ * 10)
+    dataset = dataset.map(preprocess_dataset(is_training))
+    return dataset.batch(batch_size_).prefetch(batch_size_)
+
 
 def load_data(num_images) -> Tuple [np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     val_dataset1, train_dataset1 = tfds.load(
     "tf_flowers", split=["train[:1000]", "train[352:]"], as_supervised=True
     )
+    val_dataset = prepare_dataset(val_dataset1, is_training=False,batch_size_=1)
     temp1=[]
-    for j in val_dataset1:
+    for j in val_dataset:
         print(j)
         temp1.append(j)
     
