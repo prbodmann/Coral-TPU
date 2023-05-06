@@ -90,66 +90,50 @@ def perform_inference(interpreter):
     Logger.timing("Perform inference", t1 - t0)
 
 
+
 def check_output_against_golden(interpreter, gold, index):
     t0 = time.perf_counter()
     out = classification.get_scores(interpreter)
     #print(out)
     #print(gold)
-    diff = out != gold
+    total_errs = 0
+    if not (out==gold).all():
+        lh.log_error_detail(f"Wrong classes (e: {gold}, r: {out}) on image: {index}")
+        total_errs = 1
 
-    errs_above_thresh = np.count_nonzero(diff & (gold >= CLASSIFICATION_THRESHOLD))
-    errs_below_thresh = np.count_nonzero(diff & (gold < CLASSIFICATION_THRESHOLD))
-    g_classes = np.count_nonzero(gold >= CLASSIFICATION_THRESHOLD)
-    o_classes = np.count_nonzero(out >= CLASSIFICATION_THRESHOLD)
+    #errs_above_thresh = np.count_nonzero(diff & (gold >= CLASSIFICATION_THRESHOLD))
+    #errs_below_thresh = np.count_nonzero(diff & (gold < CLASSIFICATION_THRESHOLD))
+    #g_classes = np.count_nonzero(gold >= CLASSIFICATION_THRESHOLD)
+    #o_classes = np.count_nonzero(out >= CLASSIFICATION_THRESHOLD)
 
-    if g_classes != o_classes:    
-        lh.log_error_detail(f"Wrong amount of classes (e: {g_classes}, r: {o_classes}) on image: {index}")
-    if errs_above_thresh > 0:
-        lh.log_error_detail(f"Errors above thresh: {errs_above_thresh} on image: {index}")
-    if errs_below_thresh > 0:
-        lh.log_error_detail(f"Errors below thresh: {errs_below_thresh} on image: {index}")
+    #if g_classes != o_classes:    
+    #    lh.log_error_detail(f"Wrong amount of classes (e: {g_classes}, r: {o_classes}) on image: {index}")
+    #if errs_above_thresh > 0:
+    #    lh.log_error_detail(f"Errors above thresh: {errs_above_thresh} on image: {index}")
+    #if errs_below_thresh > 0:
+    #    lh.log_error_detail(f"Errors below thresh: {errs_below_thresh} on image: {index}")
 
     t1 = time.perf_counter()
 
-    total_errs = errs_above_thresh + errs_below_thresh
+    
     if total_errs > 0:
-        Logger.info(f"Output doesn't match golden")
+        Logger.info(f"Output doesn't match golden {gold} - {out}")
     Logger.timing("Check output", t1 - t0)
             
-    return errs_above_thresh, errs_below_thresh
-
-def preprocess_dataset(is_training=True):
-    def _pp(image, label):
-        if is_training:
-            # Resize to a bigger spatial resolution and take the random
-            # crops.
-            image = tf.image.resize(image, (resize_bigger, resize_bigger))
-            image = tf.image.random_crop(image, (image_size, image_size, 3))
-            image = tf.image.random_flip_left_right(image)
-        else:
-            image = tf.image.resize(image, (image_size, image_size))
-        label = tf.one_hot(label, depth=num_classes)
-        return image, label
-
-    return _pp
+    return total_errs
 
 
-def prepare_dataset(dataset, is_training=True,batch_size_=1):
-    if is_training:
-        dataset = dataset.shuffle(batch_size_ * 10)
-    dataset = dataset.map(preprocess_dataset(is_training))
-    return dataset.batch(batch_size_).prefetch(batch_size_)
 
 def load_data(num_images) -> Tuple [np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    val_dataset1, train_dataset1 = tfds.load(
-    "tf_flowers", split=["train[:352]", "train[352:]"], as_supervised=True
+    val_dataset, train_dataset = tfds.load(
+    "tf_flowers", split=["train[:1000]", "train[352:]"], as_supervised=True
     )
-    train_dataset = prepare_dataset(train_dataset1, is_training=True,batch_size_=1)
-    val_dataset = prepare_dataset(val_dataset1, is_training=False,batch_size_=1)
-    randomRows = numpy.random.randint(len(val_dataset), size=num_images)
+    
+    randomRows = numpy.random.randint(len(val_dataset1), size=num_images)
     temp=[]
     for i in randomRows:
-        temp.append(val_dataset[i])
+        print(i)
+        temp.append(val_dataset[0][i])
     return  temp
 
 def main():
