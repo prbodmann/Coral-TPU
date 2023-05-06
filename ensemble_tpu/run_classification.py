@@ -114,7 +114,7 @@ def check_output_against_golden(interpreter, gold, index):
 
     total_errs = 1
     if total_errs > 0:
-        Logger.info(f"Output doesn't match golden")
+        Logger.info(f"Output doesn't match golden {gold} - {out}")
     Logger.timing("Check output", t1 - t0)
             
     return total_errs
