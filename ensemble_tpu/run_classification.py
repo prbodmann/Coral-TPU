@@ -95,7 +95,6 @@ def check_output_against_golden(interpreter, gold, index):
     #print(out)
     #print(gold)
     total_errs = 0
-
     if not (out==gold).all():
         lh.log_error_detail(f"Wrong classes (e: {gold}, r: {out}) on image: {index}")
         total_errs = 1
