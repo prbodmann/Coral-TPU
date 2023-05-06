@@ -13,7 +13,7 @@ from typing import Tuple, List
 import random
 import numpy
 from PIL import Image as im
-
+import tensorflow_datasets as tfds
 
 FILE_FULL_PATH = Path(__file__).parent.absolute()
 sys.path.insert(0, f'{FILE_FULL_PATH}/../libLogHelper/build')
@@ -140,7 +140,7 @@ def prepare_dataset(dataset, is_training=True,batch_size_=1):
     return dataset.batch(batch_size_).prefetch(batch_size_)
 
 def load_data(num_images) -> Tuple [np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    (val_dataset1, train_dataset1 = tfds.load(
+    val_dataset1, train_dataset1 = tfds.load(
     "tf_flowers", split=["train[:352]", "train[352:]"], as_supervised=True
     )
     train_dataset = prepare_dataset(train_dataset1, is_training=True,batch_size_=1)
