@@ -156,8 +156,8 @@ def load_data(num_images) -> Tuple [np.ndarray, np.ndarray, np.ndarray, np.ndarr
     val_dataset = prepare_dataset(val_dataset1, is_training=False,batch_size_=1)
     temp1=[]
     for j in val_dataset:
-        print(j)
-        temp1.append(j)
+        print(j[0])
+        temp1.append(j[0])
     
     randomRows = numpy.random.randint(len(temp1), size=num_images)
     temp=[]
