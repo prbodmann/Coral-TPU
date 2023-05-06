@@ -184,9 +184,8 @@ def main():
             else:
                 errs = check_output_against_golden(interpreter, golden[index],index)
                 info_count = 0             
-
-                lh.log_info_count(int(info_count))
-                lh.log_error_count(int(errs))
+                if errs !=0:
+                    lh.log_error_count(int(errs))
         t1 = time.perf_counter()
 
         Logger.timing("Iteration duration:", t1 - t0)
