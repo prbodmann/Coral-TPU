@@ -218,20 +218,11 @@ def main():
             if save_golden:
                 golden.append(classification.get_scores(interpreter))
             else:
-                errs_abv_thresh, errs_blw_thresh = check_output_against_golden(interpreter, golden[index],index)
-                errs_count = errs_abv_thresh + errs_blw_thresh
-                info_count = 0
-                if errs_count > 0:
-                    Logger.info(f"SDC: {errs_count} error(s) (above thresh: {errs_abv_thresh}, below thresh: {errs_blw_thresh}) on image: {index}")
-
-                    if errs_abv_thresh > 0:
-                        sdc_file = save_sdc_output(interpreter, model_file, image_file)
-                        Logger.info(f"SDC output saved to file `{sdc_file}`")
-                        lh.log_info_detail(f"SDC output saved to file `{sdc_file}`")
-                        info_count += 1
-
-                lh.log_info_count(int(info_count))
-                lh.log_error_count(int(errs_count))
+                print(golden)               
+                errs = check_output_against_golden(interpreter, golden[index],index)
+                info_count = 0             
+                if errs !=0:
+                    lh.log_error_count(int(errs))
         t1 = time.perf_counter()
 
         Logger.timing("Iteration duration:", t1 - t0)
