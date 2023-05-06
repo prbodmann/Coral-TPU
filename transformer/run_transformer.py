@@ -14,6 +14,7 @@ import random
 import numpy
 from PIL import Image as im
 import tensorflow_datasets as tfds
+import tensorflow as tf
 
 FILE_FULL_PATH = Path(__file__).parent.absolute()
 sys.path.insert(0, f'{FILE_FULL_PATH}/../libLogHelper/build')
