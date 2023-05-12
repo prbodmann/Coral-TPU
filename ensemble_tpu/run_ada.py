@@ -149,7 +149,7 @@ def main():
                 pickle.dump(results,golden_fd)
             break
         else:
-            errs = check_output_against_golden(interpreter, golden[index],index)
+            errs = check_output_against_golden(boosted_model, golden[index],index)
             info_count = 0             
             if errs !=0:
                 lh.log_error_count(int(errs))
