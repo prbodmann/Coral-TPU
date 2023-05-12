@@ -146,7 +146,7 @@ def main():
             lh.end_iteration()
 
             if save_golden:
-                golden.append(classification.get_scores(interpreter))
+                golden.append(results)
             else:
                 errs = check_output_against_golden(results, golden[index],index)
                 info_count = 0             
