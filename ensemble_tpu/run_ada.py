@@ -140,19 +140,20 @@ def main():
             # as a PNG file
             #data.save(f'image_{index}.png')
         #print(images.shape)
-        lh.start_iteration()
-        results=boosted_model.predict_proba_tpu(images)
-        lh.end_iteration()
+        for index,img in enumerate(images):
+            lh.start_iteration()
+            results=boosted_model.predict_proba_tpu(img)
+            lh.end_iteration()
 
-        if save_golden:
-            with open(golden_file,'wb') as golden_fd:
-                pickle.dump(results,golden_fd)
-            break
-        else:
-            errs = check_output_against_golden(boosted_model, golden[index],index)
-            info_count = 0             
-            if errs !=0:
-                lh.log_error_count(int(errs))
+            if save_golden:
+                with open(golden_file,'wb') as golden_fd:
+                    pickle.dump(results,golden_fd)
+                break
+            else:
+                errs = check_output_against_golden(boosted_model, golden[index],index)
+                info_count = 0             
+                if errs !=0:
+                    lh.log_error_count(int(errs))
         t1 = time.perf_counter()
 
         Logger.timing("Iteration duration:", t1 - t0)
