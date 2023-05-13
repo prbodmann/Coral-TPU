@@ -1,4 +1,3 @@
-from src.models import AdaBoostClassifier as Ada_CNN
 #!/usr/bin/env python3
 
 import sys
@@ -18,8 +17,9 @@ from PIL import Image as im
 
 FILE_FULL_PATH = Path(__file__).parent.absolute()
 sys.path.insert(0, f'{FILE_FULL_PATH}/../libLogHelper/build')
-from src import classification
-from src.logger import Logger
+sys.path.append(f'{FILE_FULL_PATH}/../neural-networks')
+from src.utils import common, classification
+from src.utils.logger import Logger
 import log_helper as lh
 Logger.setLevel(Logger.Level.TIMING)
 MAX_ERR_PER_IT = 500
@@ -33,6 +33,9 @@ def log_exception_and_exit(err_msg):
     lh.end_log_file()
     raise Exception(err_msg)
 
+def save_output_to_file(scores, filename):
+    data = { 'scores': scores }
+    common.save_tensors_to_file(data, filename)
 
 # Main functions
 
@@ -48,9 +51,47 @@ def init_log_file(model_file, input_file, nimages):
 
     #Logger.info(f"Log file is `{lh.get_log_file_name()}`")
 
-def check_output_against_golden(out, gold, index):
+def create_interpreter(model_file):
     t0 = time.perf_counter()
-    
+
+    interpreter = common.create_interpreter(model_file)
+    interpreter.allocate_tensors()
+
+    t1 = time.perf_counter()
+
+    Logger.info("Interpreter created successfully")
+    Logger.timing("Create interpreter", t1 - t0)
+
+    return interpreter
+
+
+
+def set_interpreter_intput(interpreter, resized_image):
+    t0 = time.perf_counter()
+
+    common.set_input(interpreter, resized_image)
+
+    t1 = time.perf_counter()
+
+    Logger.info("Interpreter input set successfully")
+    Logger.timing("Set interpreter input", t1 - t0)
+
+def perform_inference(interpreter):
+    t0 = time.perf_counter()
+
+    lh.start_iteration()
+    interpreter.invoke()
+    lh.end_iteration()
+
+    t1 = time.perf_counter()
+
+    Logger.info("Inference performed successfully")
+    Logger.timing("Perform inference", t1 - t0)
+
+
+def check_output_against_golden(interpreter, gold, index):
+    t0 = time.perf_counter()
+    out = classification.get_scores(interpreter)
     #print(out)
     #print(gold)
     total_errs = 0
@@ -80,13 +121,14 @@ def check_output_against_golden(out, gold, index):
     return total_errs
 
 
-
-def load_data(num_images):
+def load_data(num_images) -> Tuple [np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     (x_train, y_train), (x_test, y_test) = cifar10.load_data()
     x_test = x_test / 255.
-    
-
-    return x_test[np.random.choice(x_test.shape[0], num_images, replace=False), :]
+    randomRows = numpy.random.randint(len(x_test), size=num_images)
+    temp=[]
+    for i in randomRows:
+        temp.append(x_test[i])
+    return  temp
 
 def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -110,10 +152,7 @@ def main():
     
     init_log_file(model_file, input_file, nimages)
     lh.set_iter_interval_print(20)
-    boosted_model = Ada_CNN(
-        base_estimator=None,
-        n_estimators=3)
-    boosted_model.load_tflite_model(model_file)
+    interpreter = create_interpreter(model_file)
     images=[]
     golden=[]
     if save_golden:
@@ -131,7 +170,7 @@ def main():
         t0 = time.perf_counter()
         Logger.info(f"Iteration {i}")
 
-        #for index,img in enumerate(images):
+        for index in range(nimages):
 
             #Logger.info(f"Predicting image: {image_file}")
             #data = im.fromarray((img * 255).astype(np.uint8))
@@ -139,35 +178,36 @@ def main():
             # saving the final output
             # as a PNG file
             #data.save(f'image_{index}.png')
-        #print(images.shape)
-        for index,img in enumerate(images):
-            lh.start_iteration()
-            results=boosted_model.predict_proba_tpu(img)
-            lh.end_iteration()
-
+            set_interpreter_intput(interpreter, images[index])
+            perform_inference(interpreter)
+            #if i == 2 and index == 3:
+            #    golden[3]+=1
             if save_golden:
-                golden.append(results)
+                golden.append(classification.get_scores(interpreter))
             else:
-                errs = check_output_against_golden(results, golden[index],index)
+                errs = check_output_against_golden(interpreter, golden[index],index)
                 info_count = 0             
                 if errs !=0:
                     lh.log_error_count(int(errs))
                     lh.log_info_detail(f"Recreating interpreter")
                     info_count += 1
                     Logger.info(f"Recreating interpreter...")
-                    if boosted_model is not None:
-                        del boosted_model
-                     boosted_model = Ada_CNN(
-                        base_estimator=None,
-                        n_estimators=3)
-                    boosted_model.load_tflite_model(model_file)
+                    if interpreter is not None:
+                        del interpreter
+                    interpreter = create_interpreter(model_file)
+                    with open(input_file,'rb') as input_imgs:
+                        images=pickle.load(input_imgs)
+                    with open(golden_file,'rb') as golden_fd:
+                        golden=pickle.load(golden_fd)
         t1 = time.perf_counter()
 
         Logger.timing("Iteration duration:", t1 - t0)
         if save_golden:
+
             with open(golden_file,'wb') as golden_fd:
                 pickle.dump(golden,golden_fd)
             break
+    
     if not save_golden:
         lh.end_log_file()
 

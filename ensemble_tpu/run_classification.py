@@ -47,7 +47,7 @@ def init_log_file(model_file, input_file, nimages):
         log_exception_and_exit("Could not initialize log file")
 
     lh.set_max_errors_iter(MAX_ERR_PER_IT)
-    lh.set_iter_interval_print(1)
+    #lh.set_iter_interval_print(1)
 
     #Logger.info(f"Log file is `{lh.get_log_file_name()}`")
 
@@ -151,7 +151,7 @@ def main():
 
     
     init_log_file(model_file, input_file, nimages)
-    lh.set_iter_interval_print(20)
+    lh.set_iter_interval_print(10)
     interpreter = create_interpreter(model_file)
     images=[]
     golden=[]
@@ -170,7 +170,7 @@ def main():
         t0 = time.perf_counter()
         Logger.info(f"Iteration {i}")
 
-        for index,img in enumerate(images):
+        for index in range(nimages):
 
             #Logger.info(f"Predicting image: {image_file}")
             #data = im.fromarray((img * 255).astype(np.uint8))
@@ -178,7 +178,7 @@ def main():
             # saving the final output
             # as a PNG file
             #data.save(f'image_{index}.png')
-            set_interpreter_intput(interpreter, img)
+            set_interpreter_intput(interpreter, images[index])
             perform_inference(interpreter)
             if save_golden:
                 golden.append(classification.get_scores(interpreter))
@@ -187,6 +187,12 @@ def main():
                 info_count = 0             
                 if errs !=0:
                     lh.log_error_count(int(errs))
+                    lh.log_info_detail(f"Recreating interpreter")
+                    info_count += 1
+                    Logger.info(f"Recreating interpreter...")
+                    if interpreter is not None:
+                        del interpreter
+                    interpreter = create_interpreter(model_file)
         t1 = time.perf_counter()
 
         Logger.timing("Iteration duration:", t1 - t0)
