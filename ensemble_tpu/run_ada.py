@@ -109,7 +109,7 @@ def main():
 
     
     init_log_file(model_file, input_file, nimages)
-    lh.set_iter_interval_print(20)
+    lh.set_iter_interval_print(1000)
     boosted_model = Ada_CNN(
         base_estimator=None,
         n_estimators=3)
