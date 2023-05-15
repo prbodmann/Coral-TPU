@@ -205,7 +205,7 @@ def main():
         t0 = time.perf_counter()
         Logger.info(f"Iteration {i}")
 
-        for index,img in enumerate(images):
+        for index in range(nimages):
 
             #Logger.info(f"Predicting image: {image_file}")
             #data = im.fromarray((img * 255).astype(np.uint8))
@@ -213,7 +213,7 @@ def main():
             # saving the final output
             # as a PNG file
             #data.save(f'image_{index}.png')
-            set_interpreter_intput(interpreter, img)
+            set_interpreter_intput(interpreter, input_imgs[index])
             perform_inference(interpreter)
             if save_golden:
                 golden.append(classification.get_scores(interpreter))
@@ -223,6 +223,10 @@ def main():
                 info_count = 0             
                 if errs !=0:
                     lh.log_error_count(int(errs))
+                    with open(input_file,'rb') as input_imgs:
+                        images=pickle.load(input_imgs)
+                    with open(golden_file,'rb') as golden_fd:
+                        golden=pickle.load(golden_fd)
         t1 = time.perf_counter()
 
         Logger.timing("Iteration duration:", t1 - t0)
