@@ -51,8 +51,8 @@ def init_log_file(model_file, input_file, nimages):
 def check_output_against_golden(out, gold, index):
     t0 = time.perf_counter()
     
-    #print(out)
-    #print(gold)
+    Logger.info(out)
+    Logger.info(gold)
     total_errs = 0
     if not (out==gold).all():
         lh.log_error_detail(f"Wrong classes (e: {gold}, r: {out}) on image: {index}")
@@ -140,11 +140,12 @@ def main():
             # as a PNG file
             #data.save(f'image_{index}.png')
         #print(images.shape)
-        for index,img in enumerate(images):
+        for index in range(nimages):
+            Logger.info("started")
             lh.start_iteration()
-            results=boosted_model.predict_proba_tpu(img)
+            results=boosted_model.predict_proba_tpu([images[index]])
             lh.end_iteration()
-
+            Logger.info(images[index].shape)
             if save_golden:
                 golden.append(results)
             else:
@@ -152,15 +153,11 @@ def main():
                 info_count = 0             
                 if errs !=0:
                     lh.log_error_count(int(errs))
-                    lh.log_info_detail(f"Recreating interpreter")
-                    info_count += 1
-                    Logger.info(f"Recreating interpreter...")
-                    if boosted_model is not None:
-                        del boosted_model
-                     boosted_model = Ada_CNN(
-                        base_estimator=None,
-                        n_estimators=3)
-                    boosted_model.load_tflite_model(model_file)
+                    with open(input_file,'rb') as input_imgs:
+                        images=pickle.load(input_imgs)
+                    with open(golden_file,'rb') as golden_fd:
+                        golden=pickle.load(golden_fd)
+
         t1 = time.perf_counter()
 
         Logger.timing("Iteration duration:", t1 - t0)
@@ -173,3 +170,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
