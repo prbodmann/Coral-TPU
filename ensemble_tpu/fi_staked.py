@@ -11,6 +11,7 @@ import tensorflow as tf
 from keras.layers import Input, Dense, concatenate
 from src.models import conv_pool_cnn, all_cnn, nin_cnn, ensemble, conv_all, conv_nin, all_nin, define_stacked_model, load_all_models, fit_stacked_model
 from src.utils import tflite_converter, load_data, evaluate_error
+from keras.models import Model
 
 CONV_POOL_CNN_WEIGHT_FILE = os.path.join(os.getcwd(), 'weights', 'conv_pool_cnn_pretrained_weights.hdf5')
 ALL_CNN_WEIGHT_FILE = os.path.join(os.getcwd(), 'weights', 'all_cnn_pretrained_weights.hdf5')
