@@ -1,4 +1,4 @@
-from keras.layers import Conv2D, MaxPooling2D, GlobalAveragePooling2D, Dropout, Activation, Average, Flatten, AveragePooling2D,Input, Reshape
+from keras.layers import Conv2D, MaxPooling2D, GlobalAveragePooling2D, Dropout, Activation, Average, Flatten, AveragePooling2D,Input, Reshape, concatenate, Dense
 from keras.models import Model, Sequential
 from tensorflow.python.framework.ops import Tensor
 from keras.engine import training
@@ -9,16 +9,53 @@ from keras.preprocessing.image import ImageDataGenerator
 from keras.callbacks import LearningRateScheduler
 import os
 import tensorflow as tf
-from sklearn.preprocessing import OneHotEncoder #LabelBinarizer
+#from sklearn.preprocessing import OneHotEncoder #LabelBinarizer
 from numpy.core.umath_tests import inner1d
 from src.utils import tflite_converter, create_interpreter, get_scores, set_interpreter_input
 import pickle
+from keras.utils import plot_model, to_categorical
 
 cce = keras.losses.CategoricalCrossentropy()
 
 CONV_POOL_CNN_WEIGHT_FILE = os.path.join(os.getcwd(), 'weights', 'conv_pool_cnn_pretrained_weights.hdf5')
 ALL_CNN_WEIGHT_FILE = os.path.join(os.getcwd(), 'weights', 'all_cnn_pretrained_weights.hdf5')
 NIN_CNN_WEIGHT_FILE = os.path.join(os.getcwd(), 'weights', 'nin_cnn_pretrained_weights.hdf5')
+
+def load_all_models(x_train):
+    input_shape = x_train[0,:,:,:].shape
+    print(input_shape)
+    #print(x_train[0,:,:,:].dtype)
+    #print(y_train[0,:].dtype)
+    model_input = Input(shape=input_shape)
+    conv_pool_cnn_model = conv_pool_cnn(model_input)
+
+    try:
+        conv_pool_cnn_weight_file
+    except NameError:
+        conv_pool_cnn_model.load_weights(CONV_POOL_CNN_WEIGHT_FILE)
+    #tflite_converter(conv_pool_cnn_model,x_train,"model1.tflite")
+
+    all_cnn_model = all_cnn(model_input)
+
+    try:
+        all_cnn_weight_file
+    except NameError:
+        all_cnn_model.load_weights(ALL_CNN_WEIGHT_FILE)
+    #tflite_converter(all_cnn_model,x_train,"model2.tflite")
+
+    nin_cnn_model = nin_cnn(model_input)
+
+    try:
+        nin_cnn_weight_file
+    except NameError:
+        nin_cnn_model.load_weights(NIN_CNN_WEIGHT_FILE)
+    #tflite_converter(nin_cnn_model,x_train,"model3.tflite")
+
+
+    models = [conv_pool_cnn_model, all_cnn_model, nin_cnn_model]
+    return models
+
+
 
 def conv_pool_cnn(model_input: Tensor) -> training.Model:
 
@@ -120,6 +157,40 @@ def all_nin(models: List [training.Model], model_input: Tensor) -> training.Mode
     model = Model(model_input, y, name='ensemble')
     model.compile(loss=cce, optimizer="adam")
     return model
+
+def define_stacked_model(members):
+    # update all layers in all models to not be trainable
+    for i in range(len(members)):
+        model = members[i]
+        for layer in model.layers:
+            # make not trainable
+            layer.trainable = False
+            # rename to avoid 'unique layer name' issue
+            layer._name = 'ensemble_' + str(i+1) + '_' + layer.name
+            # define multi-headed input
+    ensemble_visible = members[0].input
+    # concatenate merge output from each model
+    ensemble_outputs = [model.output for model in members]
+    merge = concatenate(ensemble_outputs)
+    hidden = Dense(10, activation='relu')(merge)
+    output = Dense(10, activation='softmax')(hidden)
+    model = Model(inputs=ensemble_visible, outputs=output)
+    # plot graph of ensemble
+    plot_model(model, show_shapes=True, to_file='model_graph.png')
+    # compile
+    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+    return model
+
+# fit a stacked model
+def fit_stacked_model(model, inputX, inputy):
+    # prepare input data
+    
+    #X = [inputX for _ in range(len(model.input))]
+    # encode output data
+    #inputy_enc = to_categorical(inputy)
+
+    # fit model
+    model.fit(inputX, inputy, epochs=300, verbose=1)
 
 class AdaBoostClassifier(object):
     '''

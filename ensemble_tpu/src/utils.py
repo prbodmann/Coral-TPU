@@ -6,9 +6,10 @@ import numpy as np
 from typing import Tuple
 import keras
 from keras.models import model_from_json
-import xgboost as xgb
+from keras.layers import Input
 import numpy
 import time
+
 
 def reshape_for_CNN(X):
        ###########reshape input mak it to be compatibel to CNN
@@ -95,42 +96,6 @@ def get_feature_layer(model, data):
 	print(feature_layer_output.shape)
 	return feature_layer_output
 
-def xgb_model(X_train, y_train, X_test, y_test):
-
-	dtrain = xgb.DMatrix(
-		X_train,
-		label=y_train
-	)
-
-	dtest = xgb.DMatrix(
-		X_test,
-		label=y_test
-	)
-
-	results = {}
-
-	params = {
-		'max_depth':12,
-		'eta':0.05,
-		'objective':'multi:softprob',
-		'num_class':10,
-		'early_stopping_rounds':10,
-		'eval_metric':'merror'
-	}
-
-	watchlist = [(dtrain, 'train'),(dtest, 'eval')]
-	n_round = 400
-
-	model = xgb.train(
-		params,
-		dtrain,
-		n_round,
-		watchlist,
-		evals_result=results)
-
-	pickle.dump(model, open("cnn_xgboost_final.pickle.dat", "wb"))
-
-	return model
 def one_hot_encode(x):
 
 	encoded = np.zeros((len(x), 10))
