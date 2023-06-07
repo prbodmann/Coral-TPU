@@ -38,6 +38,7 @@ def define_truncated_models(members,stacked_model):
     ensemble_outputs = [model.output for model in members]
     merge = concatenate(ensemble_outputs)
     part_shape = merge.shape
+    print(part_shape)
     part_input=Input(shape=part_shape)
     hidden = Dense(10, activation='relu')(part_input)
     
@@ -82,5 +83,5 @@ with tf.device('/gpu:0'):
     stacked_model=define_stacked_model(members)
     fit_stacked_model(stacked_model, testX, testy)
     ma,mb = define_truncated_models(members,stacked_model)
-    tflite_converter(ma,trainX,"models/stacked_top.tflite")
+    #tflite_converter(ma,trainX,"models/stacked_top.tflite")
     tflite_converter2(mb,testy,"models/stacked_bottom.tflite")
