@@ -59,7 +59,7 @@ def tflite_converter2(model,x_train,name):
             
             data = tf.concat([x,x,x],0)
             
-            data=tf.reshape(data, shape=[-1, 30])
+            data=tf.reshape(data, shape=[1, 30])
             print(data.shape)
             yield [tf.cast(data,tf.float32)]
 
