@@ -190,7 +190,7 @@ def fit_stacked_model(model, inputX, inputy):
     #inputy_enc = to_categorical(inputy)
 
     # fit model
-    model.fit(inputX, inputy, epochs=300, verbose=1)
+    model.fit(inputX, inputy, epochs=20, verbose=1)
 
 class AdaBoostClassifier(object):
     '''
