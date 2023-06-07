@@ -176,7 +176,7 @@ def define_stacked_model(members):
     output = Dense(10, activation='softmax')(hidden)
     model = Model(inputs=ensemble_visible, outputs=output)
     # plot graph of ensemble
-    plot_model(model, show_shapes=True, to_file='model_graph.png')
+    #plot_model(model, show_shapes=True, to_file='model_graph.png')
     # compile
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
     return model
