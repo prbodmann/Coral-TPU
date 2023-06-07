@@ -47,8 +47,8 @@ def define_truncated_models(members,stacked_model):
     
     model1.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
     model2.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-    model2.get_layer("dense_3").setWeights(stacked_model.get_layer("dense_3").getWeights())
-    model2.get_layer("dense_2").setWeights(stacked_model.get_layer("dense_2").getWeights())
+    model2.get_layer("dense_3").set_weights(stacked_model.get_layer("dense_3").get_weights())
+    model2.get_layer("dense_2").set_weights(stacked_model.get_layer("dense_2").get_weights())
     return [model1,model2]
 
 
