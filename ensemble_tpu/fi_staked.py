@@ -61,5 +61,5 @@ with tf.device('/gpu:0'):
     stacked_model=define_stacked_model(members)
     fit_stacked_model(stacked_model, testX, testy)
     ma,mb = define_truncated_models(members,stacked_model)
-    tflite_converter(ma,x_train,"models/stacked_top.tflite")
-    tflite_converter(mb,x_train,"models/stacked_bottom.tflite")
+    tflite_converter(ma,trainX,"models/stacked_top.tflite")
+    tflite_converter(mb,trainX,"models/stacked_bottom.tflite")
