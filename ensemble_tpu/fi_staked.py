@@ -51,7 +51,7 @@ def define_truncated_models(members,stacked_model):
 
 
 
-with tf.device('/cpu:0'):
+with tf.device('/gpu:0'):
     trainX, testX, trainy, testy = load_data()
     members = load_all_models(trainX)
     print('Loaded %d models' % len(members))
