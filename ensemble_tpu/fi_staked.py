@@ -55,7 +55,8 @@ def tflite_converter2(model,x_train,name):
 
     def representative_data_gen():
         for x in x_train:
-            data = tf.reshape(x + x + x, shape=[-1, 30])
+            tf.concat([x,x,x],0)
+            data = 
             yield [tf.cast(data,tf.float32)]
 
     converter_quant = tf.lite.TFLiteConverter.from_keras_model(model)
