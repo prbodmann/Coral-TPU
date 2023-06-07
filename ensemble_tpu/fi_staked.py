@@ -55,11 +55,8 @@ def define_truncated_models(members,stacked_model):
 def tflite_converter2(model,x_train,name):
 
     def representative_data_gen():
-        for x in x_train:
-            
-            data = tf.concat([x,x,x],0)
-            
-            data=tf.reshape(data, shape=[1, 30])
+        for x in x_train:         
+            data=tf.reshape([x,x,x], shape=[-1, 30])
             print(data.shape)
             yield [tf.cast(data,tf.float32)]
 
