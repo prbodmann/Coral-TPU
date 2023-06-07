@@ -39,7 +39,7 @@ def define_truncated_models(members,stacked_model):
     part_shape = merge.shape
     part_input=Input(shape=part_shape)
     hidden = Dense(10, activation='relu')(part_input)
-    hidden.setWeights(stacked_model.layers[-2].getWeights())
+    
     output = Dense(10, activation='softmax')(hidden)
     output.setWeights(stacked_model.layers[-1].getWeights())
     model1 = Model(inputs=ensemble_visible, outputs=merge)
@@ -47,6 +47,8 @@ def define_truncated_models(members,stacked_model):
     
     model1.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
     model2.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+    model2.layers[-2].setWeights(stacked_model.layers[-2].getWeights())
+    model2.layers[-1].setWeights(stacked_model.layers[-1].getWeights())
     return [model1,model2]
 
 
