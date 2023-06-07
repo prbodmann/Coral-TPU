@@ -41,7 +41,6 @@ def define_truncated_models(members,stacked_model):
     hidden = Dense(10, activation='relu')(part_input)
     
     output = Dense(10, activation='softmax')(hidden)
-    output.setWeights(stacked_model.layers[-1].getWeights())
     model1 = Model(inputs=ensemble_visible, outputs=merge)
     model2 = Model(inputs=part_input, outputs=output)
     
