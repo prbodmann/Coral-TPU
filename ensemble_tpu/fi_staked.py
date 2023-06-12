@@ -43,7 +43,7 @@ def define_truncated_models(members,stacked_model):
     
     part_shape = merge.shape
     print(part_shape)
-    part_input=Input(shape=part_shape)
+    part_input=Input(shape=part_shape[1])
     hidden = Dense(10, activation='relu')(part_input)    
     output = Dense(10, activation='softmax')(hidden)    
     model2 = Model(inputs=part_input, outputs=output)   
