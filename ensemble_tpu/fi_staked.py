@@ -47,6 +47,7 @@ def define_truncated_models(members,stacked_model):
     hidden = Dense(10, activation='relu')(part_input)    
     output = Dense(10, activation='softmax')(hidden)    
     model2 = Model(inputs=part_input, outputs=output)   
+    model2.summary()
     model2.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
     model2.get_layer("dense_3").set_weights(stacked_model.get_layer("dense_1").get_weights())
     model2.get_layer("dense_2").set_weights(stacked_model.get_layer("dense").get_weights())
