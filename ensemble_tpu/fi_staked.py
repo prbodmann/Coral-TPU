@@ -24,6 +24,7 @@ NIN_CNN_WEIGHT_FILE = os.path.join(os.getcwd(), 'weights', 'nin_cnn_pretrained_w
 
 # define stacked model from multiple mem-ber input models
 def define_truncated_models(members,stacked_model):
+    stacked_model.summary()
     # update all layers in all models to not be trainable
     for i in range(len(members)):
         model = members[i]
@@ -37,16 +38,15 @@ def define_truncated_models(members,stacked_model):
     # concatenate merge output from each model
     ensemble_outputs = [model.output for model in members]
     merge = concatenate(ensemble_outputs)
+    model1 = Model(inputs=ensemble_visible, outputs=merge)
+    model1.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+    
     part_shape = merge.shape
     print(part_shape)
     part_input=Input(shape=part_shape)
-    hidden = Dense(10, activation='relu')(part_input)
-    
-    output = Dense(10, activation='softmax')(hidden)
-    model1 = Model(inputs=ensemble_visible, outputs=merge)
-    model2 = Model(inputs=part_input, outputs=output)
-    
-    model1.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+    hidden = Dense(10, activation='relu')(part_input)    
+    output = Dense(10, activation='softmax')(hidden)    
+    model2 = Model(inputs=part_input, outputs=output)   
     model2.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
     model2.get_layer("dense_3").set_weights(stacked_model.get_layer("dense_1").get_weights())
     model2.get_layer("dense_2").set_weights(stacked_model.get_layer("dense").get_weights())
