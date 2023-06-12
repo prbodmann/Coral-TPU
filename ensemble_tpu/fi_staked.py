@@ -56,7 +56,7 @@ def tflite_converter2(model,x_train,name):
 
     def representative_data_gen():
         for x in x_train:         
-            data=tf.concat(axis=1,values=[x, x, x])
+            data=tf.reshape(tf.concat(axis=1,values=[x, x, x]),[1,30])
             print(data.shape)
             yield [tf.cast(data,tf.float32)]
 
