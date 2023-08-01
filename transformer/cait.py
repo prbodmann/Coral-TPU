@@ -815,7 +815,7 @@ def load_image_from_url(url):
     image_bytes = io.BytesIO(urlopen(url).read())
     image = PIL.Image.open(image_bytes)
     preprocessed_image = preprocess_image(image)
-    return image, tf.cast(preprocessed_image,tf.float32)
+    return image, preprocessed_image
 
 
 """
@@ -1001,7 +1001,7 @@ image_resized = tf.image.resize(
 )
 image_resized = crop_layer(image_resized)
 
-plt.imshow(image_resized.numpy().squeeze().astype("int32"))
+plt.imshow(image_resized.numpy().squeeze().astype("float32"))
 plt.imshow(saliency_attention.numpy().squeeze(), cmap="cividis", alpha=0.9)
 plt.axis("off")
 
