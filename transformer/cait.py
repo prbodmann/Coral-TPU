@@ -53,7 +53,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.utils import get_custom_objects
-from numpy import tahn
+from numpy import tanh
 """
 ## The LayerScale layer
 
