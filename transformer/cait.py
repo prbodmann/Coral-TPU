@@ -95,7 +95,7 @@ basis.
 The practical implementation of LayerScale is simpler than it might sound.
 """
 
-def igelu(x,a=-0.2888,b=-1.769):
+def igelu(x:float32,a=-0.2888:float32,b=-1.769:float32):
     return tanh(10^3*x)*(a*(min(x·tanh(10^3*x), -b)+b)^2+1)
 
 
