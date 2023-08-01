@@ -94,7 +94,7 @@ basis.
 
 The practical implementation of LayerScale is simpler than it might sound.
 """
-
+@tf.function
 def igelu(x,a=-0.2888,b=-1.769):
     return K.tanh(1000.0*x)*(a*(min(x*K.tanh(1000.0*x), -b)+b)^2+1.0)
 
