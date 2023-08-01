@@ -1004,7 +1004,7 @@ image_resized = tf.image.resize(
 )
 image_resized = crop_layer(image_resized)
 
-plt.imshow(image_resized.numpy().squeeze().astype("float32"))
+plt.imshow(image_resized.numpy().squeeze().astype("int32"))
 plt.imshow(saliency_attention.numpy().squeeze(), cmap="cividis", alpha=0.9)
 plt.axis("off")
 
