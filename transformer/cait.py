@@ -98,7 +98,7 @@ The practical implementation of LayerScale is simpler than it might sound.
 def igelu(x):
     x1=K.cast(x,'float32')
     t1 = K.tanh(1000.0*x1)
-    t2 = t1*(0.2888*(K.min(x1*t1, 1.769)-1.769)**2+1.0)
+    t2 = t1*(0.2888*(K.minimum(x1*t1, 1.769)-1.769)**2+1.0)
     return t2
 
 
