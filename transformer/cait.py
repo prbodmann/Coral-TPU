@@ -53,7 +53,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.utils import get_custom_objects
-from numpy import tanh
+from keras import backend as K
 """
 ## The LayerScale layer
 
@@ -96,7 +96,7 @@ The practical implementation of LayerScale is simpler than it might sound.
 """
 
 def igelu(x,a=-0.2888,b=-1.769):
-    return tanh(10^3*x)*(a*(min(x·tanh(10^3*x), -b)+b)^2+1)
+    return K.tanh(10^3*x)*(a*(min(x·K.tanh(10^3*x), -b)+b)^2+1)
 
 
 get_custom_objects().update({'igelu': layers.Activation(igelu)})
