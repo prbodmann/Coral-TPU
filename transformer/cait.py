@@ -756,7 +756,7 @@ batch_size = 2
 config = get_config()
 cait_xxs24_224 = CaiT(**config)
 
-dummy_inputs = tf.ones((batch_size, image_size, image_size, num_channels))
+dummy_inputs = tf.cast(tf.ones((batch_size, image_size, image_size, num_channels)),'float32')
 _ = cait_xxs24_224(dummy_inputs)
 
 """
