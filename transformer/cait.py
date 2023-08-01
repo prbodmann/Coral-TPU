@@ -95,7 +95,7 @@ basis.
 The practical implementation of LayerScale is simpler than it might sound.
 """
 
-def igelu(x:tf.float32,a=-0.2888,b=-1.769):
+def igelu(x,a=-0.2888,b=-1.769):
     return tanh(10^3*x)*(a*(min(x·tanh(10^3*x), -b)+b)^2+1)
 
 
@@ -363,6 +363,7 @@ def mlp(x, dropout_rate: float, hidden_units: typing.List[int]):
             units,
             activation='igelu' if idx == 0 else None,
             bias_initializer=keras.initializers.RandomNormal(stddev=1e-6),
+            dtype=tf.float32
         )(x)
         x = layers.Dropout(dropout_rate)(x)
     return x
