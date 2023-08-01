@@ -97,7 +97,8 @@ The practical implementation of LayerScale is simpler than it might sound.
 @tf.function
 def igelu(x):
     x1=K.cast(x,'float32')
-    return K.tanh(1000.0*x1)*(0.2888*(K.min(x1*K.tanh(1000.0*x1), 1.769)-1.769)**2+1.0)
+    t1 = K.tanh(1000.0*x1)
+    return t1*(0.2888*(K.min(x1*t1, 1.769)-1.769)**2+1.0)
 
 
 get_custom_objects().update({'igelu': layers.Activation(igelu)})
