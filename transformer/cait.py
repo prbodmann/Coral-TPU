@@ -756,7 +756,7 @@ batch_size = 2
 config = get_config()
 cait_xxs24_224 = CaiT(**config)
 
-dummy_inputs = tf.cast(tf.ones((batch_size, image_size, image_size, num_channels)),'float32')
+dummy_inputs = tf.cast(tf.ones((batch_size, image_size, image_size, num_channels)),tf.float32)
 _ = cait_xxs24_224(dummy_inputs)
 
 """
@@ -815,7 +815,7 @@ def load_image_from_url(url):
     image_bytes = io.BytesIO(urlopen(url).read())
     image = PIL.Image.open(image_bytes)
     preprocessed_image = preprocess_image(image)
-    return image, preprocessed_image
+    return image, tf.cast(preprocessed_image,tf.float32)
 
 
 """
