@@ -54,7 +54,7 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.utils import get_custom_objects
 from keras import backend as K
-import tfds
+import tensorflow_datasets as tfds
 """
 ## The LayerScale layer
 
