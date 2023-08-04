@@ -762,7 +762,7 @@ cait_xxs24_224 = CaiT(**config)
 dset = load_dataset('imagenet-1k', split='train',streaming=True, token=True)
 tf_ds = dset.with_format("tf")
 
-model.fit(
+cait_xxs24_224.fit(
     tf_ds,
     epochs=20,
     batch_size=batch_size       
