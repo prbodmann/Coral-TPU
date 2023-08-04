@@ -759,13 +759,9 @@ batch_size = 2
 
 config = get_config()
 cait_xxs24_224 = CaiT(**config)
-dset = load_dataset('imagenet-1k', split='train',streaming=True, token=True).take(10000)
-tf_ds = dset.to_tf_dataset(
-            columns=["inputs"],
-            label_cols=["labels"],
-            batch_size=2,
-            shuffle=True
-            )
+dset = load_dataset('imagenet-1k', split='train',streaming=True, token=True)
+tf_ds = dset['train'].with_format("tf")
+
 model.fit(
     tf_ds,
     epochs=20,
