@@ -759,5 +759,5 @@ batch_size = 2
 
 config = get_config()
 cait_xxs24_224 = CaiT(**config)
-dset = load_dataset('imagenet-1k', split='train', use_auth_token=True)
+dset = load_dataset('imagenet-1k', split='train', token=True)
 print(dset)
