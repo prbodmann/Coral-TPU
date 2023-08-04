@@ -756,7 +756,8 @@ amend this `get_config()` method to instantiate a CaiT model for your own datase
 image_size = 224
 num_channels = 3
 batch_size = 2
-
+learning_rate = 0.002
+label_smoothing_factor = 0.1
 config = get_config()
 cait_xxs24_224 = CaiT(**config)
 dset = load_dataset('imagenet-1k', split='train',streaming=True, token=True)
