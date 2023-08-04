@@ -760,7 +760,7 @@ learning_rate = 0.002
 label_smoothing_factor = 0.1
 config = get_config()
 cait_xxs24_224 = CaiT(**config)
-dset = load_dataset('imagenet-1k', split='train',streaming=True, token=True)
+dset = load_dataset('imagenet-1k', split='train',, token=True)
 tf_ds = dset.with_format("tf")
 optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
 loss_fn = keras.losses.CategoricalCrossentropy(label_smoothing=label_smoothing_factor)
