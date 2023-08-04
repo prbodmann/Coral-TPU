@@ -760,4 +760,4 @@ batch_size = 2
 config = get_config()
 cait_xxs24_224 = CaiT(**config)
 
-ds = tfds.load('huggingface:imagenet-1k')
+ds = tfds.load('huggingface:imagenet-1k',use_auth_token=True)
