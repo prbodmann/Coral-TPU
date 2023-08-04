@@ -54,7 +54,7 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.utils import get_custom_objects
 from keras import backend as K
-import tensorflow_datasets as tfds
+from datasets import load_dataset
 """
 ## The LayerScale layer
 
@@ -759,5 +759,5 @@ batch_size = 2
 
 config = get_config()
 cait_xxs24_224 = CaiT(**config)
-
-ds = tfds.load('huggingface:imagenet-1k')
+dset = load_dataset('imagenet-1k', split='train', use_auth_token=True)
+print(dset)
