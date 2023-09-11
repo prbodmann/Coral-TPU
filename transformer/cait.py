@@ -266,7 +266,7 @@ class TalkingHeadAttention(layers.Layer):
         self.attn_drop = layers.Dropout(dropout_rate)
 
         self.proj = layers.Dense(projection_dim)
-        print(self.proj.shape)
+        
         self.proj_l = layers.Dense(self.num_heads)
         self.proj_w = layers.Dense(self.num_heads)
 
@@ -307,8 +307,9 @@ class TalkingHeadAttention(layers.Layer):
         x = tf.matmul(attn, v)
         x = tf.transpose(x, perm=[0, 2, 1, 3])
         x = tf.reshape(x, (B, N, C))
-
+        print(x.shape)
         x = self.proj(x)
+        print(x.shape)
         x = self.proj_drop(x, training)
 
         return x, attn
