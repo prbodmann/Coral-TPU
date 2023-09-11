@@ -266,7 +266,7 @@ class TalkingHeadAttention(layers.Layer):
         self.attn_drop = layers.Dropout(dropout_rate)
 
         self.proj = layers.Dense(projection_dim)
-
+        print(self.proj.shape)
         self.proj_l = layers.Dense(self.num_heads)
         self.proj_w = layers.Dense(self.num_heads)
 
