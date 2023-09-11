@@ -440,7 +440,7 @@ def LayerScaleBlock(
     Returns:
         A keras.Model instance.
     """
-    encoded_patches = keras.Input((None, projection_dim))
+    encoded_patches = keras.Input((projection_dim))
 
     # Self-attention.
     x1 = layers.LayerNormalization(epsilon=layer_norm_eps)(encoded_patches)
