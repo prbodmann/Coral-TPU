@@ -8,7 +8,8 @@ import PIL
 import tensorflow as tf
 from tensorflow.keras import Model, datasets, Sequential
 
-from tensorflow.keras.layers import Layer, Activation, nn
+from tensorflow.keras.layers import Layer, Activation, Dense, LayerNormalization, Dropout, Softmax
+
 from tensorflow.keras.utils import get_custom_objects
 from tensorflow.keras import backend as K
 
@@ -68,7 +69,7 @@ class PreNorm(Layer):
     def __init__(self, fn):
         super(PreNorm, self).__init__()
 
-        self.norm = nn.LayerNormalization()
+        self.norm = LayerNormalization()
         self.fn = fn
 
     def call(self, x, training=True, **kwargs):
@@ -85,14 +86,14 @@ class MLP(Layer):
                 else:
                     return 0.5 * x * (1.0 + tf.math.erf(x / tf.cast(1.4142135623730951, x.dtype)))
 
-            return nn.Activation(gelu)
+            return Activation(gelu)
 
         self.net = [
-            nn.Dense(units=hidden_dim),
+            Dense(units=hidden_dim),
             igelu(),
-            nn.Dropout(rate=dropout),
-            nn.Dense(units=dim),
-            nn.Dropout(rate=dropout)
+            Dropout(rate=dropout),
+            Dense(units=dim),
+            Dropout(rate=dropout)
         ]
         self.net = Sequential(self.net)
 
@@ -107,16 +108,16 @@ class Attention(Layer):
         self.heads = heads
         self.scale = dim_head ** -0.5
 
-        self.attend = nn.Softmax()
-        self.to_q = nn.Dense(units=inner_dim, use_bias=False)
-        self.to_kv = nn.Dense(units=inner_dim * 2, use_bias=False)
+        self.attend = Softmax()
+        self.to_q = Dense(units=inner_dim, use_bias=False)
+        self.to_kv = Dense(units=inner_dim * 2, use_bias=False)
 
         self.mix_heads_pre_attn = tf.Variable(initial_value=tf.random.normal([heads, heads]))
         self.mix_heads_post_attn = tf.Variable(initial_value=tf.random.normal([heads, heads]))
 
         self.to_out = [
-            nn.Dense(units=dim),
-            nn.Dropout(rate=dropout)
+            Dense(units=dim),
+            Dropout(rate=dropout)
         ]
 
         self.to_out = Sequential(self.to_out)
@@ -179,7 +180,7 @@ class CaiT(Model):
 
         self.patch_embedding = Sequential([
             Rearrange('b (h p1) (w p2) c -> b (h w) (p1 p2 c)', p1=patch_size, p2=patch_size),
-            nn.Dense(units=dim)
+            Dense(units=dim)
         ], name='patch_embedding')
 
         self.pos_embedding = tf.Variable(initial_value=tf.random.normal([1, num_patches, dim]))
@@ -190,8 +191,8 @@ class CaiT(Model):
         self.cls_transformer = Transformer(dim, cls_depth, heads, dim_head, mlp_dim, dropout, layer_dropout)
 
         self.mlp_head = Sequential([
-            nn.LayerNormalization(),
-            nn.Dense(units=num_classes)
+            LayerNormalization(),
+            Dense(units=num_classes)
         ], name='mlp_head')
 
     def call(self, img, training=True, **kwargs):
