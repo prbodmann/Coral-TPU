@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import PIL
 import tensorflow as tf
+from tensorflow import einsum
 from tensorflow.keras import Model, datasets, Sequential
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.layers import Layer, Activation, Dense, LayerNormalization, Dropout, Softmax
