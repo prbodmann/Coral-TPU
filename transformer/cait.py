@@ -1,51 +1,7 @@
-"""
-Title: Class Attention Image Transformers with LayerScale
-Author: [Sayak Paul](https://twitter.com/RisingSayak)
-Date created: 2022/09/19
-Last modified: 2022/09/25
-Description: Implementing an image transformer equipped with Class Attention and LayerScale.
-Accelerator: NONE
-"""
-"""
-
-## Introduction
-
-In this tutorial, we implement the CaiT (Class-Attention in Image Transformers)
-proposed in [Going deeper with Image Transformers](https://arxiv.org/abs/2103.17239) by
-Touvron et al. Depth scaling, i.e. increasing the model depth for obtaining better
-performance and generalization has been quite successful for convolutional neural
-networks ([Tan et al.](https://arxiv.org/abs/1905.11946),
-[Dollár et al.](https://arxiv.org/abs/2103.06877), for example). But applying
-the same model scaling principles to
-Vision Transformers ([Dosovitskiy et al.](https://arxiv.org/abs/2010.11929)) doesn't
-translate equally well -- their performance gets saturated quickly with depth scaling.
-Note that one assumption here is that the underlying pre-training dataset is
-always kept fixed when performing model scaling.
-
-In the CaiT paper, the authors investigate this phenomenon and propose modifications to
-the vanilla ViT (Vision Transformers) architecture to mitigate this problem.
-
-The tutorial is structured like so:
-
-* Implementation of the individual blocks of CaiT
-* Collating all the blocks to create the CaiT model
-* Loading a pre-trained CaiT model
-* Obtaining prediction results
-* Visualization of the different attention layers of CaiT
-
-The readers are assumed to be familiar with Vision Transformers already. Here is
-an implementation of Vision Transformers in Keras:
-[Image classification with Vision Transformer](https://keras.io/examples/vision/image_classification_with_vision_transformer/).
-"""
-
-"""
-## Imports
-"""
-
 import io
 import typing
 from urllib.request import urlopen
-
+import numpy
 import matplotlib.pyplot as plt
 import numpy as np
 import PIL
@@ -55,49 +11,13 @@ from tensorflow.keras import layers
 from tensorflow.keras.utils import get_custom_objects
 from keras import backend as K
 from datasets import load_dataset
-"""
-## The LayerScale layer
+import tensorflow_datasets as tfds
+from tensorflow.keras.utils import to_categorical
 
-We begin by implementing a **LayerScale** layer which is one of the two modifications
-proposed in the CaiT paper.
 
-When increasing the depth of the ViT models, they meet with optimization instability and
-eventually don't converge. The residual connections within each Transformer block
-introduce information bottleneck. When there is an increased amount of depth, this
-bottleneck can quickly explode and deviate the optimization pathway for the underlying
-model.
-
-The following equations denote where residual connections are added within a Transformer
-block:
-
-<div align="center">
-    <img src="https://i.ibb.co/jWV5bFb/image.png"/>
-</div>
-
-where, **SA** stands for self-attention, **FFN** stands for feed-forward network, and
-**eta** denotes the LayerNorm operator ([Ba et al.](https://arxiv.org/abs/1607.06450)).
-
-LayerScale is formally implemented like so:
-
-<div align="center">
-    <img src="https://i.ibb.co/VYDWNn9/image.png"/>
-</div>
-
-where, the lambdas are learnable parameters and are initialized with a very small value
-({0.1, 1e-5, 1e-6}). **diag** represents a diagonal matrix.
-
-Intuitively, LayerScale helps control the contribution of the residual branches. The
-learnable parameters of LayerScale are initialized to a small value to let the branches
-act like identity functions and then let them figure out the degrees of interactions
-during the training. The diagonal matrix additionally helps control the contributions
-of the individual dimensions of the residual inputs as it is applied on a per-channel
-basis.
-
-The practical implementation of LayerScale is simpler than it might sound.
-"""
 @tf.function
 def igelu(x):
-    x1=K.cast(x,'float32')
+    x1=x
     t1 = K.tanh(1000.0*x1)
     t2 = t1*(0.2888*(K.minimum(x1*t1, 1.769)-1.769)**2+1.0)
     return t2
@@ -365,9 +285,8 @@ def mlp(x, dropout_rate: float, hidden_units: typing.List[int]):
     for idx, units in enumerate(hidden_units):
         x = layers.Dense(
             units,
-            activation='igelu' if idx == 0 else None,
+            activation=igelu if idx == 0 else None,
             bias_initializer=keras.initializers.RandomNormal(stddev=1e-6),
-            dtype=tf.float32
         )(x)
         x = layers.Dropout(dropout_rate)(x)
     return x
@@ -664,11 +583,10 @@ class CaiT(keras.Model):
                 else x[:, 0]
             )
         return (
-            (x, sa_ffn_attn, ca_ffn_attn)
+            (x)
             if self.pre_logits
-            else (self.head(x), sa_ffn_attn, ca_ffn_attn)
+            else (self.head(x))
         )
-
 
 """
 Having the SA and CA layers segregated this way helps the model to focus on underlying
@@ -687,8 +605,9 @@ a model configuration that will be passed to our `CaiT` class for initialization
 """
 
 
+
 def get_config(
-    image_size: int = 224,
+    image_size: int = 32,
     patch_size: int = 16,
     projection_dim: int = 192,
     sa_ffn_layers: int = 24,
@@ -701,7 +620,7 @@ def get_config(
     sd_prob: float = 0.0,
     global_pool: str = "token",
     pre_logits: bool = False,
-    num_classes: int = 1000,
+    num_classes: int = 100,
 ) -> typing.Dict:
     """Default configuration for CaiT models (cait_xxs24_224).
 
@@ -742,33 +661,66 @@ def get_config(
     return config
 
 
-"""
-Most of the configuration variables should sound familiar to you if you already know the
-ViT architecture. Point of focus is given to `sa_ffn_layers` and `ca_ffn_layers` that
-control the number of SA-Transformer blocks and CA-Transformer blocks. You can easily
-amend this `get_config()` method to instantiate a CaiT model for your own dataset.
-"""
+import argparse
+parser = argparse.ArgumentParser(description='Process some integers.')
+parser.add_argument('--training', action = 'store_const', dest = 'training',
+                           default = False, required = False,const=True)
+args = parser.parse_args()
+(x_train, y_train), (x_test, y_test) = keras.datasets.cifar100.load_data()
 
-"""
-## Model Instantiation
-"""
+# one hot encode target values
+y_train = to_categorical(y_train)
+y_test = to_categorical(y_test)
 
-image_size = 224
-num_channels = 3
-batch_size = 2
-learning_rate = 0.002
-label_smoothing_factor = 0.1
-config = get_config()
-cait_xxs24_224 = CaiT(**config)
-dset = load_dataset('imagenet-1k', split='train', token=True)
-tf_ds = dset.with_format("tf")
-optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
-loss_fn = keras.losses.CategoricalCrossentropy(label_smoothing=label_smoothing_factor)
+# convert from integers to floats
+x_train = x_train.astype('float32')
+x_test = x_test.astype('float32')
+# normalize to range 0-1
+x_train = x_train / 255.0
+x_test = x_test / 255.0
 
-cait_xxs24_224.compile(optimizer, loss_fn)
-cait_xxs24_224.fit(
-    tf_ds,
-    epochs=20,
-    batch_size=batch_size       
-)
-print(dset)
+if args.training:
+    batch_size = 100
+    learning_rate = 0.002
+    label_smoothing_factor = 0.1
+    config = get_config()
+    cait_xxs24_224 = CaiT(**config)    
+
+    optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
+    loss_fn = keras.losses.CategoricalCrossentropy(label_smoothing=label_smoothing_factor)
+
+    cait_xxs24_224.compile(optimizer, loss_fn)
+    cait_xxs24_224.build((batch_size, 32, 32, 3))
+    cait_xxs24_224.summary()
+
+    cait_xxs24_224.fit(
+        x=x_train,y= y_train,
+        validation_data=(x_test, y_test),
+        epochs=20,
+        batch_size=batch_size,
+        verbose=1   
+    )
+    results= cait_xxs24_224.evaluate(x_test, y_test)
+    tf.saved_model.save(cait_xxs24_224,'cait_xxs24_32')
+    print(results)
+else:
+    cait_xxs24_224=  tf.saved_model.load('cait_xxs24_32')
+batch_size=1
+def representative_data_gen():
+    for x in x_train:            
+        yield [x[0]]
+
+converter_quant = tf.lite.TFLiteConverter.from_keras_model(cait_xxs24_224) 
+
+converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
+converter_quant.input_shape=(1,32,32,3)
+converter_quant.representative_dataset = representative_data_gen
+converter_quant.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
+converter_quant.target_spec.supported_types = [tf.int8]
+converter_quant.experimental_new_converter = True
+converter_quant.allow_custom_ops=True
+tflite_model = converter_quant.convert()
+open("cait_xxs24_32.tflite", "wb").write(tflite_model)
+
+
+
