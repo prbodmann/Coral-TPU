@@ -22,6 +22,12 @@ from einops.layers.tensorflow import Rearrange
 
 optimizer = Adam(learning_rate=learning_rate)
 loss_fn = CategoricalCrossentropy(label_smoothing=label_smoothing_factor)
+DIM=192
+MLP_RATIO=4
+batch_size = 100
+learning_rate = 0.002
+label_smoothing_factor = 0.1
+
 
 @tf.function
 def igelu(x):
@@ -229,13 +235,9 @@ x_test = x_test.astype('float32')
 # normalize to range 0-1
 x_train = x_train / 255.0
 x_test = x_test / 255.0
-DIM=192
-MLP_RATIO=4
 
 if args.training:
-    batch_size = 100
-    learning_rate = 0.002
-    label_smoothing_factor = 0.1
+
 
     cait_xxs24_224 = CaiT(
         image_size = 224,
