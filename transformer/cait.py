@@ -268,7 +268,7 @@ if args.training:
         verbose=1   
     )
     cait_xxs24_224.summary()
-    results= cait_xxs24_224.evaluate(x_test, y_test)
+    results= cait_xxs24_224.evaluate(x_test, y_test,batch_size=batch_size)
     tf.saved_model.save(cait_xxs24_224,'cait_xxs24_32')
     print(results)
     
