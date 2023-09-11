@@ -440,8 +440,8 @@ def LayerScaleBlock(
     Returns:
         A keras.Model instance.
     """
-    encoded_patches = keras.Input((1, projection_dim))
-
+    encoded_patches = keras.Input((None, projection_dim))
+    print(projection_dim)
     # Self-attention.
     x1 = layers.LayerNormalization(epsilon=layer_norm_eps)(encoded_patches)
     attn_output, attn_scores = TalkingHeadAttention(
