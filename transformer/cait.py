@@ -229,7 +229,7 @@ DIM=192
 MLP_RATIO=4
 
 if args.training:
-    batch_size = 10
+    batch_size = 100
     learning_rate = 0.002
     label_smoothing_factor = 0.1
 
@@ -251,13 +251,14 @@ if args.training:
 
     cait_xxs24_224.compile(optimizer, loss_fn)
     cait_xxs24_224.build((batch_size, 32, 32, 3))
-    #cait_xxs24_224.summary()
+    cait_xxs24_224.summary()
 
     cait_xxs24_224.fit(
         x=x_train,y= y_train,
         validation_data=(x_test, y_test),
         epochs=20,
-        batch_size=batch_size
+        batch_size=batch_size,
+        verbose=1   
     )
     results= cait_xxs24_224.evaluate(x_test, y_test)
     tf.saved_model.save(cait_xxs24_224,'cait_xxs24_32')
