@@ -4,10 +4,11 @@ from tensorflow.keras import Model
 from tensorflow.keras.layers import Layer
 from tensorflow.keras import Sequential, datasets
 import tensorflow.keras.layers as nn
-
+from tensorflow.keras.utils import to_categorical
 from einops import rearrange
 from einops.layers.tensorflow import Reduce
-
+from tensorflow.keras.losses import CategoricalCrossentropy
+from tensorflow.keras.optimizers import Adam
 
 def gelu(x, approximate=False):
     if approximate:
