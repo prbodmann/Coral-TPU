@@ -19,6 +19,7 @@ from tensorflow.keras.utils import to_categorical
 
 from einops import rearrange, repeat
 from einops.layers.tensorflow import Rearrange
+from random import randrange
 
 tf.config.experimental_run_functions_eagerly(True)
 DIM=192
