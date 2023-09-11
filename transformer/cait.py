@@ -227,7 +227,9 @@ x_test = x_test.astype('float32')
 # normalize to range 0-1
 x_train = x_train / 255.0
 x_test = x_test / 255.0
+DIM=192
 MLP_RATIO=4
+
 if args.training:
     batch_size = 100
     learning_rate = 0.002
@@ -237,11 +239,11 @@ if args.training:
     image_size = 224,
     patch_size = 16,
     num_classes = 100,
-    dim = 192,
+    dim = DIM,
     depth = 12,             # depth of transformer for patch to patch attention only
     cls_depth = 2,          # depth of cross attention of CLS tokens to patch
     heads = 4,
-    mlp_dim = dim * MLP_RATIO,
+    mlp_dim = DIM * MLP_RATIO,
     dropout = 0.0,
     emb_dropout = 0.0,
     layer_dropout = 0.05    # randomly dropout 5% of the layers
