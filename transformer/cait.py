@@ -249,7 +249,7 @@ if args.training:
     loss_fn = CategoricalCrossentropy(label_smoothing=label_smoothing_factor)
 
     cait_xxs24_224.compile(optimizer, loss_fn)
-    cait_xxs24_224.build((batch_size, 32, 32, 3))
+    cait_xxs24_224.build((None, 32, 32, 3))
     #cait_xxs24_224.summary()
 
     cait_xxs24_224.fit(
