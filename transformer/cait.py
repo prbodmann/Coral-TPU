@@ -6,7 +6,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import PIL
 import tensorflow as tf
-from tensorflow.keras import Model
+from tensorflow.keras import Model, datasets
+
 from tensorflow.keras.layers import Layer, Activation
 from tensorflow.keras.utils import get_custom_objects
 from tensorflow.keras import backend as K
@@ -214,7 +215,7 @@ parser = argparse.ArgumentParser(description='Process some integers.')
 parser.add_argument('--training', action = 'store_const', dest = 'training',
                            default = False, required = False,const=True)
 args = parser.parse_args()
-(x_train, y_train), (x_test, y_test) = keras.datasets.cifar100.load_data()
+(x_train, y_train), (x_test, y_test) = datasets.cifar100.load_data()
 
 # one hot encode target values
 y_train = to_categorical(y_train)
