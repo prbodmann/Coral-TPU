@@ -15,6 +15,8 @@ from tensorflow.keras import backend as K
 import tensorflow_datasets as tfds
 from tensorflow.keras.utils import to_categorical
 
+from einops import rearrange, repeat
+from einops.layers.tensorflow import Rearrange
 
 @tf.function
 def igelu(x):
