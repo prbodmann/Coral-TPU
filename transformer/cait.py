@@ -276,7 +276,7 @@ else:
     cait_xxs24_224=  tf.saved_model.load('cait_xxs24_32')
 batch_size=1
 def representative_data_gen():
-    for x in x_train:            
+    for x in x_test:            
         yield [x[0]]
 
 converter_quant = tf.lite.TFLiteConverter.from_keras_model(cait_xxs24_224) 
