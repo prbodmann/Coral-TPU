@@ -25,6 +25,48 @@ def igelu(x):
 
 get_custom_objects().update({'igelu': layers.Activation(igelu)})
 
+"""
+## The LayerScale layer
+
+We begin by implementing a **LayerScale** layer which is one of the two modifications
+proposed in the CaiT paper.
+
+When increasing the depth of the ViT models, they meet with optimization instability and
+eventually don't converge. The residual connections within each Transformer block
+introduce information bottleneck. When there is an increased amount of depth, this
+bottleneck can quickly explode and deviate the optimization pathway for the underlying
+model.
+
+The following equations denote where residual connections are added within a Transformer
+block:
+
+<div align="center">
+    <img src="https://i.ibb.co/jWV5bFb/image.png"/>
+</div>
+
+where, **SA** stands for self-attention, **FFN** stands for feed-forward network, and
+**eta** denotes the LayerNorm operator ([Ba et al.](https://arxiv.org/abs/1607.06450)).
+
+LayerScale is formally implemented like so:
+
+<div align="center">
+    <img src="https://i.ibb.co/VYDWNn9/image.png"/>
+</div>
+
+where, the lambdas are learnable parameters and are initialized with a very small value
+({0.1, 1e-5, 1e-6}). **diag** represents a diagonal matrix.
+
+Intuitively, LayerScale helps control the contribution of the residual branches. The
+learnable parameters of LayerScale are initialized to a small value to let the branches
+act like identity functions and then let them figure out the degrees of interactions
+during the training. The diagonal matrix additionally helps control the contributions
+of the individual dimensions of the residual inputs as it is applied on a per-channel
+basis.
+
+The practical implementation of LayerScale is simpler than it might sound.
+"""
+
+
 class LayerScale(layers.Layer):
     """LayerScale as introduced in CaiT: https://arxiv.org/abs/2103.17239.
 
@@ -285,7 +327,7 @@ def mlp(x, dropout_rate: float, hidden_units: typing.List[int]):
     for idx, units in enumerate(hidden_units):
         x = layers.Dense(
             units,
-            activation=igelu if idx == 0 else None,
+            activation=tf.nn.gelu if idx == 0 else None,
             bias_initializer=keras.initializers.RandomNormal(stddev=1e-6),
         )(x)
         x = layers.Dropout(dropout_rate)(x)
@@ -395,7 +437,7 @@ def LayerScaleBlock(
     Returns:
         A keras.Model instance.
     """
-    encoded_patches = keras.Input(projection_dim)
+    encoded_patches = keras.Input((None, projection_dim))
 
     # Self-attention.
     x1 = layers.LayerNormalization(epsilon=layer_norm_eps)(encoded_patches)
@@ -588,6 +630,7 @@ class CaiT(keras.Model):
             else (self.head(x))
         )
 
+
 """
 Having the SA and CA layers segregated this way helps the model to focus on underlying
 objectives more concretely:
@@ -605,9 +648,8 @@ a model configuration that will be passed to our `CaiT` class for initialization
 """
 
 
-
 def get_config(
-    image_size: int = 32,
+    image_size: int = 224,
     patch_size: int = 16,
     projection_dim: int = 192,
     sa_ffn_layers: int = 24,
@@ -620,7 +662,7 @@ def get_config(
     sd_prob: float = 0.0,
     global_pool: str = "token",
     pre_logits: bool = False,
-    num_classes: int = 100,
+    num_classes: int = 1000,
 ) -> typing.Dict:
     """Default configuration for CaiT models (cait_xxs24_224).
 
@@ -659,6 +701,7 @@ def get_config(
     config["num_classes"] = num_classes
 
     return config
+
 
 
 import argparse
