@@ -8,7 +8,7 @@ import PIL
 import tensorflow as tf
 from tensorflow.keras import Model, datasets, Sequential
 
-from tensorflow.keras.layers import Layer, Activation
+from tensorflow.keras.layers import Layer, Activation, nn
 from tensorflow.keras.utils import get_custom_objects
 from tensorflow.keras import backend as K
 
