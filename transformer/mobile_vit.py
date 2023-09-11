@@ -292,10 +292,10 @@ if args.training:
 
 
     cait_xxs24_224 =MobileViT(
-    image_size=(224, 224),
-    dims=[96, 120, 144],
-    channels=[16, 32, 48, 48, 64, 64, 80, 80, 96, 96, 384]
-)
+        image_size=(224, 224),
+        dims=[96, 120, 144],
+        channels=[16, 32, 48, 48, 64, 64, 80, 80, 96, 96, 384]
+    )
 
     cait_xxs24_224.compile(optimizer, loss_fn)
     cait_xxs24_224.build((batch_size, 32, 32, 3))
