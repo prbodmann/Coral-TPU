@@ -187,6 +187,7 @@ class CaiT(Model):
             Dense(units=dim)
         ], name='patch_embedding')
         self.patch_embedding.compile(optimizer, loss_fn)
+
         self.pos_embedding = tf.Variable(initial_value=tf.random.normal([1, num_patches, dim]))
         self.cls_token = tf.Variable(initial_value=tf.random.normal([1, 1, dim]))
         self.dropout = Dropout(rate=emb_dropout)
@@ -257,7 +258,7 @@ if args.training:
 
     cait_xxs24_224.compile(optimizer, loss_fn)
     cait_xxs24_224.build((batch_size, 32, 32, 3))
-    cait_xxs24_224.summary()
+    #cait_xxs24_224.summary()
 
     cait_xxs24_224.fit(
         x=x_train,y= y_train,
@@ -266,10 +267,11 @@ if args.training:
         batch_size=batch_size,
         verbose=1   
     )
+    cait_xxs24_224.summary()
     results= cait_xxs24_224.evaluate(x_test, y_test)
     tf.saved_model.save(cait_xxs24_224,'cait_xxs24_32')
     print(results)
-    cait_xxs24_224.summary()
+    
 else:
     cait_xxs24_224=  tf.saved_model.load('cait_xxs24_32')
 batch_size=1
