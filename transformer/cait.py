@@ -192,6 +192,7 @@ class CaiT(Model):
     def call(self, img, training=True, **kwargs):
         x = self.patch_embedding(img)
         b, n, d = x.shape
+        print(b, n, d)
 
         x += self.pos_embedding[:, :n]
         x = self.dropout(x, training=training)
