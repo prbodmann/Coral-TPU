@@ -233,18 +233,18 @@ if args.training:
     label_smoothing_factor = 0.1
 
     cait_xxs24_224 = CaiT(
-    image_size = 224,
-    patch_size = 16,
-    num_classes = 100,
-    dim = DIM,
-    depth = 12,             # depth of transformer for patch to patch attention only
-    cls_depth = 2,          # depth of cross attention of CLS tokens to patch
-    heads = 4,
-    mlp_dim = DIM * MLP_RATIO,
-    dropout = 0.0,
-    emb_dropout = 0.0,
-    layer_dropout = 0.05    # randomly dropout 5% of the layers
-)
+        image_size = 224,
+        patch_size = 16,
+        num_classes = 100,
+        dim = DIM,
+        depth = 12,             # depth of transformer for patch to patch attention only
+        cls_depth = 2,          # depth of cross attention of CLS tokens to patch
+        heads = 4,
+        mlp_dim = DIM * MLP_RATIO,
+        dropout = 0.0,
+        emb_dropout = 0.0,
+        layer_dropout = 0.05    # randomly dropout 5% of the layers
+    )
     optimizer = Adam(learning_rate=learning_rate)
     loss_fn = CategoricalCrossentropy(label_smoothing=label_smoothing_factor)
 
