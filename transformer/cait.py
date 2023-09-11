@@ -274,9 +274,8 @@ class TalkingHeadAttention(layers.Layer):
 
     def call(self, x, training=False):
         B, N, C = tf.shape(x)[0], tf.shape(x)[1], tf.shape(x)[2]
-        print(B)
-        print(N)
-        print(C)
+        print(x.shape)
+
         # Project the inputs all at once.
         qkv = self.qkv(x)
 
