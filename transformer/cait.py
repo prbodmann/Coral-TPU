@@ -9,7 +9,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.utils import get_custom_objects
-from keras import backend as K
+from tensorflow.keras import backend as K
 from datasets import load_dataset
 import tensorflow_datasets as tfds
 from tensorflow.keras.utils import to_categorical
