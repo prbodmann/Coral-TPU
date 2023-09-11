@@ -20,14 +20,14 @@ from tensorflow.keras.utils import to_categorical
 from einops import rearrange, repeat
 from einops.layers.tensorflow import Rearrange
 
-optimizer = Adam(learning_rate=learning_rate)
-loss_fn = CategoricalCrossentropy(label_smoothing=label_smoothing_factor)
+
 DIM=192
 MLP_RATIO=4
 batch_size = 100
 learning_rate = 0.002
 label_smoothing_factor = 0.1
-
+optimizer = Adam(learning_rate=learning_rate)
+loss_fn = CategoricalCrossentropy(label_smoothing=label_smoothing_factor)
 
 @tf.function
 def igelu(x):
