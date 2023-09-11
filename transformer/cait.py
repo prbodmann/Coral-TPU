@@ -7,7 +7,7 @@ import numpy as np
 import PIL
 import tensorflow as tf
 from tensorflow import keras
-from tensorflow.keras.layers import Layer
+from tensorflow.keras.layers import Layer, Activation
 from tensorflow.keras.utils import get_custom_objects
 from tensorflow.keras import backend as K
 
@@ -23,7 +23,7 @@ def igelu(x):
     return t2
 
 
-get_custom_objects().update({'igelu': layers.Activation(igelu)})
+get_custom_objects().update({'igelu': Activation(igelu)})
 
 def exists(val):
     return val is not None
