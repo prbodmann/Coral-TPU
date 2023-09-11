@@ -199,7 +199,7 @@ class CaiT(Model):
 
         x = self.patch_transformer(x, training=training)
 
-        cls_tokens = repeat(self.cls_token, '1 n d -> b n d', b=b)
+        cls_tokens = repeat(self.cls_token, '() n d -> b n d', b=b)
         x = self.cls_transformer(cls_tokens, context=x, training=training)
 
         x = self.mlp_head(x[:, 0])
