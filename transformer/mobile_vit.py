@@ -9,7 +9,7 @@ from einops import rearrange
 from einops.layers.tensorflow import Reduce
 from tensorflow.keras.losses import CategoricalCrossentropy
 from tensorflow.keras.optimizers import Adam
-
+from grouped_conv2d import grouped_convolution
 def gelu(x, approximate=False):
     if approximate:
         coeff = tf.cast(0.044715, x.dtype)
@@ -141,7 +141,7 @@ class MV2Block(Layer):
         if expansion == 1:
             self.conv = Sequential([
                 # dw
-                nn.DepthwiseConv2D(filters=hidden_dim, kernel_size=3, strides=stride, padding='SAME',
+                grouped_convolution(filters=hidden_dim, kernel_size=3, strides=stride, padding='SAME', groups=hidden_dim,
                           use_bias=False),
                 nn.BatchNormalization(momentum=0.9, epsilon=1e-5),
                 Swish(),
@@ -156,7 +156,7 @@ class MV2Block(Layer):
                 nn.BatchNormalization(momentum=0.9, epsilon=1e-5),
                 Swish(),
                 # dw
-                nn.DepthwiseConv2D(filters=hidden_dim, kernel_size=3, strides=stride, padding='SAME',
+                grouped_convolution(filters=hidden_dim, kernel_size=3, strides=stride, padding='SAME', groups=hidden_dim,
                           use_bias=False),
                 nn.BatchNormalization(momentum=0.9, epsilon=1e-5),
                 Swish(),
