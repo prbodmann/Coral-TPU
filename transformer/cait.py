@@ -185,7 +185,7 @@ class CaiT(Model):
 
         self.pos_embedding = tf.Variable(initial_value=tf.random.normal([1, num_patches, dim]))
         self.cls_token = tf.Variable(initial_value=tf.random.normal([1, 1, dim]))
-        self.dropout = nn.Dropout(rate=emb_dropout)
+        self.dropout = Dropout(rate=emb_dropout)
 
         self.patch_transformer = Transformer(dim, depth, heads, dim_head, mlp_dim, dropout, layer_dropout)
         self.cls_transformer = Transformer(dim, cls_depth, heads, dim_head, mlp_dim, dropout, layer_dropout)
