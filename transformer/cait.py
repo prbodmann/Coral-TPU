@@ -249,8 +249,8 @@ if args.training:
     loss_fn = CategoricalCrossentropy(label_smoothing=label_smoothing_factor)
 
     cait_xxs24_224.compile(optimizer, loss_fn)
-    cait_xxs24_224.build((batch_size, 32, 32, 3))
-    cait_xxs24_224.summary()
+    #cait_xxs24_224.build((batch_size, 32, 32, 3))
+    #cait_xxs24_224.summary()
 
     cait_xxs24_224.fit(
         x=x_train,y= y_train,
@@ -262,6 +262,7 @@ if args.training:
     results= cait_xxs24_224.evaluate(x_test, y_test)
     tf.saved_model.save(cait_xxs24_224,'cait_xxs24_32')
     print(results)
+    cait_xxs24_224.summary()
 else:
     cait_xxs24_224=  tf.saved_model.load('cait_xxs24_32')
 batch_size=1
