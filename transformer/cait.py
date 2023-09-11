@@ -20,6 +20,9 @@ from tensorflow.keras.utils import to_categorical
 from einops import rearrange, repeat
 from einops.layers.tensorflow import Rearrange
 
+optimizer = Adam(learning_rate=learning_rate)
+loss_fn = CategoricalCrossentropy(label_smoothing=label_smoothing_factor)
+
 @tf.function
 def igelu(x):
     x1=x
@@ -90,6 +93,7 @@ class MLP(Layer):
             Dropout(rate=dropout)
         ]
         self.net = Sequential(self.net)
+        self.net.compile(optimizer, loss_fn)
 
     def call(self, x, training=True):
         return self.net(x, training=training)
@@ -115,7 +119,7 @@ class Attention(Layer):
         ]
 
         self.to_out = Sequential(self.to_out)
-
+        self.to_out.compile(optimizer, loss_fn)
     def call(self, x, context=None, training=True):
 
         if not exists(context):
@@ -246,8 +250,7 @@ if args.training:
         emb_dropout = 0.0,
         layer_dropout = 0.05    # randomly dropout 5% of the layers
     )
-    optimizer = Adam(learning_rate=learning_rate)
-    loss_fn = CategoricalCrossentropy(label_smoothing=label_smoothing_factor)
+
 
     cait_xxs24_224.compile(optimizer, loss_fn)
     cait_xxs24_224.build((batch_size, 32, 32, 3))
