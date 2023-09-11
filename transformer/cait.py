@@ -7,9 +7,9 @@ import numpy as np
 import PIL
 import tensorflow as tf
 from tensorflow.keras import Model, datasets, Sequential
-
+from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.layers import Layer, Activation, Dense, LayerNormalization, Dropout, Softmax
-
+from tensorflow.keras.losses import CategoricalCrossentropy
 from tensorflow.keras.utils import get_custom_objects
 from tensorflow.keras import backend as K
 
@@ -244,7 +244,7 @@ if args.training:
     emb_dropout = 0.0,
     layer_dropout = 0.05    # randomly dropout 5% of the layers
 )
-    optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
+    optimizer = Adam(learning_rate=learning_rate)
     loss_fn = keras.losses.CategoricalCrossentropy(label_smoothing=label_smoothing_factor)
 
     cait_xxs24_224.compile(optimizer, loss_fn)
