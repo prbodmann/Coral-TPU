@@ -186,7 +186,7 @@ class CaiT(Model):
             Rearrange('b (h p1) (w p2) c -> b (h w) (p1 p2 c)', p1=patch_size, p2=patch_size),
             Dense(units=dim)
         ], name='patch_embedding')
-
+        self.patch_embedding.compile(optimizer, loss_fn)
         self.pos_embedding = tf.Variable(initial_value=tf.random.normal([1, num_patches, dim]))
         self.cls_token = tf.Variable(initial_value=tf.random.normal([1, 1, dim]))
         self.dropout = Dropout(rate=emb_dropout)
@@ -198,6 +198,7 @@ class CaiT(Model):
             LayerNormalization(),
             Dense(units=num_classes)
         ], name='mlp_head')
+        self.mlp_head.compile(optimizer, loss_fn)
 
     def call(self, img, training=True, **kwargs):
         x = self.patch_embedding(img)
