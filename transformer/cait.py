@@ -7,7 +7,7 @@ import numpy as np
 import PIL
 import tensorflow as tf
 from tensorflow import keras
-from tensorflow.keras import layers
+from tensorflow.keras.layers import Layer
 from tensorflow.keras.utils import get_custom_objects
 from tensorflow.keras import backend as K
 
