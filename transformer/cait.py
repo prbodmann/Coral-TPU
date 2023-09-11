@@ -20,8 +20,7 @@ from tensorflow.keras.utils import to_categorical
 from einops import rearrange, repeat
 from einops.layers.tensorflow import Rearrange
 
-tf.config.run_functions_eagerly(True)
-
+tf.config.experimental_run_functions_eagerly(True)
 DIM=192
 MLP_RATIO=4
 batch_size = 100
