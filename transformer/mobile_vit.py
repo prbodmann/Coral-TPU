@@ -141,7 +141,7 @@ class MV2Block(Layer):
         if expansion == 1:
             self.conv = Sequential([
                 # dw
-                nn.Conv2D(filters=hidden_dim, kernel_size=3, strides=stride, padding='SAME', groups=hidden_dim,
+                nn.DepthwiseConv2D(filters=hidden_dim, kernel_size=3, strides=stride, padding='SAME',
                           use_bias=False),
                 nn.BatchNormalization(momentum=0.9, epsilon=1e-5),
                 Swish(),
@@ -156,7 +156,7 @@ class MV2Block(Layer):
                 nn.BatchNormalization(momentum=0.9, epsilon=1e-5),
                 Swish(),
                 # dw
-                nn.Conv2D(filters=hidden_dim, kernel_size=3, strides=stride, padding='SAME', groups=hidden_dim,
+                nn.DepthwiseConv2D(filters=hidden_dim, kernel_size=3, strides=stride, padding='SAME',
                           use_bias=False),
                 nn.BatchNormalization(momentum=0.9, epsilon=1e-5),
                 Swish(),
