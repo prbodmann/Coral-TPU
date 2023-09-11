@@ -79,18 +79,11 @@ class MLP(Layer):
     def __init__(self, dim, hidden_dim, dropout=0.0):
         super(MLP, self).__init__()
         def GELU():
-            def gelu(x, approximate=True):
-                if approximate:
-                    coeff = tf.cast(0.044715, x.dtype)
-                    return 0.5 * x * (1.0 + tf.tanh(0.7978845608028654 * (x + coeff * tf.pow(x, 3))))
-                else:
-                    return 0.5 * x * (1.0 + tf.math.erf(x / tf.cast(1.4142135623730951, x.dtype)))
-
-            return Activation(gelu)
+            return Activation(igelu)
 
         self.net = [
             Dense(units=hidden_dim),
-            igelu(),
+            GELU(),
             Dropout(rate=dropout),
             Dense(units=dim),
             Dropout(rate=dropout)
