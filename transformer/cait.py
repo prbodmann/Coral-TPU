@@ -245,7 +245,7 @@ if args.training:
     layer_dropout = 0.05    # randomly dropout 5% of the layers
 )
     optimizer = Adam(learning_rate=learning_rate)
-    loss_fn = keras.losses.CategoricalCrossentropy(label_smoothing=label_smoothing_factor)
+    loss_fn = CategoricalCrossentropy(label_smoothing=label_smoothing_factor)
 
     cait_xxs24_224.compile(optimizer, loss_fn)
     cait_xxs24_224.build((batch_size, 32, 32, 3))
