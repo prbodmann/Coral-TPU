@@ -213,7 +213,7 @@ class MobileViT(Model):
                  image_size,
                  dims,
                  channels,
-                 num_classes,
+                 num_classes=100,
                  expansion=4,
                  kernel_size=3,
                  patch_size=(2, 2),
@@ -294,8 +294,7 @@ if args.training:
     cait_xxs24_224 =MobileViT(
     image_size=(224, 224),
     dims=[96, 120, 144],
-    channels=[16, 32, 48, 48, 64, 64, 80, 80, 96, 96, 384],
-    num_classes=100
+    channels=[16, 32, 48, 48, 64, 64, 80, 80, 96, 96, 384]
 )
 
     cait_xxs24_224.compile(optimizer, loss_fn)
