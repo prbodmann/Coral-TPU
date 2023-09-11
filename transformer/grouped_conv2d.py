@@ -1,5 +1,5 @@
 import tensorflow as tf
-from tensorflow.contrib.layers.python.layers import utils
+from tensorflow.keras.layers import utils
 import collections
 
 slim = tf.contrib.slim
