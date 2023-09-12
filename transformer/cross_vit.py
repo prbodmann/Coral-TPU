@@ -243,7 +243,7 @@ if args.training:
     cait_xxs24_224.fit(
         x=x_train,y= y_train,
         validation_data=(x_test, y_test),
-        epochs=20,
+        epochs=2,
         batch_size=batch_size,
         verbose=1   
     )
