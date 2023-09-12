@@ -10,6 +10,10 @@ from einops.layers.tensorflow import Reduce
 from tensorflow.keras.losses import CategoricalCrossentropy
 from tensorflow.keras.optimizers import Adam
 from grouped_conv2d import GroupConv2D
+
+optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
+loss_fn = keras.losses.CategoricalCrossentropy(label_smoothing=label_smoothing_factor)
+
 def gelu(x, approximate=False):
     if approximate:
         coeff = tf.cast(0.044715, x.dtype)
@@ -19,7 +23,7 @@ def gelu(x, approximate=False):
 
 
 class GELU(Layer):
-    def __init__(self, approximate=False):
+    def __init__(self, approximate=True):
         super(GELU, self).__init__()
         self.approximate = approximate
 
