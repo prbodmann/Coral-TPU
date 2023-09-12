@@ -372,7 +372,7 @@ with tf.device("/cpu:0"):
         )
         cait_xxs24_224.summary()
         results= cait_xxs24_224.evaluate(x_test, y_test,batch_size=batch_size)
-        #tf.saved_model.save(cait_xxs24_224,'cait_xxs24_32')
+        tf.saved_model.save(cait_xxs24_224,'cross_vit')
         print(results)
         
     else:
@@ -392,4 +392,5 @@ with tf.device("/cpu:0"):
     converter_quant.experimental_new_converter = True
     converter_quant.allow_custom_ops=True
     tflite_model = converter_quant.convert()
-    open("cait_xxs24_32.tflite", "wb").write(tflite_model)
+    print("finished converting")
+    open("cross_vit.tflite", "wb").write(tflite_model)
