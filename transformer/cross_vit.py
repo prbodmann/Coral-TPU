@@ -154,7 +154,7 @@ class Attention(Layer):
         grid = rearrange(grid, 'c i j -> (i j) c')
         rel_pos = grid[:, None] - grid[None, :]
         rel_pos += window_size - 1
-        self.rel_pos_indices = tf.reduce_sum(rel_pos * tf.convert_to_tensor([2 * window_size - 1, 1]), axis=-1)
+        self.rel_pos_indices = tf.reduce_sum(rel_pos * tf.convert_to_tensor([2 * window_size - 1, 1]), axis=-1).numpy()
 
     def call(self, x, training=True):
         _, height, width, _ = x.shape
@@ -186,7 +186,7 @@ class Attention(Layer):
         rel_pos = tf.stack(tf.meshgrid(pos, pos, indexing='ij'))
         rel_pos = rearrange(rel_pos, 'c i j -> (i j) c')
         biases = self.dpb(tf.cast(rel_pos, tf.float32))
-        rel_pos_bias = biases.numpy()[self.rel_pos_indices.numpy()]
+        rel_pos_bias = biases.numpy()[self.rel_pos_indices]
 
         sim = sim + rel_pos_bias
 
