@@ -14,7 +14,7 @@ from grouped_conv2d import GroupConv2D
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.losses import CategoricalCrossentropy
 
-batch_size = 100
+batch_size = 1
 learning_rate = 0.002
 label_smoothing_factor = 0.1
 
@@ -308,7 +308,7 @@ if args.training:
     )
 
     cait_xxs24_224.compile(optimizer, loss_fn)
-    cait_xxs24_224.build((32, 32, 3))
+    cait_xxs24_224.build((batch_size, 32, 32, 3))
     #cait_xxs24_224.summary()
 
     cait_xxs24_224.fit(
@@ -333,7 +333,7 @@ def representative_data_gen():
 converter_quant = tf.lite.TFLiteConverter.from_keras_model(cait_xxs24_224) 
 
 converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
-converter_quant.input_shape=(32,32,3)
+converter_quant.input_shape=(1,32,32,3)
 converter_quant.representative_dataset = representative_data_gen
 converter_quant.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
 converter_quant.target_spec.supported_types = [tf.int8]
