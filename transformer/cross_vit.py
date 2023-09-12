@@ -319,7 +319,7 @@ if args.training:
     dim = (64, 128, 256, 512),         # dimension at each stage
     depth = (2, 2, 8, 2),              # depth of transformer at each stage
     global_window_size = (8, 4, 2, 1), # global window sizes at each stage
-    local_window_size = 7,             # local window size (can be customized for each stage, but in paper, held constant at 7 for all stages)
+    local_window_size = 8,             # local window size (can be customized for each stage, but in paper, held constant at 7 for all stages)
     )
 
 
