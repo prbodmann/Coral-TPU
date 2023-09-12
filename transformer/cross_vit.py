@@ -15,7 +15,7 @@ from einops import rearrange, repeat
 from einops.layers.tensorflow import Rearrange
 from tensorflow import einsum
 
-batch_size = 1
+batch_size = 100
 learning_rate = 0.002
 label_smoothing_factor = 0.1
 
