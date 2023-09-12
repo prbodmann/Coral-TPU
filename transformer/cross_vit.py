@@ -13,6 +13,7 @@ from tensorflow.keras.optimizers import Adam
 from grouped_conv2d import GroupConv2D
 from einops import rearrange, repeat
 from einops.layers.tensorflow import Rearrange
+from tensorflow import einsum
 
 batch_size = 1
 learning_rate = 0.002
