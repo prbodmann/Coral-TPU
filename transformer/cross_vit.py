@@ -372,6 +372,9 @@ if args.training:
     )
     cait_xxs24_224.summary()
     results= cait_xxs24_224.evaluate(x_test, y_test,batch_size=batch_size)
+    
+    img = tf.random.normal(shape=[1, 224, 224, 3])
+    preds = v(img) # (1, 1000)
     tf.saved_model.save(cait_xxs24_224,'cross_vit')
     print(results)
     
