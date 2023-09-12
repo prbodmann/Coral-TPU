@@ -375,7 +375,7 @@ with tf.device("/cpu:0"):
         
         img = tf.random.normal(shape=[1, 224, 224, 3])
         preds = cait_xxs24_224(img) # (1, 1000)
-        #cait_xxs24_224.save('cross_vit')
+        cait_xxs24_224.save('cross_vit')
         print(results)
         
     else:
