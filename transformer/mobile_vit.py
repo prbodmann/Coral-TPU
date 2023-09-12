@@ -1,5 +1,6 @@
 import argparse
 import tensorflow as tf
+
 from tensorflow.keras import Model
 from tensorflow.keras.layers import Layer
 from tensorflow.keras import Sequential, datasets
@@ -10,9 +11,14 @@ from einops.layers.tensorflow import Reduce
 from tensorflow.keras.losses import CategoricalCrossentropy
 from tensorflow.keras.optimizers import Adam
 from grouped_conv2d import GroupConv2D
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.losses import CategoricalCrossentropy
 
-optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
-loss_fn = keras.losses.CategoricalCrossentropy(label_smoothing=label_smoothing_factor)
+learning_rate = 0.002
+label_smoothing_factor = 0.1
+
+optimizer = Adam(learning_rate=learning_rate)
+loss_fn = CategoricalCrossentropy(label_smoothing=label_smoothing_factor)
 
 def gelu(x, approximate=False):
     if approximate:
