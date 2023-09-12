@@ -23,299 +23,275 @@ label_smoothing_factor = 0.1
 optimizer = Adam(learning_rate=learning_rate)
 loss_fn = CategoricalCrossentropy(label_smoothing=label_smoothing_factor)
 
-def exists(val):
-    return val is not None
+import tensorflow as tf
+from tensorflow.keras import Model
+from tensorflow.keras.layers import Layer
+from tensorflow.keras import Sequential
+import tensorflow.keras.layers as nn
+from tensorflow import einsum
 
-def default(val, d):
-    return val if exists(val) else d
+from einops import rearrange
+from einops.layers.tensorflow import Rearrange, Reduce
 
-class PreNorm(Layer):
-    def __init__(self, fn):
-        super(PreNorm, self).__init__()
+def cast_tuple(val, length = 1):
+    return val if isinstance(val, tuple) else ((val,) * length)
 
-        self.norm = nn.LayerNormalization()
-        self.fn = fn
+def gelu(x, approximate=False):
+    if approximate:
+        coeff = tf.cast(0.044715, x.dtype)
+        return 0.5 * x * (1.0 + tf.tanh(0.7978845608028654 * (x + coeff * tf.pow(x, 3))))
+    else:
+        return 0.5 * x * (1.0 + tf.math.erf(x / tf.cast(1.4142135623730951, x.dtype)))
 
-    def call(self, x, training=True, **kwargs):
-        return self.fn(self.norm(x), training=training, **kwargs)
+class GELU(Layer):
+    def __init__(self, approximate=False):
+        super(GELU, self).__init__()
+        self.approximate = approximate
+
+    def call(self, x, training=True):
+        return gelu(x, self.approximate)
+
+# cross embed layer
+class CrossEmbedLayer(Layer):
+    def __init__(self, dim, kernel_sizes, stride=2):
+        super(CrossEmbedLayer, self).__init__()
+
+        kernel_sizes = sorted(kernel_sizes)
+        num_scales = len(kernel_sizes)
+
+        # calculate the dimension at each scale
+        dim_scales = [int(dim / (2 ** i)) for i in range(1, num_scales)]
+        dim_scales = [*dim_scales, dim - sum(dim_scales)]
+
+        self.convs = []
+        for kernel, dim_scale in zip(kernel_sizes, dim_scales):
+            self.convs.append(nn.Conv2D(filters=dim_scale, kernel_size=kernel, strides=stride, padding='SAME'))
+
+    def call(self, x, training=True):
+        fmaps = tuple(map(lambda conv: conv(x), self.convs))
+        x = tf.concat(fmaps, axis=-1)
+        return x
+
+# dynamic positional bias
+class DynamicPositionBias(Layer):
+    def __init__(self, dim):
+        super(DynamicPositionBias, self).__init__()
+
+        self.dpb_layers = Sequential([
+            nn.Dense(units=dim),
+            nn.LayerNormalization(),
+            nn.ReLU(),
+            nn.Dense(units=dim),
+            nn.LayerNormalization(),
+            nn.ReLU(),
+            nn.Dense(units=dim),
+            nn.LayerNormalization(),
+            nn.ReLU(),
+            nn.Dense(units=1),
+            Rearrange('... () -> ...')
+        ])
+
+    def call(self, x, training=True):
+        x = self.dpb_layers(x)
+        return x
+
+# transformer classes
+class LayerNorm(Layer):
+    def __init__(self, dim, eps=1e-5):
+        super(LayerNorm, self).__init__()
+        self.eps = eps
+
+        self.g = tf.Variable(tf.ones([1, 1, 1, dim]))
+        self.b = tf.Variable(tf.zeros([1, 1, 1, dim]))
+
+    def call(self, x, training=True):
+        var = tf.math.reduce_variance(x, axis=-1, keepdims=True)
+        mean = tf.reduce_mean(x, axis=-1, keepdims=True)
+
+        x = (x - mean) / tf.sqrt((var + self.eps)) * self.g + self.b
+        return x
 
 class MLP(Layer):
-    def __init__(self, dim, hidden_dim, dropout=0.0):
+    def __init__(self, dim, mult=4, dropout=0.0):
         super(MLP, self).__init__()
-        def GELU():
-            def gelu(x, approximate=False):
-                if approximate:
-                    coeff = tf.cast(0.044715, x.dtype)
-                    return 0.5 * x * (1.0 + tf.tanh(0.7978845608028654 * (x + coeff * tf.pow(x, 3))))
-                else:
-                    return 0.5 * x * (1.0 + tf.math.erf(x / tf.cast(1.4142135623730951, x.dtype)))
 
-            return nn.Activation(gelu)
-
-        self.net = [
-            nn.Dense(units=hidden_dim),
+        self.net = Sequential([
+            LayerNorm(dim),
+            nn.Conv2D(filters=dim*mult, kernel_size=1, strides=1),
             GELU(),
             nn.Dropout(rate=dropout),
-            nn.Dense(units=dim),
-            nn.Dropout(rate=dropout)
-        ]
-        self.net = Sequential(self.net)
+            nn.Conv2D(filters=dim, kernel_size=1, strides=1)
+        ])
 
     def call(self, x, training=True):
         return self.net(x, training=training)
 
 class Attention(Layer):
-    def __init__(self, dim, heads=8, dim_head=64, dropout=0.0):
+    def __init__(self, dim, attn_type, window_size, dim_head=32, dropout=0.0):
         super(Attention, self).__init__()
-        inner_dim = dim_head * heads
 
+        assert attn_type in {'short', 'long'}, 'attention type must be one of local or distant'
+        heads = dim // dim_head
         self.heads = heads
         self.scale = dim_head ** -0.5
+        inner_dim = dim_head * heads
 
+        self.attn_type = attn_type
+        self.window_size = window_size
+
+        self.norm = LayerNorm(dim)
+        self.to_qkv = nn.Conv2D(filters=inner_dim * 3, kernel_size=1, strides=1, use_bias=False)
+        self.to_out = nn.Conv2D(filters=dim, kernel_size=1, strides=1)
+
+        # positions
+        self.dpb = DynamicPositionBias(dim // 4)
         self.attend = nn.Softmax()
-        self.to_q = nn.Dense(units=inner_dim, use_bias=False)
-        self.to_kv = nn.Dense(units=inner_dim * 2, use_bias=False)
 
-        self.to_out = [
-            nn.Dense(units=dim),
-            nn.Dropout(rate=dropout)
-        ]
+        # calculate and store indices for retrieving bias
+        pos = tf.range(window_size)
+        grid = tf.stack(tf.meshgrid(pos, pos, indexing='ij'))
+        grid = rearrange(grid, 'c i j -> (i j) c')
+        rel_pos = grid[:, None] - grid[None, :]
+        rel_pos += window_size - 1
+        self.rel_pos_indices = tf.reduce_sum(rel_pos * tf.convert_to_tensor([2 * window_size - 1, 1]), axis=-1)
 
-        self.to_out = Sequential(self.to_out)
+    def call(self, x, training=True):
+        _, height, width, _ = x.shape
+        heads = self.heads
+        wsz = self.window_size
 
-    def call(self, x, context=None, kv_include_self=False, training=True):
+        # prenorm
+        x = self.norm(x)
 
-        context = default(context, x)
+        # rearrange for short or long distance attention
 
-        if kv_include_self:
-            context = tf.concat([x, context], axis=1) # cross attention requires CLS token includes itself as key / value
+        if self.attn_type == 'short':
+            x = rearrange(x, 'b (h s1) (w s2) d -> (b h w) s1 s2 d', s1=wsz, s2=wsz)
+        elif self.attn_type == 'long':
+            x = rearrange(x, 'b (l1 h) (l2 w) d -> (b h w) l1 l2 d', l1=wsz, l2=wsz)
 
-        q = self.to_q(x)
-        kv = self.to_kv(context)
-        k, v = tf.split(kv, num_or_size_splits=2, axis=-1)
-        qkv = (q, k, v)
+        # queries / keys / values
+        qkv = self.to_qkv(x)
+        q, k, v = tf.split(qkv, num_or_size_splits=3, axis=-1)
 
-        q, k, v = map(lambda t: rearrange(t, 'b n (h d) -> b h n d', h=self.heads), qkv)
+        # split heads
+        q, k, v = map(lambda t: rearrange(t, 'b x y (h d) -> b h (x y) d', h=heads), (q, k, v))
+        q = q * self.scale
 
-        dots = einsum('b h i d, b h j d -> b h i j', q, k) * self.scale
+        sim = einsum('b h i d, b h j d -> b h i j', q, k)
 
-        attn = self.attend(dots)
+        # add dynamic positional bias
+        pos = tf.range(-wsz, wsz + 1)
+        rel_pos = tf.stack(tf.meshgrid(pos, pos, indexing='ij'))
+        rel_pos = rearrange(rel_pos, 'c i j -> (i j) c')
+        biases = self.dpb(tf.cast(rel_pos, tf.float32))
+        rel_pos_bias = biases.numpy()[self.rel_pos_indices.numpy()]
 
-        x = einsum('b h i j, b h j d -> b h i d', attn, v)
-        x = rearrange(x, 'b h n d -> b n (h d)')
-        x = self.to_out(x, training=training)
+        sim = sim + rel_pos_bias
 
-        return x
+        # attend
+        attn = self.attend(sim)
+
+        # merge heads
+        out = einsum('b h i j, b h j d -> b h i d', attn, v)
+        out = rearrange(out, 'b h (x y) d -> b x y (h d) ', x=wsz, y=wsz)
+        out = self.to_out(out)
+        # rearrange back for long or short distance attention
+        if self.attn_type == 'short':
+            out = rearrange(out, '(b h w) s1 s2 d -> b (h s1) (w s2) d', h=height // wsz, w=width // wsz)
+        elif self.attn_type == 'long':
+            out = rearrange(out, '(b h w) l1 l2 d -> b (l1 h) (l2 w) d', h=height // wsz, w=width // wsz)
+
+        return out
 
 class Transformer(Layer):
-    def __init__(self, dim, depth, heads, dim_head, mlp_dim, dropout=0.0):
+    def __init__(self, dim, local_window_size, global_window_size, depth=4, dim_head=32, attn_dropout=0.0, ff_dropout=0.0):
         super(Transformer, self).__init__()
 
         self.layers = []
-        self.norm = nn.LayerNormalization()
 
         for _ in range(depth):
             self.layers.append([
-                PreNorm(Attention(dim, heads=heads, dim_head=dim_head, dropout=dropout)),
-                PreNorm(MLP(dim, mlp_dim, dropout=dropout))
+                Attention(dim, attn_type='short', window_size=local_window_size, dim_head=dim_head, dropout=attn_dropout),
+                MLP(dim, dropout=ff_dropout),
+                Attention(dim, attn_type='long', window_size=global_window_size, dim_head=dim_head, dropout=attn_dropout),
+                MLP(dim, dropout=ff_dropout)
             ])
 
     def call(self, x, training=True):
-        for attn, mlp in self.layers:
-            x = attn(x, training=training) + x
-            x = mlp(x, training=training) + x
-
-        x = self.norm(x)
-
-        return x
-
-# projecting CLS tokens, in the case that small and large patch tokens have different dimensions
-class ProjectInOut(Layer):
-    def __init__(self, dim_in, dim_out, fn):
-        super(ProjectInOut, self).__init__()
-        self.fn = fn
-
-        self.need_projection = dim_in != dim_out
-        if self.need_projection:
-            self.project_in = nn.Dense(units=dim_out)
-            self.project_out = nn.Dense(units=dim_in)
-
-    def call(self, x, training=True, *args, **kwargs):
-        # args check
-        if self.need_projection:
-            x = self.project_in(x)
-
-        x = self.fn(x, training=training, *args, **kwargs)
-
-        if self.need_projection:
-            x = self.project_out(x)
+        for short_attn, short_ff, long_attn, long_ff in self.layers:
+            x = short_attn(x) + x
+            x = short_ff(x, training=training) + x
+            x = long_attn(x) + x
+            x = long_ff(x, training=training) + x
 
         return x
 
-# cross attention transformer
-class CrossTransformer(Layer):
-    def __init__(self, sm_dim, lg_dim, depth, heads, dim_head, dropout):
-        super(CrossTransformer, self).__init__()
-
-        self.layers = []
-
-        for _ in range(depth):
-            self.layers.append([ProjectInOut(sm_dim, lg_dim, PreNorm(Attention(lg_dim, heads=heads, dim_head=dim_head, dropout=dropout))),
-                                ProjectInOut(lg_dim, sm_dim, PreNorm(Attention(sm_dim, heads=heads, dim_head=dim_head, dropout=dropout)))]
-                               )
-
-    def call(self, inputs, training=True):
-        sm_tokens, lg_tokens = inputs
-        (sm_cls, sm_patch_tokens), (lg_cls, lg_patch_tokens) = map(lambda t: (t[:, :1], t[:, 1:]), (sm_tokens, lg_tokens))
-
-        for sm_attend_lg, lg_attend_sm in self.layers:
-            sm_cls = sm_attend_lg(sm_cls, context=lg_patch_tokens, kv_include_self=True, training=training) + sm_cls
-            lg_cls = lg_attend_sm(lg_cls, context=sm_patch_tokens, kv_include_self=True, training=training) + lg_cls
-
-        sm_tokens = tf.concat([sm_cls, sm_patch_tokens], axis=1)
-        lg_tokens = tf.concat([lg_cls, lg_patch_tokens], axis=1)
-
-        return sm_tokens, lg_tokens
-
-# multi-scale encoder
-class MultiScaleEncoder(Layer):
+class CrossFormer(Model):
     def __init__(self,
-        depth,
-        sm_dim,
-        lg_dim,
-        sm_enc_params,
-        lg_enc_params,
-        cross_attn_heads,
-        cross_attn_depth,
-        cross_attn_dim_head=64,
-        dropout=0.0):
-        super(MultiScaleEncoder, self).__init__()
+                 dim=(64, 128, 256, 512),
+                 depth=(2, 2, 8, 2),
+                 global_window_size=(8, 4, 2, 1),
+                 local_window_size=7,
+                 cross_embed_kernel_sizes=((4, 8, 16, 32), (2, 4), (2, 4), (2, 4)),
+                 cross_embed_strides=(4, 2, 2, 2),
+                 num_classes=1000,
+                 attn_dropout=0.0,
+                 ff_dropout=0.0,
+                 ):
+        super(CrossFormer, self).__init__()
+        dim = cast_tuple(dim, 4)
+        depth = cast_tuple(depth, 4)
+        global_window_size = cast_tuple(global_window_size, 4)
+        local_window_size = cast_tuple(local_window_size, 4)
+        cross_embed_kernel_sizes = cast_tuple(cross_embed_kernel_sizes, 4)
+        cross_embed_strides = cast_tuple(cross_embed_strides, 4)
 
-        self.layers = []
+        assert len(dim) == 4
+        assert len(depth) == 4
+        assert len(global_window_size) == 4
+        assert len(local_window_size) == 4
+        assert len(cross_embed_kernel_sizes) == 4
+        assert len(cross_embed_strides) == 4
 
-        for _ in range(depth):
-            self.layers.append([Transformer(dim=sm_dim, dropout=dropout, **sm_enc_params),
-                                Transformer(dim=lg_dim, dropout=dropout, **lg_enc_params),
-                                CrossTransformer(sm_dim=sm_dim, lg_dim=lg_dim,
-                                                 depth=cross_attn_depth, heads=cross_attn_heads, dim_head=cross_attn_dim_head, dropout=dropout)
-                                ]
-            )
+        # layers
+        self.crossformer_layers = []
 
+        for dim_out, layers, global_wsz, local_wsz, cel_kernel_sizes, cel_stride in zip(dim, depth,
+                                                                                        global_window_size, local_window_size,
+                                                                                        cross_embed_kernel_sizes, cross_embed_strides):
+            self.crossformer_layers.append([
+                CrossEmbedLayer(dim_out, cel_kernel_sizes, stride=cel_stride),
+                Transformer(dim_out, local_window_size=local_wsz, global_window_size=global_wsz, depth=layers,
+                            attn_dropout=attn_dropout, ff_dropout=ff_dropout)
+            ])
 
-    def call(self, inputs, training=True):
-        sm_tokens, lg_tokens = inputs
-        for sm_enc, lg_enc, cross_attend in self.layers:
-            sm_tokens, lg_tokens = sm_enc(sm_tokens, training=training), lg_enc(lg_tokens, training=training)
-            sm_tokens, lg_tokens = cross_attend([sm_tokens, lg_tokens], training=training)
-
-        return sm_tokens, lg_tokens
-
-# patch-based image to token embedder
-class ImageEmbedder(Layer):
-    def __init__(self,
-                 dim,
-                 image_size,
-                 patch_size,
-                 dropout=0.0):
-        super(ImageEmbedder, self).__init__()
-
-        assert image_size % patch_size == 0, 'Image dimensions must be divisible by the patch size.'
-        num_patches = (image_size // patch_size) ** 2
-
-        self.patch_embedding = Sequential([
-            Rearrange('b (h p1) (w p2) c -> b (h w) (p1 p2 c)', p1=patch_size, p2=patch_size),
-            nn.Dense(units=dim)
-        ], name='patch_embedding')
-
-        self.pos_embedding = tf.Variable(initial_value=tf.random.normal([1, num_patches + 1, dim]))
-        self.cls_token = tf.Variable(initial_value=tf.random.normal([1, 1, dim]))
-        self.dropout = nn.Dropout(rate=dropout)
-
-    def call(self, x, training=True):
-        x = self.patch_embedding(x)
-
-        b, n, d = x.shape
-
-        cls_tokens = repeat(self.cls_token, '() n d -> b n d', b=b)
-        x = tf.concat([cls_tokens, x], axis=1)
-        x += self.pos_embedding[:, :(n + 1)]
-        x = self.dropout(x, training=training)
-
-        return x
-
-# cross ViT class
-class CrossViT(Model):
-    def __init__(self,
-                 image_size,
-                 num_classes,
-                 sm_dim,
-                 lg_dim,
-                 sm_patch_size=12,
-                 sm_enc_depth=1,
-                 sm_enc_heads=8,
-                 sm_enc_mlp_dim=2048,
-                 sm_enc_dim_head=64,
-                 lg_patch_size=16,
-                 lg_enc_depth=4,
-                 lg_enc_heads=8,
-                 lg_enc_mlp_dim=2048,
-                 lg_enc_dim_head=64,
-                 cross_attn_depth=2,
-                 cross_attn_heads=8,
-                 cross_attn_dim_head=64,
-                 depth=3,
-                 dropout=0.1,
-                 emb_dropout=0.1):
-        super(CrossViT, self).__init__()
-        self.sm_image_embedder = ImageEmbedder(dim=sm_dim, image_size=image_size, patch_size=sm_patch_size, dropout=emb_dropout)
-        self.lg_image_embedder = ImageEmbedder(dim=lg_dim, image_size=image_size, patch_size=lg_patch_size, dropout=emb_dropout)
-
-        self.multi_scale_encoder = MultiScaleEncoder(
-            depth=depth,
-            sm_dim=sm_dim,
-            lg_dim=lg_dim,
-            cross_attn_heads=cross_attn_heads,
-            cross_attn_dim_head=cross_attn_dim_head,
-            cross_attn_depth=cross_attn_depth,
-            sm_enc_params=dict(
-                depth=sm_enc_depth,
-                heads=sm_enc_heads,
-                mlp_dim=sm_enc_mlp_dim,
-                dim_head=sm_enc_dim_head
-            ),
-            lg_enc_params=dict(
-                depth=lg_enc_depth,
-                heads=lg_enc_heads,
-                mlp_dim=lg_enc_mlp_dim,
-                dim_head=lg_enc_dim_head
-            ),
-            dropout=dropout
-        )
-
-        self.sm_mlp_head = Sequential([
-            nn.LayerNormalization(),
+        # final logits
+        self.to_logits = Sequential([
+            Reduce('b h w c -> b c', 'mean'),
             nn.Dense(units=num_classes)
-        ], name='sm_mlp_head')
+        ])
 
-        self.lg_mlp_head = Sequential([
-            nn.LayerNormalization(),
-            nn.Dense(units=num_classes)
-        ], name='lg_mlp_head')
+    def call(self, x, training=True, **kwargs):
+        for cel, transformer in self.crossformer_layers:
+            x = cel(x)
+            x = transformer(x, training=training)
 
-    def call(self, img, training=True, **kwargs):
-        sm_tokens = self.sm_image_embedder(img, training=training)
-        lg_tokens = self.lg_image_embedder(img, training=training)
-
-        sm_tokens, lg_tokens = self.multi_scale_encoder([sm_tokens, lg_tokens], training=training)
-
-        sm_cls, lg_cls = map(lambda t: t[:, 0], (sm_tokens, lg_tokens))
-
-        sm_logits = self.sm_mlp_head(sm_cls)
-        lg_logits = self.lg_mlp_head(lg_cls)
-
-        x = sm_logits + lg_logits
+        x = self.to_logits(x)
 
         return x
+""" Usage
+v = CrossFormer(
+    num_classes = 1000,                # number of output classes
+    dim = (64, 128, 256, 512),         # dimension at each stage
+    depth = (2, 2, 8, 2),              # depth of transformer at each stage
+    global_window_size = (8, 4, 2, 1), # global window sizes at each stage
+    local_window_size = 7,             # local window size (can be customized for each stage, but in paper, held constant at 7 for all stages)
+)
+
+img = tf.random.normal(shape=[1, 224, 224, 3])
+preds = v(img) # (1, 1000)
+"""
 
 
 parser = argparse.ArgumentParser(description='Process some integers.')
@@ -338,25 +314,14 @@ x_test = x_test / 255.0
 if args.training:
 
 
-    cait_xxs24_224 = CrossViT(
-    image_size = 224,
-    num_classes = 100,
-    depth = 4,               # number of multi-scale encoding blocks
-    sm_dim = 192,            # high res dimension
-    sm_patch_size = 16,      # high res patch size (should be smaller than lg_patch_size)
-    sm_enc_depth = 2,        # high res depth
-    sm_enc_heads = 8,        # high res heads
-    sm_enc_mlp_dim = 2048,   # high res feedforward dimension
-    lg_dim = 384,            # low res dimension
-    lg_patch_size = 32,      # low res patch size
-    lg_enc_depth = 3,        # low res depth
-    lg_enc_heads = 8,        # low res heads
-    lg_enc_mlp_dim = 2048,   # low res feedforward dimensions
-    cross_attn_depth = 2,    # cross attention rounds
-    cross_attn_heads = 8,    # cross attention heads
-    dropout = 0.1,
-    emb_dropout = 0.1
-)
+    cait_xxs24_224 =  CrossFormer(
+    num_classes = 100,                # number of output classes
+    dim = (64, 128, 256, 512),         # dimension at each stage
+    depth = (2, 2, 8, 2),              # depth of transformer at each stage
+    global_window_size = (8, 4, 2, 1), # global window sizes at each stage
+    local_window_size = 7,             # local window size (can be customized for each stage, but in paper, held constant at 7 for all stages)
+    )
+
 
     cait_xxs24_224.compile(optimizer, loss_fn)
     cait_xxs24_224.build((batch_size, 32, 32, 3))
