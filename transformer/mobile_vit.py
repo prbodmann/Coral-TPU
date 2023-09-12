@@ -14,6 +14,7 @@ from grouped_conv2d import GroupConv2D
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.losses import CategoricalCrossentropy
 
+batch_size = 100
 learning_rate = 0.002
 label_smoothing_factor = 0.1
 
