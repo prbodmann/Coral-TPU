@@ -186,7 +186,7 @@ class Attention(Layer):
         rel_pos = tf.stack(tf.meshgrid(pos, pos, indexing='ij'))
         rel_pos = rearrange(rel_pos, 'c i j -> (i j) c')
         biases = self.dpb(tf.cast(rel_pos, tf.float32))
-        rel_pos_bias = nbiases.numpy()[self.rel_pos_indices.numpy()]
+        rel_pos_bias = biases.numpy()[self.rel_pos_indices.numpy()]
 
         sim = sim + rel_pos_bias
 
