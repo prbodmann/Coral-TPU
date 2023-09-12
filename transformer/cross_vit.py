@@ -325,7 +325,7 @@ if args.training:
 
 
     cait_xxs24_224.compile(optimizer, loss_fn,  run_eagerly=True)
-    cait_xxs24_224.build((batch_size, 32, 32, 3))
+    cait_xxs24_224.build((batch_size, 224, 224, 3))
     #cait_xxs24_224.summary()
 
     cait_xxs24_224.fit(
