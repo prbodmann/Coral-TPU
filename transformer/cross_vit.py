@@ -33,6 +33,8 @@ from tensorflow import einsum
 from einops import rearrange
 from einops.layers.tensorflow import Rearrange, Reduce
 
+tf.enable_eager_execution()
+
 def cast_tuple(val, length = 1):
     return val if isinstance(val, tuple) else ((val,) * length)
 
