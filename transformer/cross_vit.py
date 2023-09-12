@@ -312,7 +312,7 @@ if args.training:
     cait_xxs24_224 =  RegionViT(
     dim = (64, 128, 256, 512),      # tuple of size 4, indicating dimension at each stage
     depth = (2, 2, 8, 2),           # depth of the region to local transformer at each stage
-    window_size = 7,                # window size, which should be either 7 or 14
+    window_size = 8,                # window size, which should be either 7 or 14
     num_classes = 100,             # number of output classes
     tokenize_local_3_conv = False,  # whether to use a 3 layer convolution to encode the local tokens from the image. the paper uses this for the smaller models, but uses only 1 conv (set to False) for the larger models
     use_peg = False,                # whether to use positional generating module. they used this for object detection for a boost in performance
