@@ -346,7 +346,7 @@ if args.training:
     sm_enc_heads = 8,        # high res heads
     sm_enc_mlp_dim = 2048,   # high res feedforward dimension
     lg_dim = 384,            # low res dimension
-    lg_patch_size = 64,      # low res patch size
+    lg_patch_size = 32,      # low res patch size
     lg_enc_depth = 3,        # low res depth
     lg_enc_heads = 8,        # low res heads
     lg_enc_mlp_dim = 2048,   # low res feedforward dimensions
