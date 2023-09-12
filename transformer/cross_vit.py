@@ -374,11 +374,11 @@ if args.training:
     
     img = tf.random.normal(shape=[1, 224, 224, 3])
     preds = cait_xxs24_224(img) # (1, 1000)
-    cait_xxs24_224.save('cross_vit.h5')
+    cait_xxs24_224.save('cross_vit',save_format="tf")
     print(results)
     
 else:
-    cait_xxs24_224=  tf.keras.models.load_model('cross_vit.h5')
+    cait_xxs24_224=  tf.keras.models.load_model('cross_vit')
 
 batch_size=1
 def representative_data_gen():
