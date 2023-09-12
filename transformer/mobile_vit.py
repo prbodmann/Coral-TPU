@@ -11,8 +11,7 @@ from einops.layers.tensorflow import Reduce
 from tensorflow.keras.losses import CategoricalCrossentropy
 from tensorflow.keras.optimizers import Adam
 from grouped_conv2d import GroupConv2D
-from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.losses import CategoricalCrossentropy
+from tensorflow import einsum
 
 batch_size = 1
 learning_rate = 0.002
@@ -118,6 +117,7 @@ class Attention(Layer):
         out = self.to_out(out, training=training)
 
         return out
+
 
 
 class Transformer(Layer):
