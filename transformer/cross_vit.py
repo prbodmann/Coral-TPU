@@ -33,7 +33,6 @@ from tensorflow import einsum
 from einops import rearrange
 from einops.layers.tensorflow import Rearrange, Reduce
 
-tf.enable_eager_execution()
 
 def cast_tuple(val, length = 1):
     return val if isinstance(val, tuple) else ((val,) * length)
@@ -325,7 +324,7 @@ if args.training:
     )
 
 
-    cait_xxs24_224.compile(optimizer, loss_fn)
+    cait_xxs24_224.compile(optimizer, loss_fn,  run_eagerly=True)
     cait_xxs24_224.build((batch_size, 32, 32, 3))
     #cait_xxs24_224.summary()
 
