@@ -52,7 +52,7 @@ def test(vit_size,num_classes = 5,
     input_tensor = Input(shape=(image_height,image_width,image_channels))
 
    # input_tensor: (batch_size, image_height, image_width, image_channels)
-    x = self.patch_embedding(input_tensor)
+    x = patch_embedding(input_tensor)
     # reshaping
     x = tf.reshape(
         x, shape=(-1, x.shape[1] * x.shape[2], patch_embedding_dim))
