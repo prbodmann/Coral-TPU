@@ -281,7 +281,7 @@ class Transformer(Layer):
 
         return x, token_ids
 
-class Patches(layers.Layer):
+class Patches(Layer):
     def __init__(self, patch_size):
         super().__init__()
         self.patch_size = patch_size
