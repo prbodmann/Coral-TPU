@@ -85,7 +85,7 @@ vit = viT(vit_size=args.vit_size,
           num_classes=5,
           config_path=args.vit_config)
 
-batch_size = 1
+batch_size = 32
 auto  = tf.data.experimental.AUTOTUNE
 resize_bigger = 280
 num_classes = 5
@@ -113,6 +113,12 @@ def prepare_dataset(dataset, is_training=True):
     dataset = dataset.map(preprocess_dataset(is_training), num_parallel_calls=auto)
     return dataset.batch(batch_size).prefetch(auto)
 
+def configure_for_performance(ds):
+  ds = ds.cache()
+  ds = ds.shuffle(buffer_size=1000)
+  ds = ds.batch(batch_size)
+  ds = ds.prefetch(buffer_size=AUTOTUNE)
+  return ds
 
 """
 The authors use a multi-scale data sampler to help the model learn representations of
@@ -132,8 +138,8 @@ num_val = val_dataset.cardinality()
 print(f"Number of training examples: {num_train}")
 print(f"Number of validation examples: {num_val}")
 
-train_ds = prepare_dataset(train_dataset, is_training=True)
-test_ds = prepare_dataset(val_dataset, is_training=False)
+train_ds = configure_for_performance(train_dataset)
+val_ds = configure_for_performance(val_dataset)
 
 """
 ## Train a MobileViT (XXS) model
