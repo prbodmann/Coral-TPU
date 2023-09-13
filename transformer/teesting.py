@@ -323,7 +323,7 @@ class ViT(Model):
         num_patches = (image_height // patch_height) * (image_width // patch_width)
 
         self.patch_embedding = Sequential([
-            Patches(patch_height)
+            Patches(patch_height),
             Reshape((image_height*image_width,patch_height*patch_width*3)),
             #Rearrange('b (h p1) (w p2) c -> b (h w) (p1 p2 c)', p1=patch_height, p2=patch_width),
             nn.Dense(units=dim)
