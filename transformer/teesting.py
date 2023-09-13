@@ -403,7 +403,14 @@ def representative_data_gen():
     for x in x_test[100]:            
         yield [x[0]]
 
-converter_quant = tf.lite.TFLiteConverter.from_keras_model(cait_xxs24_224) 
+input_shape = cait_xxs24_224.inputs[0].shape.as_list()
+input_shape[0] = batch_size
+func = tf.function(cait_xxs24_224).get_concrete_function(
+    tf.TensorSpec(input_shape, cait_xxs24_224.inputs[0].dtype))
+converter = tf.lite.TFLiteConverter.from_concrete_functions([func])
+
+
+#converter_quant = tf.lite.TFLiteConverter.from_keras_model(cait_xxs24_224) 
 
 converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
 converter_quant.representative_dataset = representative_data_gen
