@@ -303,7 +303,7 @@ class ViT(Model):
         x = nn.Dense(units=dim)(img)   
   
         self.pos_embedding = tf.Variable(initial_value=tf.random.normal([1, num_patches + 1, dim]))
-        self.cls_token = tf.Variable(initial_value=tf.random.normal([1, 1, dim]))
+        self.cls_token = tf.Variable(initial_value=tf.random.normal([None, 1, 1, dim]))
         self.dropout = nn.Dropout(rate=emb_dropout)
 
         self.transformer = Transformer(dim, depth, max_tokens_per_depth, heads, dim_head, mlp_dim, dropout)
