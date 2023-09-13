@@ -155,7 +155,7 @@ chekpoint = tf.keras.callbacks.ModelCheckpoint(
     save_weights_only=True)
 
 vit.compile(optimizer=optimizer,
-            loss=vit_loss,
+            loss="categorical_crossentropy",
             metrics=["acc"])
 
 history = vit.fit(train_ds,
