@@ -162,7 +162,7 @@ vit.compile(optimizer=optimizer,
             metrics=["acc"])
 
 history = vit.fit(train_ds,
-                  validation_data=test_ds,
+                  validation_data=val_ds,
                   shuffle=True,
                   validation_batch_size=args.validation_batch_size,
                   callbacks=[chekpoint],
