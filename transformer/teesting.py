@@ -298,9 +298,10 @@ num_patches = (image_size // patch_size) * (image_size // patch_size)
 patch_embedding = Sequential([
         Rearrange('b (h p1) (w p2) c -> b (h w) (p1 p2 c)', p1=patch_size, p2=patch_size),
         nn.Dense(units=dim)
-    ],dynamic=True)
+    ])
 
 class ViT(Model):
+    @tf.function:
     def __init__(self):
         super(ViT, self).__init__()
         img = Input(shape=(image_size, image_size, 3), dtype="float32")
