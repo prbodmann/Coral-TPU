@@ -1,7 +1,7 @@
 import argparse
 import tensorflow as tf
 
-from tensorflow.keras import Model, Input
+from tensorflow.keras import Model
 from tensorflow.keras.layers import Layer
 from tensorflow.keras import Sequential, datasets
 import tensorflow.keras.layers as nn
@@ -281,32 +281,34 @@ class Transformer(Layer):
 
         return x, token_ids
 
-image_size = 224
-patch_size = 16
-num_classes = 100
-dim = 1024
-depth = 6
-max_tokens_per_depth = (256, 128, 64, 32, 16, 8) # a tuple that denotes the maximum number of tokens that any given layer should have. if the layer has greater than this amount, it will undergo adaptive token sampling
-heads = 16
-mlp_dim = 2048
-dropout = 0.1
-emb_dropout = 0.1
-dim_head = 64
-assert image_size % patch_size == 0 and image_size % patch_size == 0, 'Image dimensions must be divisible by the patch size.'
-num_patches = (image_size // patch_size) * (image_size // patch_size)
-@tf.function
-def patch_embedding(x):
-
-    return Rearrange('b (h p1) (w p2) c -> b (h w) (p1 p2 c)', p1=patch_size, p2=patch_size)(x)
-
 class ViT(Model):
-    @tf.function
-    def __init__(self,img):
+    def __init__(self,
+                 image_size, 
+                 patch_size, 
+                 num_classes, 
+                 dim, 
+                 depth, 
+                 max_tokens_per_depth, 
+                 heads, 
+                 mlp_dim,
+                 dim_head=64, 
+                 dropout=0.0, 
+                 emb_dropout=0.0
+                 ):
         super(ViT, self).__init__()
-       # img = Input(shape=(image_size, image_size, 3), dtype="float32")
 
-        x = patch_embedding(img) 
-        x =  nn.Dense(units=dim)(x)
+        image_height, image_width = pair(image_size)
+        patch_height, patch_width = pair(patch_size)
+
+        assert image_height % patch_height == 0 and image_width % patch_width == 0, 'Image dimensions must be divisible by the patch size.'
+
+        num_patches = (image_height // patch_height) * (image_width // patch_width)
+
+        self.patch_embedding = Sequential([
+            Rearrange('b (h p1) (w p2) c -> b (h w) (p1 p2 c)', p1=patch_height, p2=patch_width),
+            nn.Dense(units=dim)
+        ])
+
         self.pos_embedding = tf.Variable(initial_value=tf.random.normal([1, num_patches + 1, dim]))
         self.cls_token = tf.Variable(initial_value=tf.random.normal([1, 1, dim]))
         self.dropout = nn.Dropout(rate=emb_dropout)
@@ -317,15 +319,18 @@ class ViT(Model):
             nn.LayerNormalization(),
             nn.Dense(units=num_classes)
         ])
-        print(x.shape)
+
+
+    def call(self, img, return_sampled_token_ids=False, training=True, **kwargs):
+        x = self.patch_embedding(img)
         b, n, _ = x.shape
 
         cls_tokens = repeat(self.cls_token, '() n d -> b n d', b=b)
         x = tf.concat([cls_tokens, x], axis=1)
         x += self.pos_embedding[:, :(n + 1)]
-        x = self.dropout(x, training=True)
+        x = self.dropout(x, training=training)
 
-        x, token_ids = self.transformer(x, training=True)
+        x, token_ids = self.transformer(x, training=training)
 
         logits = self.mlp_head(x[:, 0])
 
@@ -335,9 +340,6 @@ class ViT(Model):
             return logits, token_ids
 
         return logits
-
-       
-        
 
 
 parser = argparse.ArgumentParser(description='Process some integers.')
@@ -356,11 +358,22 @@ x_test = x_test.astype('float32')
 # normalize to range 0-1
 x_train = x_train / 255.0
 x_test = x_test / 255.0
-cait_xxs24_224=None
+
 if args.training:
 
-    img = tf.random.normal(shape=[1, 224, 224, 3])
-    cait_xxs24_224 =  ViT(img)
+
+    cait_xxs24_224 =  ViT(
+        image_size = 224,
+        patch_size = 16,
+        num_classes = 100,
+        dim = 1024,
+        depth = 6,
+        max_tokens_per_depth = (256, 128, 64, 32, 16, 8), # a tuple that denotes the maximum number of tokens that any given layer should have. if the layer has greater than this amount, it will undergo adaptive token sampling
+        heads = 16,
+        mlp_dim = 2048,
+        dropout = 0.1,
+        emb_dropout = 0.1
+    )
 
 
     cait_xxs24_224.compile(optimizer, loss_fn,  run_eagerly=True)
@@ -379,7 +392,7 @@ if args.training:
     
     img = tf.random.normal(shape=[1, 224, 224, 3])
     preds = cait_xxs24_224(img) # (1, 1000)
-    #cait_xxs24_224.save('cross_vit',save_format="tf")
+    cait_xxs24_224.save('cross_vit',save_format="tf")
     print(results)
     
 else:
@@ -389,19 +402,15 @@ batch_size=1
 def representative_data_gen():
     for x in x_test[100]:            
         yield [x[0]]
-img = tf.random.normal(shape=[1, 224, 224, 3])
-preds = cait_xxs24_224(img) # (1, 1000)
-print(preds)
-print(cait_xxs24_224.inputs)
 
-input_shape = cait_xxs24_224.inputs[0].shape.as_list()
+input_shape = model.inputs[0].shape.as_list()
 input_shape[0] = batch_size
-func = tf.function(cait_xxs24_224).get_concrete_function(
-    tf.TensorSpec(input_shape, cait_xxs24_224.inputs[0].dtype))
+func = tf.function(model).get_concrete_function(
+    tf.TensorSpec(input_shape, model.inputs[0].dtype))
 converter = tf.lite.TFLiteConverter.from_concrete_functions([func])
 
 
-#converter_quant = tf.lite.TFLiteConverter.from_keras_model(cait_xxs24_224) 
+converter_quant = tf.lite.TFLiteConverter.from_keras_model(cait_xxs24_224) 
 
 converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
 converter_quant.representative_dataset = representative_data_gen
