@@ -101,7 +101,7 @@ def preprocess_dataset(is_training=True):
             image = tf.image.random_flip_left_right(image)
         else:
             image = tf.image.resize(image, (image_size, image_size))
-        label = tf.one_hot(label, depth=num_classes)
+        label = [tf.one_hot(label, depth=num_classes)]
         return image, label
 
     return _pp
