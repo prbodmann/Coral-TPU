@@ -299,7 +299,7 @@ class ViT(Model):
         super(ViT, self).__init__()
         img = Input(shape=(image_size, image_size, 3), dtype="float32")
         self.patch_embedding = Sequential([
-            Rearrange('b (h p1) (w p2) c -> b (h w) (p1 p2 c)', p1=patch_height, p2=patch_width),
+            Rearrange('b (h p1) (w p2) c -> b (h w) (p1 p2 c)', p1=patch_size, p2=patch_size),
             nn.Dense(units=dim)
         ])
 
