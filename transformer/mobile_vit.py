@@ -104,7 +104,7 @@ def inverted_residual_block(x, expanded_channels, output_channels, strides=1):
     m = tf.nn.swish(m)
 
     if strides == 2:
-        m = layers.ZeroPadding2D(padding=imagenet_utils.correct_pad(m, 3))(m)
+        m = layers.ZeroPadding2D(padding=correct_pad(m, 3))(m)
     m = layers.DepthwiseConv2D(
         3, strides=strides, padding="same" if strides == 1 else "valid", use_bias=False
     )(m)
