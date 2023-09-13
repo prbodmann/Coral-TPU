@@ -126,7 +126,7 @@ varied scales. In this example, we discard this part.
 """
 
 train_dataset, val_dataset = tfds.load(
-    "tf_flowers", split=["train[:90%]", "train[90%:]"],     with_info=True,
+    "tf_flowers", split=["train[:90%]", "train[90%:]"], 
     as_supervised=True
 )
 
