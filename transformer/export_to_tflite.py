@@ -1,6 +1,6 @@
 import os
 import argparse
-from teesting import viT
+from teesting import viT, test
 import tensorflow as tf 
 from utils.general import load_config
 import tensorflow_datasets as tfds
@@ -46,7 +46,7 @@ def representative_data_gen():
 
 
 
-model = viT(args.vit_size, args.num_classes)
+model = test(args.vit_size, args.num_classes)
 model.load_weights(os.path.join("finetuning_weights", args.source_name)).expect_partial()
 model.compute_output_shape(input_shape = [1] + VIT_CONFIG[args.vit_size]["image_size"])
 
