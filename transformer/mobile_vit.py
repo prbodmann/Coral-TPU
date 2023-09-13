@@ -33,7 +33,7 @@ import tensorflow as tf
 from tensorflow.keras.applications import imagenet_utils
 from tensorflow.keras import layers
 from tensorflow import keras
-
+from tensorflow.keras.layers.experimental.preprocessing import Rescaling
 import tensorflow_datasets as tfds
 import tensorflow_addons as tfa
 
