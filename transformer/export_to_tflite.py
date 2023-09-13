@@ -34,10 +34,13 @@ def parse_opt():
 args = parse_opt()
 
 VIT_CONFIG = load_config("vit_architectures.yaml")
-
+train_dataset, val_dataset = tfds.load(
+    "tf_flowers", split=["train[:90%]", "train[90%:]"], 
+    as_supervised=True
+)
 batch_size=1
 def representative_data_gen():
-    for x in x_test:            
+    for x in train_dataset:            
         yield [x[0]]
 
 
