@@ -297,7 +297,7 @@ num_patches = (image_size // patch_size) * (image_size // patch_size)
 class ViT(Model):
     def __init__(self):
         super(ViT, self).__init__()
-         image_height, image_width = pair(image_size)
+        image_height, image_width = pair(image_size)
         patch_height, patch_width = pair(patch_size)
 
         assert image_height % patch_height == 0 and image_width % patch_width == 0, 'Image dimensions must be divisible by the patch size.'
