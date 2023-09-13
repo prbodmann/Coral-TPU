@@ -64,7 +64,7 @@ class viT(tf.keras.Model):
                                                     name="ExtractToken")
         self.dense_out = tf.keras.layers.Dense(self.num_classes,
                                                name="head",
-                                               activation=self.class_activation)
+                                               activation="sigmoid")
 
         self.build(
             [1, self.image_height, self.image_width, self.image_channels])
