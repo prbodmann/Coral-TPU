@@ -322,12 +322,6 @@ class ViT(Model):
 
         num_patches = (image_height // patch_height) * (image_width // patch_width)
 
-        self.patch_embedding = Sequential([
-            Patches(patch_height),
-            Reshape((image_height*image_width,patch_height*patch_width*3)),
-            #Rearrange('b (h p1) (w p2) c -> b (h w) (p1 p2 c)', p1=patch_height, p2=patch_width),
-            nn.Dense(units=dim)
-        ])
 
         self.pos_embedding = tf.Variable(initial_value=tf.random.normal([1, num_patches + 1, dim]))
         self.cls_token = tf.Variable(initial_value=tf.random.normal([1, 1, dim]))
@@ -342,7 +336,15 @@ class ViT(Model):
 
 
     def call(self, img, return_sampled_token_ids=False, training=True, **kwargs):
-        x = self.patch_embedding(img)
+        #x = self.patch_embedding(img)
+        print(x.shape)
+        x = Patches(patch_height)(img)
+        print(x.shape)
+        x = Reshape((image_height*image_width,patch_height*patch_width*3))(x)
+        print(x.shape)
+        x = nn.Dense(units=dim)(x)
+        print(x.shape)
+        print("hmm")
         b, n, _ = x.shape
 
         cls_tokens = repeat(self.cls_token, '() n d -> b n d', b=b)
