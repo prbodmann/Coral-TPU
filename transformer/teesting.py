@@ -28,7 +28,7 @@ def test(vit_size,num_classes = 5,
                                                name="embedding")
 
     cls_layer = ClassToken(name="class_token",
-                                embedding_dimension=self.patch_embedding_dim)
+                                embedding_dimension=patch_embedding_dim)
 
     pos_embedding = viTPositionalEmbedding(
         num_of_tokens=(image_height // patch_size) *
