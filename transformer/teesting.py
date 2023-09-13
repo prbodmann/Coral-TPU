@@ -15,6 +15,7 @@ from einops import rearrange, repeat
 from einops.layers.tensorflow import Rearrange
 from tensorflow import einsum
 import numpy as np
+from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 batch_size = 100
 learning_rate = 0.002
