@@ -281,6 +281,24 @@ class Transformer(Layer):
 
         return x, token_ids
 
+class Patches(layers.Layer):
+    def __init__(self, patch_size):
+        super().__init__()
+        self.patch_size = patch_size
+
+    def call(self, images):
+        batch_size = tf.shape(images)[0]
+        patches = tf.image.extract_patches(
+            images=images,
+            sizes=[1, self.patch_size, self.patch_size, 1],
+            strides=[1, self.patch_size, self.patch_size, 1],
+            rates=[1, 1, 1, 1],
+            padding="VALID",
+        )
+        patch_dims = patches.shape[-1]
+        patches = tf.reshape(patches, [batch_size, -1, patch_dims])
+        return patches
+
 class ViT(Model):
     def __init__(self,
                  image_size, 
@@ -305,6 +323,7 @@ class ViT(Model):
         num_patches = (image_height // patch_height) * (image_width // patch_width)
 
         self.patch_embedding = Sequential([
+            Patches(patch_height)
             Reshape((image_height*image_width,patch_height*patch_width*3)),
             #Rearrange('b (h p1) (w p2) c -> b (h w) (p1 p2 c)', p1=patch_height, p2=patch_width),
             nn.Dense(units=dim)
