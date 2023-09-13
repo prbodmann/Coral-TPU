@@ -325,7 +325,7 @@ class ViT(Model):
         x += self.pos_embedding[:, :(n + 1)]
         x = self.dropout(x, training=training)
 
-        x, token_ids = self.transformer(x, training=training)
+        x, token_ids = self.transformer(x, training=True)
 
         logits = self.mlp_head(x[:, 0])
 
