@@ -18,7 +18,7 @@ class viT(tf.keras.Model):
         super(viT, self).__init__(**kwargs)
         self.vit_size = vit_size
         self.num_classes = num_classes         
-
+        print(self.vit_size)
         self.vit_attr = load_config(config_path)[self.vit_size]
 
         self.patch_size = self.vit_attr["patch_size"]
