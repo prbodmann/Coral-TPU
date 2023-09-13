@@ -313,7 +313,7 @@ class ViT(Model):
             nn.Dense(units=num_classes)
         ])
         print(x.shape)
-        _, b, n, _ = x.shape
+        b, n, _ = x.shape[:3]
 
         cls_tokens = repeat(self.cls_token, '() n d -> b n d', b=b)
         x = tf.concat([cls_tokens, x], axis=1)
