@@ -296,8 +296,7 @@ assert image_size % patch_size == 0 and image_size % patch_size == 0, 'Image dim
 num_patches = (image_size // patch_size) * (image_size // patch_size)
 @tf.function
 def patch_embedding(x):
-    x = Rearrange('b (h p1) (w p2) c -> b (h w) (p1 p2 c)', p1=patch_size, p2=patch_size)(x)
-    return nn.Dense(units=dim)(x)
+    return Rearrange('b (h p1) (w p2) c -> b (h w) (p1 p2 c)', p1=patch_size, p2=patch_size)(x)
 
 class ViT(Model):
     @tf.function
@@ -306,7 +305,7 @@ class ViT(Model):
         img = Input(shape=(image_size, image_size, 3), dtype="float32")
 
         x = patch_embedding(img) 
-  
+        x =  nn.Dense(units=dim)(x)
         self.pos_embedding = tf.Variable(initial_value=tf.random.normal([1, num_patches + 1, dim]))
         self.cls_token = tf.Variable(initial_value=tf.random.normal([1, 1, dim]))
         self.dropout = nn.Dropout(rate=emb_dropout)
