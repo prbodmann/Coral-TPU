@@ -61,6 +61,7 @@ converter_quant.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8
 converter_quant.target_spec.supported_types = [tf.int8]
 converter_quant.experimental_new_converter = True
 converter_quant.allow_custom_ops=True
+converter_quant.input_shape=(1,280,280,3)
 vit_tflite = converter_quant.convert()
 open(args.tflite_save_name, "wb").write(vit_tflite)
 
