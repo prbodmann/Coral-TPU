@@ -313,9 +313,9 @@ class ViT(Model):
             nn.Dense(units=num_classes)
         ])
         print(x.shape)
-        b, n, _ = x.shape[1:]
+        _, b, n, _ = x.shape[1:]
 
-        cls_tokens = repeat(self.cls_token, '() n d -> b n d', b=b)
+        cls_tokens = repeat(self.cls_token, '() () n d -> () b n d', b=b)
         x = tf.concat([cls_tokens, x], axis=1)
         x += self.pos_embedding[:, :(n + 1)]
         x = self.dropout(x, training=training)
