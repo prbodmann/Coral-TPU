@@ -294,11 +294,10 @@ emb_dropout = 0.1
 dim_head = 64
 assert image_size % patch_size == 0 and image_size % patch_size == 0, 'Image dimensions must be divisible by the patch size.'
 num_patches = (image_size // patch_size) * (image_size // patch_size)
-
-patch_embedding = Sequential([
-        Rearrange('b (h p1) (w p2) c -> b (h w) (p1 p2 c)', p1=patch_size, p2=patch_size),
-        nn.Dense(units=dim)
-    ])
+@tf.function
+def patch_embedding(x):
+    x = Rearrange('b (h p1) (w p2) c -> b (h w) (p1 p2 c)', p1=patch_size, p2=patch_size)(x)
+    return nn.Dense(units=dim)(x)
 
 class ViT(Model):
     @tf.function
