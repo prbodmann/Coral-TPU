@@ -197,7 +197,7 @@ representation of the architecture:
 
 def create_mobilevit(num_classes=5):
     inputs = keras.Input((image_size, image_size, 3))
-    x = layers.Rescaling(scale=1.0 / 255)(inputs)
+    x = Rescaling(scale=1.0 / 255)(inputs)
 
     # Initial conv-stem -> MV2 block.
     x = conv_block(x, filters=16)
