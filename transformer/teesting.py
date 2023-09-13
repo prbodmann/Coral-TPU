@@ -14,7 +14,7 @@ from grouped_conv2d import GroupConv2D
 from einops import rearrange, repeat
 from einops.layers.tensorflow import Rearrange
 from tensorflow import einsum
-
+import numpy as np
 
 batch_size = 100
 learning_rate = 0.002
