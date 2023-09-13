@@ -403,7 +403,7 @@ def representative_data_gen():
     for x in x_test[100]:            
         yield [x[0]]
 
-print(cait_xxs24_224.inputs[0])
+print(cait_xxs24_224.inputs)
 
 input_shape = cait_xxs24_224.inputs[0].shape.as_list()
 input_shape[0] = batch_size
