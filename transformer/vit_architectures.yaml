@@ -2,7 +2,7 @@ ViT-BASE16:
     encoder_layers: 12
     patch_embedding_dim: 768
     units_in_mlp: 3072
-    attention_heads: 12
+    attention_heads: 8
     image_size: [280, 280, 3]
     patch_size: 16
     dropout_rate: 0.1
