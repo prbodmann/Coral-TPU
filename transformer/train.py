@@ -141,7 +141,7 @@ test_ds = prepare_dataset(val_dataset, is_training=False)
 
 
 print(os.linesep)
-
+print(train_ds)
 optimizer = tf.keras.optimizers.SGD(learning_rate=args.learning_rate,
                                     momentum=args.momentum)
 
