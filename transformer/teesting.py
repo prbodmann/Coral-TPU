@@ -291,7 +291,8 @@ heads = 16
 mlp_dim = 2048
 dropout = 0.1
 emb_dropout = 0.1
-assert image_height % patch_height == 0 and image_width % patch_width == 0, 'Image dimensions must be divisible by the patch size.'
+
+assert image_size % patch_size == 0 and image_size % patch_size == 0, 'Image dimensions must be divisible by the patch size.'
 num_patches = (image_height // patch_height) * (image_width // patch_width)
 class ViT(Model):
     def __init__(self):
