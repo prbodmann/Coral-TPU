@@ -17,7 +17,7 @@ def parse_opt():
     parser = argparse.ArgumentParser()
     parser.add_argument('--epochs',
                         type=int,
-                        default=1,
+                        default=10,
                         help='Total training epochs for finetuning')
 
     parser.add_argument('--batch-size',
@@ -164,7 +164,7 @@ history = vit.fit(train_ds,
                   validation_batch_size=args.validation_batch_size,
                   callbacks=[chekpoint],
                   epochs=args.epochs)
-
+vit.save('vit_model')
 print(os.linesep)
 
 if args.save_training_stats:
