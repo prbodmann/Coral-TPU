@@ -297,18 +297,11 @@ num_patches = (image_size // patch_size) * (image_size // patch_size)
 class ViT(Model):
     def __init__(self):
         super(ViT, self).__init__()
-        image_height, image_width = pair(image_size)
-        patch_height, patch_width = pair(patch_size)
+        img = Input(shape=(image_size, image_size, 3), dtype="float32")
 
-        assert image_height % patch_height == 0 and image_width % patch_width == 0, 'Image dimensions must be divisible by the patch size.'
-
-        num_patches = (image_height // patch_height) * (image_width // patch_width)
-
-        self.patch_embedding = Sequential([
-            Rearrange('b (h p1) (w p2) c -> b (h w) (p1 p2 c)', p1=patch_height, p2=patch_width),
-            nn.Dense(units=dim)
-        ])
-
+        rearrange(img,'b (h p1) (w p2) c -> b (h w) (p1 p2 c)', p1=patch_size, p2=patch_size)
+        x = nn.Dense(units=dim)(img)   
+  
         self.pos_embedding = tf.Variable(initial_value=tf.random.normal([1, num_patches + 1, dim]))
         self.cls_token = tf.Variable(initial_value=tf.random.normal([1, 1, dim]))
         self.dropout = nn.Dropout(rate=emb_dropout)
@@ -319,15 +312,10 @@ class ViT(Model):
             nn.LayerNormalization(),
             nn.Dense(units=num_classes)
         ])
-
-
-    def call(self, img, return_sampled_token_ids=False, training=True, **kwargs):
-        x = self.patch_embedding(img)
+        print(x.shape)
         b, n, _ = x.shape
 
         cls_tokens = repeat(self.cls_token, '() n d -> b n d', b=b)
-        print(cls_tokens.shape)
-        print(x.shape)
         x = tf.concat([cls_tokens, x], axis=1)
         x += self.pos_embedding[:, :(n + 1)]
         x = self.dropout(x, training=training)
