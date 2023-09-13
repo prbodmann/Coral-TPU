@@ -1,7 +1,7 @@
 import os
 import json
 import argparse
-from teesting import viT
+from teesting import viT, test
 import tensorflow as tf
 from utils.loss import vit_loss
 from utils.plots import plot_accuracy, plot_loss
@@ -81,7 +81,7 @@ def parse_opt():
 
 args = parse_opt()
 
-vit = viT(vit_size=args.vit_size,
+vit = test(vit_size=args.vit_size,
           num_classes=5,
           config_path=args.vit_config)
 
