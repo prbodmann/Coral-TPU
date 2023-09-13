@@ -337,7 +337,7 @@ class ViT(Model):
 
     def call(self, img, return_sampled_token_ids=False, training=True, **kwargs):
         #x = self.patch_embedding(img)
-        print(x.shape)
+        print(img.shape)
         x = Patches(patch_height)(img)
         print(x.shape)
         x = Reshape((image_height*image_width,patch_height*patch_width*3))(x)
