@@ -6,7 +6,7 @@ ViT-BASE16:
     image_size: [280, 280, 3]
     patch_size: 16
     dropout_rate: 0.1
-    classes: 1000
+    classes: 5
     class_activation: "sigmoid"
 
 ViT-BASE32: 
@@ -17,7 +17,7 @@ ViT-BASE32:
     image_size: [280, 280, 3]
     patch_size: 32
     dropout_rate: 0.1
-    classes: 1000
+    classes: 5
     class_activation: "sigmoid"
 
 ViT-LARGE16: 
@@ -28,7 +28,7 @@ ViT-LARGE16:
     image_size: [280, 280, 3]
     patch_size: 16
     dropout_rate: 0.1
-    classes: 1000
+    classes: 5
     class_activation: "sigmoid"
 
 ViT-LARGE32: 
@@ -39,5 +39,5 @@ ViT-LARGE32:
     image_size: [280, 280, 3]
     patch_size: 32
     dropout_rate: 0.1
-    classes: 1000
+    classes: 5
     class_activation: "sigmoid"
