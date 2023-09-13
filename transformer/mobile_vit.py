@@ -30,7 +30,7 @@ for example), while being efficient on mobile devices.
 
 import tensorflow as tf
 
-from keras.applications import imagenet_utils
+from tensorflow.keras.applications import imagenet_utils
 from tensorflow.keras import layers, backend
 from tensorflow import keras
 from tensorflow.keras.layers.experimental.preprocessing import Rescaling
