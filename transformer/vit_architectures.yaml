@@ -1,7 +1,7 @@
 ViT-BASE16: 
     encoder_layers: 4
     patch_embedding_dim: 768
-    units_in_mlp: 3072
+    units_in_mlp: 1024
     attention_heads: 4
     image_size: [280, 280, 3]
     patch_size: 16
