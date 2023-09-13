@@ -323,7 +323,7 @@ class ViT(Model):
         cls_tokens = repeat(self.cls_token, '() n d -> b n d', b=b)
         x = tf.concat([cls_tokens, x], axis=1)
         x += self.pos_embedding[:, :(n + 1)]
-        x = self.dropout(x, training=training)
+        x = self.dropout(x, training=True)
 
         x, token_ids = self.transformer(x, training=True)
 
