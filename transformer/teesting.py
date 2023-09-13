@@ -312,6 +312,7 @@ class ViT(Model):
             nn.LayerNormalization(),
             nn.Dense(units=num_classes)
         ])
+        print(x.shape)
         b, n, _ = x.shape
 
         cls_tokens = repeat(self.cls_token, '() n d -> b n d', b=b)
