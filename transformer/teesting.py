@@ -11,7 +11,7 @@ from utils.general import load_config
 class viT(tf.keras.Model):
     def __init__(self,
                  vit_size,
-                 num_classes = 1000,
+                 num_classes = 5,
                  class_activation="softmax",
                  config_path="vit_architectures.yaml",
                  **kwargs):
