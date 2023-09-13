@@ -113,7 +113,8 @@ def prepare_dataset(dataset, is_training=True):
     dataset = dataset.map(preprocess_dataset(is_training), num_parallel_calls=auto)
     return dataset.batch(batch_size).prefetch(auto)
 
-def configure_for_performance(ds):
+def configure_for_performance(ds,is_training=True):
+  ds = ds.map(preprocess_dataset(is_training), num_parallel_calls=auto)
   ds = ds.cache()
   ds = ds.shuffle(buffer_size=1000)
   ds = ds.batch(batch_size)
@@ -139,7 +140,7 @@ print(f"Number of training examples: {num_train}")
 print(f"Number of validation examples: {num_val}")
 
 train_ds = configure_for_performance(train_dataset)
-val_ds = configure_for_performance(val_dataset)
+val_ds = configure_for_performance(val_dataset,False)
 
 """
 ## Train a MobileViT (XXS) model
