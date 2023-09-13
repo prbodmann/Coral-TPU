@@ -3,7 +3,8 @@ import argparse
 from teesting import viT
 import tensorflow as tf 
 from utils.general import load_config
-
+import tensorflow_datasets as tfds
+ 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 def parse_opt():
