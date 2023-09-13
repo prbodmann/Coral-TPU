@@ -403,6 +403,8 @@ def representative_data_gen():
     for x in x_test[100]:            
         yield [x[0]]
 
+print(cait_xxs24_224.inputs[0])
+
 input_shape = cait_xxs24_224.inputs[0].shape.as_list()
 input_shape[0] = batch_size
 func = tf.function(cait_xxs24_224).get_concrete_function(
