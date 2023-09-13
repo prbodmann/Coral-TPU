@@ -281,24 +281,6 @@ class Transformer(Layer):
 
         return x, token_ids
 
-class Patches(Layer):
-    def __init__(self, patch_size):
-        super().__init__()
-        self.patch_size = patch_size
-
-    def call(self, images):
-        batch_size = tf.shape(images)[0]
-        patches = tf.image.extract_patches(
-            images=images,
-            sizes=[1, self.patch_size, self.patch_size, 1],
-            strides=[1, self.patch_size, self.patch_size, 1],
-            rates=[1, 1, 1, 1],
-            padding="VALID",
-        )
-        patch_dims = patches.shape[-1]
-        patches = tf.reshape(patches, [batch_size, -1, patch_dims])
-        return patches
-
 class ViT(Model):
     def __init__(self,
                  image_size, 
@@ -322,6 +304,10 @@ class ViT(Model):
 
         num_patches = (image_height // patch_height) * (image_width // patch_width)
 
+        self.patch_embedding = Sequential([
+            Rearrange('b (h p1) (w p2) c -> b (h w) (p1 p2 c)', p1=patch_height, p2=patch_width),
+            nn.Dense(units=dim)
+        ])
 
         self.pos_embedding = tf.Variable(initial_value=tf.random.normal([1, num_patches + 1, dim]))
         self.cls_token = tf.Variable(initial_value=tf.random.normal([1, 1, dim]))
@@ -336,15 +322,7 @@ class ViT(Model):
 
 
     def call(self, img, return_sampled_token_ids=False, training=True, **kwargs):
-        #x = self.patch_embedding(img)
-        print(img.shape)
-        x = Patches(4)(img)
-        print(x.shape)
-        x = Reshape((32*32,4*4*3))(x)
-        print(x.shape)
-        x = nn.Dense(units=dim)(x)
-        print(x.shape)
-        print("hmm")
+        x = self.patch_embedding(img)
         b, n, _ = x.shape
 
         cls_tokens = repeat(self.cls_token, '() n d -> b n d', b=b)
@@ -363,6 +341,8 @@ class ViT(Model):
 
         return logits
 
+
+IMAGE_SIZE=32
 
 parser = argparse.ArgumentParser(description='Process some integers.')
 parser.add_argument('--training', action = 'store_const', dest = 'training',
@@ -385,7 +365,7 @@ if args.training:
 
 
     cait_xxs24_224 =  ViT(
-        image_size = 32,
+        image_size = IMAGE_SIZE,
         patch_size = 4,
         num_classes = 100,
         dim = 1024,
@@ -412,7 +392,7 @@ if args.training:
     cait_xxs24_224.summary()
     results= cait_xxs24_224.evaluate(x_test, y_test,batch_size=batch_size)
     
-    img = tf.random.normal(shape=[1, 32, 32, 3])
+    img = tf.random.normal(shape=[1, IMAGE_SIZE, IMAGE_SIZE, 3])
     preds = cait_xxs24_224(img) # (1, 1000)
     cait_xxs24_224.save('cross_vit',save_format="tf")
     print(results)
