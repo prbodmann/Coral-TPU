@@ -42,7 +42,7 @@ train_dataset, val_dataset = tfds.load(
 batch_size=1
 def representative_data_gen():
     for x in train_dataset:            
-        yield [[x[0]]]
+        yield tf.expand_dims1([x[0]]],axis=0)
 
 
 
