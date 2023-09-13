@@ -298,7 +298,7 @@ class ViT(Model):
     def __init__(self):
         super(ViT, self).__init__()
         img = Input(shape=(image_size, image_size, 3), dtype="float32")
-
+        @tf.function
         lol=Rearrange('b (h p1) (w p2) c -> b (h w) (p1 p2 c)', p1=patch_size, p2=patch_size)
         img = lol(img)
         x = nn.Dense(units=dim)(img)   
