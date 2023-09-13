@@ -1,5 +1,5 @@
 ViT-BASE16: 
-    encoder_layers: 12
+    encoder_layers: 8
     patch_embedding_dim: 768
     units_in_mlp: 3072
     attention_heads: 8
