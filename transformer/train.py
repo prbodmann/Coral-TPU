@@ -101,8 +101,8 @@ def preprocess_dataset(is_training=True):
             image = tf.image.random_flip_left_right(image)
         else:
             image = tf.image.resize(image, (image_size, image_size))
-
-        return image, [1,label]
+        label = tf.one_hot(label, depth=num_classes)
+        return image, label
 
     return _pp
 
@@ -111,15 +111,10 @@ def prepare_dataset(dataset, is_training=True):
     if is_training:
         dataset = dataset.shuffle(batch_size * 16)
     dataset = dataset.map(preprocess_dataset(is_training), num_parallel_calls=auto)
+    print(dataset)
     return dataset.batch(batch_size).prefetch(auto)
 
-def configure_for_performance(ds,is_training=True):
-  ds = ds.map(preprocess_dataset(is_training), num_parallel_calls=auto)
-  ds = ds.cache()
-  ds = ds.shuffle(buffer_size=1000)
-  ds = ds.batch(batch_size)
-  ds = ds.prefetch(buffer_size=auto)
-  return ds
+
 
 """
 The authors use a multi-scale data sampler to help the model learn representations of
@@ -139,8 +134,8 @@ num_val = val_dataset.cardinality()
 print(f"Number of training examples: {num_train}")
 print(f"Number of validation examples: {num_val}")
 
-train_ds = configure_for_performance(train_dataset)
-val_ds = configure_for_performance(val_dataset,False)
+train_ds = prepare_dataset(train_dataset)
+val_ds = prepare_dataset(val_dataset,False)
 
 """
 ## Train a MobileViT (XXS) model
