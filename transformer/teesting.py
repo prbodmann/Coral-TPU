@@ -1,7 +1,7 @@
 import argparse
 import tensorflow as tf
 
-from tensorflow.keras import Model
+from tensorflow.keras import Model, Input
 from tensorflow.keras.layers import Layer
 from tensorflow.keras import Sequential, datasets
 import tensorflow.keras.layers as nn
@@ -281,34 +281,28 @@ class Transformer(Layer):
 
         return x, token_ids
 
+image_size = 224
+patch_size = 16
+num_classes = 100
+dim = 1024
+depth = 6
+max_tokens_per_depth = (256, 128, 64, 32, 16, 8) # a tuple that denotes the maximum number of tokens that any given layer should have. if the layer has greater than this amount, it will undergo adaptive token sampling
+heads = 16
+mlp_dim = 2048
+dropout = 0.1
+emb_dropout = 0.1
+assert image_height % patch_height == 0 and image_width % patch_width == 0, 'Image dimensions must be divisible by the patch size.'
+num_patches = (image_height // patch_height) * (image_width // patch_width)
 class ViT(Model):
-    def __init__(self,
-                 image_size, 
-                 patch_size, 
-                 num_classes, 
-                 dim, 
-                 depth, 
-                 max_tokens_per_depth, 
-                 heads, 
-                 mlp_dim,
-                 dim_head=64, 
-                 dropout=0.0, 
-                 emb_dropout=0.0
-                 ):
+    def __init__(self):
         super(ViT, self).__init__()
-
-        image_height, image_width = pair(image_size)
-        patch_height, patch_width = pair(patch_size)
-
-        assert image_height % patch_height == 0 and image_width % patch_width == 0, 'Image dimensions must be divisible by the patch size.'
-
-        num_patches = (image_height // patch_height) * (image_width // patch_width)
-
+        img = keras.Input(shape=(image_size, image_size, 3), dtype="float32")
         self.patch_embedding = Sequential([
             Rearrange('b (h p1) (w p2) c -> b (h w) (p1 p2 c)', p1=patch_height, p2=patch_width),
             nn.Dense(units=dim)
         ])
 
+        x = self.patch_embedding(img)       
         self.pos_embedding = tf.Variable(initial_value=tf.random.normal([1, num_patches + 1, dim]))
         self.cls_token = tf.Variable(initial_value=tf.random.normal([1, 1, dim]))
         self.dropout = nn.Dropout(rate=emb_dropout)
@@ -319,10 +313,6 @@ class ViT(Model):
             nn.LayerNormalization(),
             nn.Dense(units=num_classes)
         ])
-
-
-    def call(self, img, return_sampled_token_ids=False, training=True, **kwargs):
-        x = self.patch_embedding(img)
         b, n, _ = x.shape
 
         cls_tokens = repeat(self.cls_token, '() n d -> b n d', b=b)
@@ -340,6 +330,9 @@ class ViT(Model):
             return logits, token_ids
 
         return logits
+
+       
+        
 
 
 parser = argparse.ArgumentParser(description='Process some integers.')
@@ -362,18 +355,7 @@ cait_xxs24_224=None
 if args.training:
 
 
-    cait_xxs24_224 =  ViT(
-        image_size = 224,
-        patch_size = 16,
-        num_classes = 100,
-        dim = 1024,
-        depth = 6,
-        max_tokens_per_depth = (256, 128, 64, 32, 16, 8), # a tuple that denotes the maximum number of tokens that any given layer should have. if the layer has greater than this amount, it will undergo adaptive token sampling
-        heads = 16,
-        mlp_dim = 2048,
-        dropout = 0.1,
-        emb_dropout = 0.1
-    )
+    cait_xxs24_224 =  ViT()
 
 
     cait_xxs24_224.compile(optimizer, loss_fn,  run_eagerly=True)
