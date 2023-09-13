@@ -299,8 +299,8 @@ class ViT(Model):
         super(ViT, self).__init__()
         img = Input(shape=(image_size, image_size, 3), dtype="float32")
 
-        x = rearrange(img,'b (h p1) (w p2) c -> b (h w) (p1 p2 c)', p1=patch_size, p2=patch_size)
-        x = nn.Dense(units=dim)(x)   
+        rearrange(img,'b (h p1) (w p2) c -> b (h w) (p1 p2 c)', p1=patch_size, p2=patch_size)
+        x = nn.Dense(units=dim)(img)   
   
         self.pos_embedding = tf.Variable(initial_value=tf.random.normal([1, num_patches + 1, dim]))
         self.cls_token = tf.Variable(initial_value=tf.random.normal([1, 1, dim]))
