@@ -85,7 +85,7 @@ vit = viT(vit_size=args.vit_size,
           config_path=args.vit_config)
 
 batch_size = 64
-auto = tf.data.AUTOTUNE
+auto  = tf.data.experimental.AUTOTUNE
 resize_bigger = 280
 num_classes = 5
 
