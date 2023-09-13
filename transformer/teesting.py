@@ -338,9 +338,9 @@ class ViT(Model):
     def call(self, img, return_sampled_token_ids=False, training=True, **kwargs):
         #x = self.patch_embedding(img)
         print(img.shape)
-        x = Patches(16)(img)
+        x = Patches(4)(img)
         print(x.shape)
-        x = Reshape((224*224,16*16*3))(x)
+        x = Reshape((32*32,4*4*3))(x)
         print(x.shape)
         x = nn.Dense(units=dim)(x)
         print(x.shape)
@@ -385,8 +385,8 @@ if args.training:
 
 
     cait_xxs24_224 =  ViT(
-        image_size = 224,
-        patch_size = 16,
+        image_size = 32,
+        patch_size = 4,
         num_classes = 100,
         dim = 1024,
         depth = 6,
@@ -412,7 +412,7 @@ if args.training:
     cait_xxs24_224.summary()
     results= cait_xxs24_224.evaluate(x_test, y_test,batch_size=batch_size)
     
-    img = tf.random.normal(shape=[1, 224, 224, 3])
+    img = tf.random.normal(shape=[1, 32, 32, 3])
     preds = cait_xxs24_224(img) # (1, 1000)
     cait_xxs24_224.save('cross_vit',save_format="tf")
     print(results)
