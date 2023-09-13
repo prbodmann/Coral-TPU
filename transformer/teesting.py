@@ -63,7 +63,7 @@ def test(vit_size,num_classes = 5,
     # input to posembedding layer: (batch_size, patch_size * patch_size + 1, patch_dimension)
     for tf_enc in stacked_encoders:
         # passing the input through all the transformer encoders
-        x, _ = tf_enc(x, training=training)
+        x, _ = tf_enc(x)
     # input to layernorm layer: (batch_size, patch_size * patch_size + 1, patch_dimension)
     x = layernorm(x)
     # input to get_CLS_token layer: (batch_size, patch_size * patch_size + 1, patch_dimension)
