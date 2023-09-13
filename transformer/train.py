@@ -1,7 +1,7 @@
 import os
 import json
 import argparse
-from vit import viT
+from teesting import viT
 import tensorflow as tf
 from utils.loss import vit_loss
 from utils.plots import plot_accuracy, plot_loss
