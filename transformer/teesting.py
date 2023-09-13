@@ -2,7 +2,7 @@ import argparse
 import tensorflow as tf
 
 from tensorflow.keras import Model
-from tensorflow.keras.layers import Layer
+from tensorflow.keras.layers import Layer, Reshape
 from tensorflow.keras import Sequential, datasets
 import tensorflow.keras.layers as nn
 from tensorflow.keras.utils import to_categorical
