@@ -293,7 +293,7 @@ dropout = 0.1
 emb_dropout = 0.1
 
 assert image_size % patch_size == 0 and image_size % patch_size == 0, 'Image dimensions must be divisible by the patch size.'
-num_patches = (image_height // patch_height) * (image_width // patch_width)
+num_patches = (image_size // patch_size) * (image_size // patch_size)
 class ViT(Model):
     def __init__(self):
         super(ViT, self).__init__()
