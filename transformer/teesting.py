@@ -13,35 +13,35 @@ from tensorflow.keras.layers import Reshape, Input
 def test(vit_size,num_classes = 5,
                  class_activation="softmax",
                  config_path="vit_architectures.yaml"):
-    vit_attr = load_config(config_path)[self.vit_size]
+    vit_attr = load_config(config_path)[vit_size]
 
-    patch_size = self.vit_attr["patch_size"]
-    mlp_layer1_units = self.vit_attr["units_in_mlp"]
-    dropout_rate = self.vit_attr["dropout_rate"]
-    num_stacked_encoders = self.vit_attr["encoder_layers"]
-    num_attention_heads = self.vit_attr["attention_heads"]
-    patch_embedding_dim = self.vit_attr["patch_embedding_dim"]
-    image_size = self.vit_attr["image_size"]
-    image_height, self.image_width, self.image_channels = self.image_size
-    patch_embedding = PatchEmbeddings(embedding_dimension=self.patch_embedding_dim,
-                                               patch_size=self.patch_size,
+    patch_size = vit_attr["patch_size"]
+    mlp_layer1_units = vit_attr["units_in_mlp"]
+    dropout_rate = vit_attr["dropout_rate"]
+    num_stacked_encoders = vit_attr["encoder_layers"]
+    num_attention_heads = vit_attr["attention_heads"]
+    patch_embedding_dim = vit_attr["patch_embedding_dim"]
+    image_size = vit_attr["image_size"]
+    image_height, image_width, image_channels = image_size
+    patch_embedding = PatchEmbeddings(embedding_dimension=patch_embedding_dim,
+                                               patch_size=patch_size,
                                                name="embedding")
 
     cls_layer = ClassToken(name="class_token",
                                 embedding_dimension=self.patch_embedding_dim)
 
     pos_embedding = viTPositionalEmbedding(
-        num_of_tokens=(self.image_height // self.patch_size) *
-        (self.image_width // self.patch_size) + 1,
-        embedding_dimension=self.patch_embedding_dim,
+        num_of_tokens=(image_height // patch_size) *
+        (image_width // patch_size) + 1,
+        embedding_dimension=patch_embedding_dim,
         name="Transformer/posembed_input")
 
-    stacked_encoders = [TransformerEncoder(embedding_dimension=self.patch_embedding_dim,
-                                                num_attention_heads=self.num_attention_heads,
-                                                mlp_layer1_units=self.mlp_layer1_units,
-                                                dropout_rate=self.dropout_rate,
+    stacked_encoders = [TransformerEncoder(embedding_dimension=patch_embedding_dim,
+                                                num_attention_heads=num_attention_heads,
+                                                mlp_layer1_units=mlp_layer1_units,
+                                                dropout_rate=dropout_rate,
                                                 name=f"Transformer/encoderblock_{layr}")
-                             for layr in range(self.num_stacked_encoders)]
+                             for layr in range(num_stacked_encoders)]
 
     layernorm = tf.keras.layers.LayerNormalization(
         name="Transformer/encoder_norm")
@@ -55,21 +55,21 @@ def test(vit_size,num_classes = 5,
     x = self.patch_embedding(input_tensor)
     # reshaping
     x = tf.reshape(
-        x, shape=(-1, x.shape[1] * x.shape[2], self.patch_embedding_dim))
+        x, shape=(-1, x.shape[1] * x.shape[2], patch_embedding_dim))
     # input to CLS layer: (batch_size, patch_size * patch_size, patch_dimension)
-    x = self.cls_layer(x)
+    x = cls_layer(x)
     # adding positional embeddings
-    x = self.pos_embedding(x)
+    x = pos_embedding(x)
     # input to posembedding layer: (batch_size, patch_size * patch_size + 1, patch_dimension)
-    for tf_enc in self.stacked_encoders:
+    for tf_enc in stacked_encoders:
         # passing the input through all the transformer encoders
         x, _ = tf_enc(x, training=training)
     # input to layernorm layer: (batch_size, patch_size * patch_size + 1, patch_dimension)
-    x = self.layernorm(x)
+    x = layernorm(x)
     # input to get_CLS_token layer: (batch_size, patch_size * patch_size + 1, patch_dimension)
-    x = self.get_CLS_token(x)
+    x = get_CLS_token(x)
     # input to out_dense layer: (batch_size, 1, patch_dimension)
-    x = self.dense_out(x)
+    x = dense_out(x)
     # output shape: (batch_size, 1000)
     return Model(input_tensor,x)
     
