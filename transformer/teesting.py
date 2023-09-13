@@ -7,7 +7,7 @@ from layers.positional_embedding import viTPositionalEmbedding
 from layers.pwffn import PointWiseFeedForwardNetwork
 from layers.transformer_encoder import TransformerEncoder
 from utils.general import load_config
-from tensorflow.keras import Sequential
+from tensorflow.keras import Sequential, Model
 from tensorflow.keras.layers import Reshape, Input
 
 def test(vit_size,num_classes = 5,
