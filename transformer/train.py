@@ -164,7 +164,7 @@ history = vit.fit(train_ds,
                   validation_batch_size=args.validation_batch_size,
                   callbacks=[chekpoint],
                   epochs=args.epochs)
-vit.save('vit_model')
+
 print(os.linesep)
 
 if args.save_training_stats:
