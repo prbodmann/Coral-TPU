@@ -402,7 +402,9 @@ batch_size=1
 def representative_data_gen():
     for x in x_test[100]:            
         yield [x[0]]
-
+img = tf.random.normal(shape=[1, 224, 224, 3])
+preds = cait_xxs24_224(img) # (1, 1000)
+print(preds)
 print(cait_xxs24_224.inputs)
 
 input_shape = cait_xxs24_224.inputs[0].shape.as_list()
