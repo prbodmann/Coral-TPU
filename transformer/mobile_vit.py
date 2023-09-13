@@ -36,7 +36,7 @@ from tensorflow import keras
 from tensorflow.keras.layers.experimental.preprocessing import Rescaling
 import tensorflow_datasets as tfds
 import tensorflow_addons as tfa
-
+from opt_head import MultiHeadAttention
 tfds.disable_progress_bar()
 
 """
@@ -135,7 +135,7 @@ def transformer_block(x, transformer_layers, projection_dim, num_heads=2):
         # Layer normalization 1.
         x1 = layers.LayerNormalization(epsilon=1e-6)(x)
         # Create a multi-head attention layer.
-        attention_output = layers.MultiHeadAttention(
+        attention_output = MultiHeadAttention(
             num_heads=num_heads, key_dim=projection_dim, dropout=0.1
         )(x1, x1)
         # Skip connection 1.
