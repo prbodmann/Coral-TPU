@@ -143,8 +143,7 @@ test_ds = prepare_dataset(val_dataset, is_training=False)
 print(os.linesep)
 
 optimizer = tf.keras.optimizers.SGD(learning_rate=args.learning_rate,
-                                    momentum=args.momentum,
-                                    global_clipnorm=1.0)
+                                    momentum=args.momentum)
 
 chekpoint = tf.keras.callbacks.ModelCheckpoint(
     os.path.join("finetuning_weights", f"{args.vit_size}_{args.model_name}"),
