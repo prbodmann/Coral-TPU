@@ -297,7 +297,7 @@ num_patches = (image_size // patch_size) * (image_size // patch_size)
 class ViT(Model):
     def __init__(self):
         super(ViT, self).__init__()
-        img = keras.Input(shape=(image_size, image_size, 3), dtype="float32")
+        img = Input(shape=(image_size, image_size, 3), dtype="float32")
         self.patch_embedding = Sequential([
             Rearrange('b (h p1) (w p2) c -> b (h w) (p1 p2 c)', p1=patch_height, p2=patch_width),
             nn.Dense(units=dim)
