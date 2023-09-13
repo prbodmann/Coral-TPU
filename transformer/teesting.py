@@ -1,424 +1,208 @@
-import argparse
 import tensorflow as tf
 
-from tensorflow.keras import Model
-from tensorflow.keras.layers import Layer, Reshape
-from tensorflow.keras import Sequential, datasets
-import tensorflow.keras.layers as nn
-from tensorflow.keras.utils import to_categorical
-from einops import rearrange
-from einops.layers.tensorflow import Reduce
-from tensorflow.keras.losses import CategoricalCrossentropy
-from tensorflow.keras.optimizers import Adam
-from grouped_conv2d import GroupConv2D
-from einops import rearrange, repeat
-from einops.layers.tensorflow import Rearrange
-from tensorflow import einsum
-import numpy as np
-from tensorflow.keras.preprocessing.sequence import pad_sequences
-
-batch_size = 100
-learning_rate = 0.002
-label_smoothing_factor = 0.1
-
-optimizer = Adam(learning_rate=learning_rate)
-loss_fn = CategoricalCrossentropy(label_smoothing=label_smoothing_factor)
-
-import tensorflow as tf
-from tensorflow.keras import Model
-from tensorflow.keras.layers import Layer
-from tensorflow.keras import Sequential
-import tensorflow.keras.layers as nn
-from tensorflow import einsum
-
-from einops import rearrange
-from einops.layers.tensorflow import Rearrange, Reduce
-from math import ceil
-
-def exists(val):
-    return val is not None
-
-def pair(t):
-    return t if isinstance(t, tuple) else (t, t)
-
-# adaptive token sampling functions and classes
-
-def log(t, eps = 1e-6):
-    return tf.math.log(t + eps)
-
-def sample_gumbel(shape, dtype, eps = 1e-6):
-    u = tf.random.uniform(shape, dtype=dtype)
-    return -log(-log(u, eps), eps)
-
-def torch_gather(x, indices, gather_axis):
-    # if pytorch gather indices are
-    # [[[0, 10, 20], [0, 10, 20], [0, 10, 20]],
-    #  [[0, 10, 20], [0, 10, 20], [0, 10, 20]]]
-    # tf nd_gather needs to be
-    # [[0,0,0], [0,0,10], [0,0,20], [0,1,0], [0,1,10], [0,1,20], [0,2,0], [0,2,10], [0,2,20],
-    #  [1,0,0], [1,0,10], [1,0,20], [1,1,0], [1,1,10], [1,1,20], [1,2,0], [1,2,10], [1,2,20]]
-
-    indices = tf.cast(indices, tf.int64)
-    # create a tensor containing indices of each element
-    all_indices = tf.where(tf.fill(indices.shape, True))
-    gather_locations = tf.reshape(indices, [indices.shape.num_elements()])
-
-    # splice in our pytorch style index at the correct axis
-    gather_indices = []
-    for axis in range(len(indices.shape)):
-        if axis == gather_axis:
-            gather_indices.append(gather_locations)
-        else:
-            gather_indices.append(all_indices[:, axis])
-
-    gather_indices = tf.stack(gather_indices, axis=-1)
-    gathered = tf.gather_nd(x, gather_indices)
-    reshaped = tf.reshape(gathered, indices.shape)
-    return reshaped
-
-def batched_index_select(values, indices, dim = 1):
-    value_dims = values.shape[(dim + 1):]
-    values_shape, indices_shape = map(lambda t: list(t.shape), (values, indices))
-    indices = indices[(..., *((None,) * len(value_dims)))]
-    indices = tf.tile(indices, multiples=[1] * len(indices_shape) + [*value_dims])
-    value_expand_len = len(indices_shape) - (dim + 1)
-    values = values[(*((slice(None),) * dim), *((None,) * value_expand_len), ...)]
-
-    value_expand_shape = [-1] * len(values.shape)
-    expand_slice = slice(dim, (dim + value_expand_len))
-    value_expand_shape[expand_slice] = indices.shape[expand_slice]
-    dim += value_expand_len
-
-    values = torch_gather(values, indices, dim)
-    return values
-
-class AdaptiveTokenSampling(Layer):
-    def __init__(self, output_num_tokens, eps=1e-6):
-        super(AdaptiveTokenSampling, self).__init__()
-        self.eps = eps
-        self.output_num_tokens = output_num_tokens
-
-    def call(self, attn, value=None, mask=None, training=True):
-        heads, output_num_tokens, eps, dtype = attn.shape[1], self.output_num_tokens, self.eps, attn.dtype
-
-        # first get the attention values for CLS token to all other tokens
-        cls_attn = attn[..., 0, 1:]
-
-        # calculate the norms of the values, for weighting the scores, as described in the paper
-        value_norms = tf.norm(value[..., 1:, :], axis=-1)
-
-        # weigh the attention scores by the norm of the values, sum across all heads
-        cls_attn = einsum('b h n, b h n -> b n', cls_attn, value_norms)
-
-        # normalize to 1
-        normed_cls_attn = cls_attn / (tf.reduce_sum(cls_attn, axis=-1, keepdims=True) + eps)
-
-        # instead of using inverse transform sampling, going to invert the softmax and use gumbel-max sampling instead
-        pseudo_logits = log(normed_cls_attn)
-
-        # mask out pseudo logits for gumbel-max sampling
-        mask_without_cls = mask[:, 1:]
-        mask_value = -np.finfo(attn.dtype.as_numpy_dtype).max / 2
-        pseudo_logits = tf.where(~mask_without_cls, mask_value, pseudo_logits)
-
-        # expand k times, k being the adaptive sampling number
-        pseudo_logits = repeat(pseudo_logits, 'b n -> b k n', k=output_num_tokens)
-        pseudo_logits = pseudo_logits + sample_gumbel(pseudo_logits.shape, dtype=dtype)
-
-        # gumble-max and add one to reserve 0 for padding / mask
-        sampled_token_ids = tf.argmax(pseudo_logits, axis=-1) + 1
-
-        # calculate unique using torch.unique and then pad the sequence from the right
-        unique_sampled_token_ids_list = []
-        for t in tf.unstack(sampled_token_ids):
-            t = tf.cast(t, tf.int32)
-            t, _ = tf.unique(t)
-            x = tf.sort(t)
-            unique_sampled_token_ids_list.append(x)
-
-
-        unique_sampled_token_ids = pad_sequences(unique_sampled_token_ids_list)
-
-        # calculate the new mask, based on the padding
-        new_mask = unique_sampled_token_ids != 0
-
-        # CLS token never gets masked out (gets a value of True)
-        new_mask = tf.pad(new_mask, paddings=[[0, 0], [1, 0]], constant_values=True)
-
-        # prepend a 0 token id to keep the CLS attention scores
-        unique_sampled_token_ids = tf.pad(unique_sampled_token_ids, paddings=[[0, 0], [1, 0]])
-        expanded_unique_sampled_token_ids = repeat(unique_sampled_token_ids, 'b n -> b h n', h=heads)
-
-        # gather the new attention scores
-        new_attn = batched_index_select(attn, expanded_unique_sampled_token_ids, dim=2)
-
-        # return the sampled attention scores, new mask (denoting padding), as well as the sampled token indices (for the residual)
-        return new_attn, new_mask, unique_sampled_token_ids
-
-def gelu(x, approximate=False):
-    if approximate:
-        coeff = tf.cast(0.044715, x.dtype)
-        return 0.5 * x * (1.0 + tf.tanh(0.7978845608028654 * (x + coeff * tf.pow(x, 3))))
-    else:
-        return 0.5 * x * (1.0 + tf.math.erf(x / tf.cast(1.4142135623730951, x.dtype)))
-
-class GELU(Layer):
-    def __init__(self, approximate=False):
-        super(GELU, self).__init__()
-        self.approximate = approximate
-
-    def call(self, x, training=True):
-        return gelu(x, self.approximate)
-
-class PreNorm(Layer):
-    def __init__(self, fn):
-        super(PreNorm, self).__init__()
-
-        self.norm = nn.LayerNormalization()
-        self.fn = fn
-
-    def call(self, x, **kwargs):
-        return self.fn(self.norm(x), **kwargs)
-
-class MLP(Layer):
-    def __init__(self, dim, hidden_dim, dropout=0.0):
-        super(MLP, self).__init__()
-        self.net = Sequential([
-            nn.Dense(units=hidden_dim),
-            GELU(),
-            nn.Dropout(rate=dropout),
-            nn.Dense(units=dim),
-            nn.Dropout(rate=dropout)
-        ])
-
-    def call(self, x, training=True):
-        return self.net(x, training=training)
-
-class Attention(Layer):
-    def __init__(self, dim, heads=8, dim_head=64, dropout=0.0, output_num_tokens=None):
-        super(Attention, self).__init__()
-        inner_dim = dim_head * heads
-        self.heads = heads
-        self.scale = dim_head ** -0.5
-
-        self.attend = nn.Softmax()
-        self.to_qkv = nn.Dense(units=inner_dim * 3, use_bias=False)
-
-        self.output_num_tokens = output_num_tokens
-        self.ats = AdaptiveTokenSampling(output_num_tokens) if exists(output_num_tokens) else None
-
-        self.to_out = Sequential([
-            nn.Dense(units=dim),
-            nn.Dropout(rate=dropout)
-        ])
-
-    def call(self, x, mask=None, training=True):
-        num_tokens = x.shape[1]
-
-        qkv = self.to_qkv(x)
-        qkv = tf.split(qkv, num_or_size_splits=3, axis=-1)
-        q, k, v = map(lambda t: rearrange(t, 'b n (h d)-> b h n d', h=self.heads), qkv)
-
-        dots = tf.matmul(q, tf.transpose(k, perm=[0, 1, 3, 2])) * self.scale
-
-        if exists(mask):
-            mask_f = tf.cast(mask, tf.float32)
-            dots_mask = rearrange(mask_f, 'b i -> b 1 i 1') * rearrange(mask_f, 'b j -> b 1 1 j')
-            dots_mask = tf.cast(dots_mask, tf.bool)
-            mask_value = -np.finfo(dots.dtype.as_numpy_dtype).max
-            dots = tf.where(~dots_mask, mask_value, dots)
-
-        attn = self.attend(dots)
-
-        sampled_token_ids = None
-
-        # if adaptive token sampling is enabled
-        # and number of tokens is greater than the number of output tokens
-        if exists(self.output_num_tokens) and (num_tokens - 1) > self.output_num_tokens:
-            attn, mask, sampled_token_ids = self.ats(attn, v, mask=mask)
-
-        out = tf.matmul(attn, v)
-        out = rearrange(out, 'b h n d -> b n (h d)')
-        out = self.to_out(out, training=training)
-
-        return out, mask, sampled_token_ids
-
-class Transformer(Layer):
-    def __init__(self, dim, depth, max_tokens_per_depth, heads, dim_head, mlp_dim, dropout=0.0):
-        super(Transformer, self).__init__()
-        assert len(max_tokens_per_depth) == depth, 'max_tokens_per_depth must be a tuple of length that is equal to the depth of the transformer'
-        assert sorted(max_tokens_per_depth, reverse=True) == list(max_tokens_per_depth), 'max_tokens_per_depth must be in decreasing order'
-        assert min(max_tokens_per_depth) > 0, 'max_tokens_per_depth must have at least 1 token at any layer'
-
-        self.layers = []
-        for _, output_num_tokens in zip(range(depth), max_tokens_per_depth):
-            self.layers.append([
-                PreNorm(Attention(dim, output_num_tokens=output_num_tokens, heads=heads, dim_head=dim_head, dropout=dropout)),
-                PreNorm(MLP(dim, mlp_dim, dropout=dropout))
-            ])
-
-    def call(self, x, training=True):
-        b, n = x.shape[:2]
-
-        # use mask to keep track of the paddings when sampling tokens
-        # as the duplicates (when sampling) are just removed, as mentioned in the paper
-        mask = tf.ones([b, n], dtype=tf.bool)
-
-        token_ids = tf.range(n)
-        token_ids = repeat(token_ids, 'n -> b n', b = b)
-
-        for attn, ff in self.layers:
-            attn_out, mask, sampled_token_ids = attn(x, mask=mask, training=training)
-
-            # when token sampling, one needs to then gather the residual tokens with the sampled token ids
-            if exists(sampled_token_ids):
-                x = batched_index_select(x, sampled_token_ids, dim=1)
-                token_ids = batched_index_select(token_ids, sampled_token_ids, dim=1)
-
-            x = x + attn_out
-
-            x = ff(x, training=training) + x
-
-        return x, token_ids
-
-class ViT(Model):
+from layers.class_token import ClassToken
+from layers.multihead_attention import Multihead_attention
+from layers.patch_embedding import PatchEmbeddings
+from layers.positional_embedding import viTPositionalEmbedding
+from layers.pwffn import PointWiseFeedForwardNetwork
+from layers.transformer_encoder import TransformerEncoder
+from utils.general import load_config
+
+class viT(tf.keras.Model):
     def __init__(self,
-                 image_size, 
-                 patch_size, 
-                 num_classes, 
-                 dim, 
-                 depth, 
-                 max_tokens_per_depth, 
-                 heads, 
-                 mlp_dim,
-                 dim_head=64, 
-                 dropout=0.0, 
-                 emb_dropout=0.0
-                 ):
-        super(ViT, self).__init__()
+                 vit_size,
+                 num_classes = 1000,
+                 class_activation="softmax",
+                 config_path="vit_architectures.yaml",
+                 **kwargs):
+        super(viT, self).__init__(**kwargs)
+        self.vit_size = vit_size
+        self.num_classes = num_classes         
 
-        image_height, image_width = pair(image_size)
-        patch_height, patch_width = pair(patch_size)
+        self.vit_attr = load_config(config_path)[self.vit_size]
 
-        assert image_height % patch_height == 0 and image_width % patch_width == 0, 'Image dimensions must be divisible by the patch size.'
+        self.patch_size = self.vit_attr["patch_size"]
+        self.mlp_layer1_units = self.vit_attr["units_in_mlp"]
+        self.dropout_rate = self.vit_attr["dropout_rate"]
+        self.num_stacked_encoders = self.vit_attr["encoder_layers"]
+        self.num_attention_heads = self.vit_attr["attention_heads"]
+        self.patch_embedding_dim = self.vit_attr["patch_embedding_dim"]
+        self.image_size = self.vit_attr["image_size"]
+        self.image_height, self.image_width, self.image_channels = self.image_size
+        
 
-        num_patches = (image_height // patch_height) * (image_width // patch_width)
+        assert len(self.image_size) == 3,\
+            "image size should consist (image_height, image_width, image_channels)"
 
-        self.patch_embedding = Sequential([
-            Rearrange('b (h p1) (w p2) c -> b (h w) (p1 p2 c)', p1=patch_height, p2=patch_width),
-            nn.Dense(units=dim)
-        ])
+        self.class_activation = class_activation
+        self.num_classes = self.num_classes
 
-        self.pos_embedding = tf.Variable(initial_value=tf.random.normal([1, num_patches + 1, dim]))
-        self.cls_token = tf.Variable(initial_value=tf.random.normal([1, 1, dim]))
-        self.dropout = nn.Dropout(rate=emb_dropout)
+        self.patch_embedding = PatchEmbeddings(embedding_dimension=self.patch_embedding_dim,
+                                               patch_size=self.patch_size,
+                                               name="embedding")
 
-        self.transformer = Transformer(dim, depth, max_tokens_per_depth, heads, dim_head, mlp_dim, dropout)
+        self.cls_layer = ClassToken(name="class_token",
+                                    embedding_dimension=self.patch_embedding_dim)
 
-        self.mlp_head = Sequential([
-            nn.LayerNormalization(),
-            nn.Dense(units=num_classes)
-        ])
+        self.pos_embedding = viTPositionalEmbedding(
+            num_of_tokens=(self.image_height // self.patch_size) *
+            (self.image_width // self.patch_size) + 1,
+            embedding_dimension=self.patch_embedding_dim,
+            name="Transformer/posembed_input")
 
+        self.stacked_encoders = [TransformerEncoder(embedding_dimension=self.patch_embedding_dim,
+                                                    num_attention_heads=self.num_attention_heads,
+                                                    mlp_layer1_units=self.mlp_layer1_units,
+                                                    dropout_rate=self.dropout_rate,
+                                                    name=f"Transformer/encoderblock_{layr}")
+                                 for layr in range(self.num_stacked_encoders)]
 
-    def call(self, img, return_sampled_token_ids=False, training=True, **kwargs):
-        x = self.patch_embedding(img)
-        b, n, _ = x.shape
+        self.layernorm = tf.keras.layers.LayerNormalization(
+            name="Transformer/encoder_norm")
 
-        cls_tokens = repeat(self.cls_token, '() n d -> b n d', b=b)
-        x = tf.concat([cls_tokens, x], axis=1)
-        x += self.pos_embedding[:, :(n + 1)]
-        x = self.dropout(x, training=training)
+        self.get_CLS_token = tf.keras.layers.Lambda(lambda CLS: CLS[:, 0],
+                                                    name="ExtractToken")
+        self.dense_out = tf.keras.layers.Dense(self.num_classes,
+                                               name="head",
+                                               activation=self.class_activation)
 
-        x, token_ids = self.transformer(x, training=training)
+        self.build(
+            [1, self.image_height, self.image_width, self.image_channels])
 
-        logits = self.mlp_head(x[:, 0])
+    def call(self, input_tensor, training=False):
+        # input_tensor: (batch_size, image_height, image_width, image_channels)
+        x = self.patch_embedding(input_tensor)
+        # reshaping
+        x = tf.reshape(
+            x, shape=(-1, x.shape[1] * x.shape[2], self.patch_embedding_dim))
+        # input to CLS layer: (batch_size, patch_size * patch_size, patch_dimension)
+        x = self.cls_layer(x)
+        # adding positional embeddings
+        x = self.pos_embedding(x)
+        # input to posembedding layer: (batch_size, patch_size * patch_size + 1, patch_dimension)
+        for tf_enc in self.stacked_encoders:
+            # passing the input through all the transformer encoders
+            x, _ = tf_enc(x, training=training)
+        # input to layernorm layer: (batch_size, patch_size * patch_size + 1, patch_dimension)
+        x = self.layernorm(x)
+        # input to get_CLS_token layer: (batch_size, patch_size * patch_size + 1, patch_dimension)
+        x = self.get_CLS_token(x)
+        # input to out_dense layer: (batch_size, 1, patch_dimension)
+        x = self.dense_out(x)
+        # output shape: (batch_size, 1000)
+        return x
 
-        if return_sampled_token_ids:
-            # remove CLS token and decrement by 1 to make -1 the padding
-            token_ids = token_ids[:, 1:] - 1
-            return logits, token_ids
+    def preprocess_input(self, image):
+        image = tf.image.resize(image, size=(
+            self.image_height, self.image_width))
+        output_tensor = tf.keras.applications.imagenet_utils.preprocess_input(image,
+                                                                              data_format=None,
+                                                                              mode="tf")
+        return output_tensor
 
-        return logits
+    def from_pretrained(self,
+                        pretrained_top=True):
+        from utils.npz_weights_loader import (get_pretrained_encoders_num,
+                                              load_npz_file,
+                                              reshape_mha_matrix,
+                                              reshape_mha_out_matrix)
+        params = load_npz_file(pretrained_size=self.vit_size)
+        num_transformer_encoder = get_pretrained_encoders_num(
+            pretrained_param_dict=params)
 
+        source_used_keys = []
 
-IMAGE_SIZE=32
+        self.cls_layer.set_weights([params["cls"]])
 
-parser = argparse.ArgumentParser(description='Process some integers.')
-parser.add_argument('--training', action = 'store_const', dest = 'training',
-                           default = False, required = False,const=True)
-args = parser.parse_args()
-(x_train, y_train), (x_test, y_test) = datasets.cifar100.load_data()
+        source_used_keys.extend(['cls'])
 
-# one hot encode target values
-y_train = to_categorical(y_train)
-y_test = to_categorical(y_test)
+        self.pos_embedding.set_weights(
+            [params["Transformer/posembed_input/pos_embedding"]])
 
-# convert from integers to floats
-x_train = x_train.astype('float32')
-x_test = x_test.astype('float32')
-# normalize to range 0-1
-x_train = x_train / 255.0
-x_test = x_test / 255.0
+        source_used_keys.extend(['Transformer/posembed_input/pos_embedding'])
 
-if args.training:
+        patch_emb_source_keys = [
+            f"embedding/{name}" for name in ["kernel", "bias"]]
 
+        self.patch_embedding.set_weights(
+            [params[key] for key in patch_emb_source_keys])
 
-    cait_xxs24_224 =  ViT(
-        image_size = IMAGE_SIZE,
-        patch_size = 4,
-        num_classes = 100,
-        dim = 1024,
-        depth = 6,
-        max_tokens_per_depth = (256, 128, 64, 32, 16, 8), # a tuple that denotes the maximum number of tokens that any given layer should have. if the layer has greater than this amount, it will undergo adaptive token sampling
-        heads = 16,
-        mlp_dim = 2048,
-        dropout = 0.1,
-        emb_dropout = 0.1
-    )
+        source_used_keys.extend(patch_emb_source_keys)
 
+        all_source_keys = list(params.keys())
+        for i_encoder, target_encoder in enumerate(self.stacked_encoders):
+            layer_name = f"Transformer/encoderblock_{i_encoder}"
 
-    cait_xxs24_224.compile(optimizer, loss_fn,  run_eagerly=True)
-    #cait_xxs24_224.build((batch_size, IMAGE_SIZE, IMAGE_SIZE, 3))
-    #cait_xxs24_224.summary()
+            layernorm1_source_key = [
+                f"{layer_name}/LayerNorm_0/{name}" for name in ["scale", "bias"]]
+            layernorm2_source_key = [
+                f"{layer_name}/LayerNorm_2/{name}" for name in ["scale", "bias"]]
+            target_encoder.layernorm1.set_weights(
+                [params[key] for key in layernorm1_source_key])
+            target_encoder.layernorm2.set_weights(
+                [params[key] for key in layernorm2_source_key])
 
-    cait_xxs24_224.fit(
-        x=x_train,y= y_train,
-        validation_data=(x_test, y_test),
-        epochs=2,
-        batch_size=batch_size,
-        verbose=1   
-    )
-    cait_xxs24_224.summary()
-    results= cait_xxs24_224.evaluate(x_test, y_test,batch_size=batch_size)
-    
-    img = tf.random.normal(shape=[1, IMAGE_SIZE, IMAGE_SIZE, 3])
-    preds = cait_xxs24_224(img) # (1, 1000)
-    cait_xxs24_224.save('cross_vit',save_format="tf")
-    print(results)
-    
-else:
-    cait_xxs24_224=  tf.keras.models.load_model('cross_vit')
+            source_used_keys.extend(
+                layernorm1_source_key + layernorm2_source_key)
 
-batch_size=1
-def representative_data_gen():
-    for x in x_test[100]:            
-        yield [x[0]]
+            mlp_dense0_source_key = [
+                f"{layer_name}/MlpBlock_3/Dense_0/{name}" for name in ["kernel", "bias"]]
+            mlp_dense1_source_key = [
+                f"{layer_name}/MlpBlock_3/Dense_1/{name}" for name in ["kernel", "bias"]]
+            target_encoder.pwffn.dense_1.set_weights(
+                [params[key] for key in mlp_dense0_source_key])
+            target_encoder.pwffn.dense_2.set_weights(
+                [params[key] for key in mlp_dense1_source_key])
 
-input_shape = model.inputs[0].shape.as_list()
-input_shape[0] = batch_size
-func = tf.function(model).get_concrete_function(
-    tf.TensorSpec(input_shape, model.inputs[0].dtype))
-converter = tf.lite.TFLiteConverter.from_concrete_functions([func])
+            source_used_keys.extend(
+                mlp_dense0_source_key + mlp_dense1_source_key)
 
+            query_source_key = [
+                f"{layer_name}/MultiHeadDotProductAttention_1/query/{name}" for name in ["kernel", "bias"]]
+            key_source_key = [
+                f"{layer_name}/MultiHeadDotProductAttention_1/key/{name}" for name in ["kernel", "bias"]]
+            value_source_key = [
+                f"{layer_name}/MultiHeadDotProductAttention_1/value/{name}" for name in ["kernel", "bias"]]
+            out_source_key = [
+                f"{layer_name}/MultiHeadDotProductAttention_1/out/{name}" for name in ["kernel", "bias"]]
 
-converter_quant = tf.lite.TFLiteConverter.from_keras_model(cait_xxs24_224) 
+            q_kernel, q_bias = reshape_mha_matrix(params, query_source_key)
+            k_kernel, k_bias = reshape_mha_matrix(params, key_source_key)
+            v_kernel, v_bias = reshape_mha_matrix(params, value_source_key)
+            out_kernel, out_bias = reshape_mha_out_matrix(
+                params, out_source_key)
 
-converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
-converter_quant.representative_dataset = representative_data_gen
-converter_quant.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
-converter_quant.target_spec.supported_types = [tf.int8]
-converter_quant.allow_custom_ops=True
-tflite_model = converter_quant.convert()
-print("finished converting")
-open("cross_vit.tflite", "wb").write(tflite_model)
+            target_encoder.mha.wQ.set_weights([q_kernel, q_bias])
+            target_encoder.mha.wK.set_weights([k_kernel, k_bias])
+            target_encoder.mha.wV.set_weights([v_kernel, v_bias])
+            target_encoder.mha.FFN.set_weights([out_kernel, out_bias])
+
+            source_used_keys.extend(
+                query_source_key + key_source_key + value_source_key + out_source_key)
+
+        transformer_encodernorm_weight_source_keys = [
+            f"Transformer/encoder_norm/{name}" for name in ["scale", "bias"]]
+        self.layernorm.set_weights([params[k]
+                                   for k in transformer_encodernorm_weight_source_keys])
+
+        source_used_keys.extend(transformer_encodernorm_weight_source_keys)
+
+        head_source_keys = ["head/kernel", "head/bias"]
+
+        if pretrained_top:
+            assert self.num_classes == 1000, \
+                "Given 'pretrained_top=True' but num_classes!=1000. ImageNet1k has 1000 classes."
+            self.dense_out.set_weights([params[key]
+                                       for key in head_source_keys])
+            source_used_keys.extend(head_source_keys)
+
+        unused_keys = set(source_used_keys) ^ set(all_source_keys)
+
+        if len(unused_keys) == 0:
+            print(f"Weights loaded for {self.vit_size}")
+        elif list(unused_keys).sort() == head_source_keys.sort() and not pretrained_top:
+            print(f"Did not load the last top layer as pretrained_top=False")
+        else:
+            for unused_key in unused_keys:
+                print(f"Couldn't load {unused_key}")
+
