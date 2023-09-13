@@ -301,7 +301,7 @@ patch_embedding = Sequential([
     ])
 
 class ViT(Model):
-    @tf.function:
+    @tf.function
     def __init__(self):
         super(ViT, self).__init__()
         img = Input(shape=(image_size, image_size, 3), dtype="float32")
