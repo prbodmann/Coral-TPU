@@ -54,7 +54,13 @@ model.summary()
 print(os.linesep)
 
 print("Conversion started..")
-converter_quant = tf.lite.TFLiteConverter.from_keras_model(model)
+input_shape = model.inputs[0].shape.as_list()
+input_shape[0] = batch_size
+func = tf.function(model).get_concrete_function(
+    tf.TensorSpec(input_shape, model.inputs[0].dtype))
+converter_quant = tf.lite.TFLiteConverter.from_concrete_functions([func])
+
+#converter_quant = tf.lite.TFLiteConverter.from_keras_model(model)
 converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
 converter_quant.representative_dataset = representative_data_gen
 converter_quant.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
