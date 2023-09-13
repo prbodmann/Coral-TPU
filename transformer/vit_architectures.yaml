@@ -3,7 +3,7 @@ ViT-BASE16:
     patch_embedding_dim: 768
     units_in_mlp: 3072
     attention_heads: 12
-    image_size: [384, 384, 3]
+    image_size: [280, 280, 3]
     patch_size: 16
     dropout_rate: 0.1
     classes: 1000
@@ -14,7 +14,7 @@ ViT-BASE32:
     patch_embedding_dim: 768
     units_in_mlp: 3072
     attention_heads: 12
-    image_size: [384, 384, 3]
+    image_size: [280, 280, 3]
     patch_size: 32
     dropout_rate: 0.1
     classes: 1000
@@ -25,7 +25,7 @@ ViT-LARGE16:
     patch_embedding_dim: 1024
     units_in_mlp: 4096
     attention_heads: 16
-    image_size: [384, 384, 3]
+    image_size: [280, 280, 3]
     patch_size: 16
     dropout_rate: 0.1
     classes: 1000
@@ -36,7 +36,7 @@ ViT-LARGE32:
     patch_embedding_dim: 1024
     units_in_mlp: 4096
     attention_heads: 16
-    image_size: [384, 384, 3]
+    image_size: [280, 280, 3]
     patch_size: 32
     dropout_rate: 0.1
     classes: 1000
