@@ -296,13 +296,14 @@ assert image_size % patch_size == 0 and image_size % patch_size == 0, 'Image dim
 num_patches = (image_size // patch_size) * (image_size // patch_size)
 @tf.function
 def patch_embedding(x):
+
     return Rearrange('b (h p1) (w p2) c -> b (h w) (p1 p2 c)', p1=patch_size, p2=patch_size)(x)
 
 class ViT(Model):
     @tf.function
-    def __init__(self):
+    def __init__(self,img):
         super(ViT, self).__init__()
-        img = Input(shape=(image_size, image_size, 3), dtype="float32")
+       # img = Input(shape=(image_size, image_size, 3), dtype="float32")
 
         x = patch_embedding(img) 
         x =  nn.Dense(units=dim)(x)
@@ -358,8 +359,8 @@ x_test = x_test / 255.0
 cait_xxs24_224=None
 if args.training:
 
-
-    cait_xxs24_224 =  ViT()
+    img = tf.random.normal(shape=[1, 224, 224, 3])
+    cait_xxs24_224 =  ViT(img)
 
 
     cait_xxs24_224.compile(optimizer, loss_fn,  run_eagerly=True)
