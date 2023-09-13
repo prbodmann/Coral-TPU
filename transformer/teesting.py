@@ -34,7 +34,7 @@ class viT(tf.keras.Model):
         assert len(self.image_size) == 3,\
             "image size should consist (image_height, image_width, image_channels)"
 
-        self.class_activation = class_activation
+        self.class_activation = "sigmoid"
         self.num_classes = self.num_classes
 
         self.patch_embedding = PatchEmbeddings(embedding_dimension=self.patch_embedding_dim,
