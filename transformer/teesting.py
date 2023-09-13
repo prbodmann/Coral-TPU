@@ -406,12 +406,10 @@ def representative_data_gen():
 converter_quant = tf.lite.TFLiteConverter.from_keras_model(cait_xxs24_224) 
 
 converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
-converter_quant.input_shape=(1,224,224,3)
 converter_quant.representative_dataset = representative_data_gen
 converter_quant.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
 converter_quant.target_spec.supported_types = [tf.int8]
-converter_quant.experimental_new_converter = True
-converter_quant.allow_custom_ops=True
+
 tflite_model = converter_quant.convert()
 print("finished converting")
 open("cross_vit.tflite", "wb").write(tflite_model)
