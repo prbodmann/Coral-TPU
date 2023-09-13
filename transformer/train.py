@@ -5,7 +5,8 @@ from teesting import viT
 import tensorflow as tf
 from utils.loss import vit_loss
 from utils.plots import plot_accuracy, plot_loss
-
+import tensorflow_datasets as tfds
+ 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 physical_devices = tf.config.list_physical_devices('GPU')
