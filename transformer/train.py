@@ -81,7 +81,7 @@ def parse_opt():
 args = parse_opt()
 
 vit = viT(vit_size=args.vit_size,
-          num_classes=args.num_classes,
+          num_classes=5,
           config_path=args.vit_config)
 
 batch_size = 64

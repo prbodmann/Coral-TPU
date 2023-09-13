@@ -65,7 +65,7 @@ class viT(tf.keras.Model):
         self.dense_out = tf.keras.layers.Dense(5, name="head", activation="sigmoid")
 
         self.build(
-            [1, self.image_height, self.image_width, self.image_channels])
+            [1, 280,280,3])
 
     def call(self, input_tensor, training=False):
         # input_tensor: (batch_size, image_height, image_width, image_channels)
