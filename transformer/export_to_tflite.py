@@ -40,6 +40,7 @@ train_dataset, val_dataset = tfds.load(
     as_supervised=True
 )
 batch_size=1
+resize_bigger = 280
 def representative_data_gen():
     for x in train_dataset:
         image = tf.image.resize(x[0], (resize_bigger, resize_bigger))            
