@@ -338,9 +338,9 @@ class ViT(Model):
     def call(self, img, return_sampled_token_ids=False, training=True, **kwargs):
         #x = self.patch_embedding(img)
         print(img.shape)
-        x = Patches(patch_height)(img)
+        x = Patches(16)(img)
         print(x.shape)
-        x = Reshape((image_height*image_width,patch_height*patch_width*3))(x)
+        x = Reshape((224*224,16*16*3))(x)
         print(x.shape)
         x = nn.Dense(units=dim)(x)
         print(x.shape)
