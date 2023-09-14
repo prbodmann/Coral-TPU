@@ -16,6 +16,7 @@ batch_size=1
 resize_bigger = 280
 image_size = 280
 auto  = tf.data.experimental.AUTOTUNE
+num_classes = 5
 
 def preprocess_dataset(is_training=True):
     def _pp(image, label):
