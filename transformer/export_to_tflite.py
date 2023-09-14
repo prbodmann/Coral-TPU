@@ -31,6 +31,7 @@ def preprocess_dataset(is_training=True):
 
 
 def prepare_dataset(dataset, is_training=True):
+    print("ahoy")
     if is_training:
         dataset = dataset.shuffle(batch_size * 16)
     dataset = dataset.map(preprocess_dataset(is_training), num_parallel_calls=auto)
