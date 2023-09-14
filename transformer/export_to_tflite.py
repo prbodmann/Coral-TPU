@@ -10,10 +10,13 @@ from layers.patch_embedding import PatchEmbeddings
 from layers.positional_embedding import viTPositionalEmbedding
 from layers.pwffn import PointWiseFeedForwardNetwork
 from layers.transformer_encoder import TransformerEncoder
+
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 batch_size=1
 resize_bigger = 280
 image_size = 280
+auto  = tf.data.experimental.AUTOTUNE
+
 def preprocess_dataset(is_training=True):
     def _pp(image, label):
         if is_training:
