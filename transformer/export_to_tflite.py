@@ -86,7 +86,7 @@ model = test(args.vit_size, args.num_classes)
 model.load_weights(os.path.join("finetuning_weights", args.source_name)).expect_partial()
 model.compute_output_shape(input_shape = [1] + VIT_CONFIG[args.vit_size]["image_size"])
 
-
+model.summary()
 
 import tensorflow_model_optimization as tfmot
 
@@ -100,7 +100,7 @@ with tfmot.quantization.keras.quantize_scope(
     }):
     # Use `quantize_apply` to actually make the model quantization aware.
     #quant_aware_model = tfmot.quantization.keras.quantize_apply(loaded_model)
-
+    train_images_subset = prepare_dataset(train_dataset)
     quantize_model = tfmot.quantization.keras.quantize_model
 
     # q_aware stands for for quantization aware.
@@ -111,7 +111,7 @@ with tfmot.quantization.keras.quantize_scope(
                   loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                   metrics=['accuracy'])
 
-    train_images_subset = prepare_dataset(train_dataset)
+   
 
     q_aware_model.fit(train_images_subset,
                       batch_size=1, epochs=10, validation_split=0.1)
