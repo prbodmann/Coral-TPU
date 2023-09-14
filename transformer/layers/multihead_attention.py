@@ -83,7 +83,7 @@ class Multihead_attention(tf.keras.layers.Layer):
 
         config = super().get_config().copy()
         config.update({
-            'embedding_dimension': self.embedding_dimension 
+            'embedding_dimension': self.embedding_dimension,
             'number_of_heads': self.number_of_heads
 
         })
