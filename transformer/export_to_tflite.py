@@ -113,7 +113,7 @@ with tfmot.quantization.keras.quantize_scope(
     #train_images_subset = prepare_dataset(train_dataset)
 
     #q_aware_model.fit(representative_data_gen,
-                      batch_size=500, epochs=10, validation_split=0.1)
+    #                  batch_size=500, epochs=10, validation_split=0.1)
 
 
 
