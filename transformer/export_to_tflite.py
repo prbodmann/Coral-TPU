@@ -103,16 +103,16 @@ with tfmot.quantization.keras.quantize_scope(
     quantize_model = tfmot.quantization.keras.quantize_model
 
     # q_aware stands for for quantization aware.
-    q_aware_model = quantize_model(model)
+    #q_aware_model = quantize_model(model)
 
     # `quantize_model` requires a recompile.
-    q_aware_model.compile(optimizer='adam',
-                  loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-                  metrics=['accuracy'])
+    #q_aware_model.compile(optimizer='adam',
+    #              loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+#               metrics=['accuracy'])
 
-    train_images_subset = prepare_dataset(train_dataset)
+    #train_images_subset = prepare_dataset(train_dataset)
 
-    q_aware_model.fit(representative_data_gen,
+    #q_aware_model.fit(representative_data_gen,
                       batch_size=500, epochs=10, validation_split=0.1)
 
 
