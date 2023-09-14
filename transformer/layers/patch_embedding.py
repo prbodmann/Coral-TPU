@@ -15,3 +15,12 @@ class PatchEmbeddings(tf.keras.layers.Layer):
     def call(self, input_tensor):
         output_embedding_logits = self.projection(input_tensor)
         return output_embedding_logits
+    def get_config(self):
+
+        config = super().get_config().copy()
+        config.update({
+            'embedding_dimension': self.embedding_dimension,
+            'patch_size': self.patch_size,
+            'projection': self.projection
+        })
+        return config
