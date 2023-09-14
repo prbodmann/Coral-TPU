@@ -82,8 +82,7 @@ model.compute_output_shape(input_shape = [1] + VIT_CONFIG[args.vit_size]["image_
 
 import tensorflow_model_optimization as tfmot
 
-with tfmot.quantization.keras.quantize_scope():
-
+with tfmot.quantization.keras.quantize_scope(
     {'DefaultDenseQuantizeConfig': DefaultDenseQuantizeConfig,
     'ClassToken': ClassToken}):
     # Use `quantize_apply` to actually make the model quantization aware.
