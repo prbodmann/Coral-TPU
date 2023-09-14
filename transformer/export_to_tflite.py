@@ -11,6 +11,8 @@ from layers.positional_embedding import viTPositionalEmbedding
 from layers.pwffn import PointWiseFeedForwardNetwork
 from layers.transformer_encoder import TransformerEncoder
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+batch_size=1
+resize_bigger = 280
 
 def preprocess_dataset(is_training=True):
     def _pp(image, label):
@@ -70,8 +72,8 @@ train_dataset, val_dataset = tfds.load(
     "tf_flowers", split=["train[:90%]", "train[90%:]"], 
     as_supervised=True
 )
-batch_size=1
-resize_bigger = 280
+
+
 def representative_data_gen():
     for x in train_dataset:
         image = tf.image.resize(x[0], (resize_bigger, resize_bigger))            

@@ -111,7 +111,7 @@ class viT(tf.keras.Model):
 
         self.patch_embedding = PatchEmbeddings(embedding_dimension=self.patch_embedding_dim,
                                                patch_size=self.patch_size,
-                                               name="embedding")
+                                               name="embedding") 
 
         self.cls_layer = ClassToken(name="class_token",
                                     embedding_dimension=self.patch_embedding_dim)
