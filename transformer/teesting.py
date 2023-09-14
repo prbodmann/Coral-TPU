@@ -23,9 +23,13 @@ def test(vit_size,num_classes = 5,
     patch_embedding_dim = vit_attr["patch_embedding_dim"]
     image_size = vit_attr["image_size"]
     image_height, image_width, image_channels = image_size
-    patch_embedding = PatchEmbeddings(embedding_dimension=patch_embedding_dim,
-                                               patch_size=patch_size,
-                                               name="embedding")
+    patch_embedding = tf.keras.layers.Conv2D(filters=patch_embedding_dim,
+                                                 kernel_size=patch_size,
+                                                 strides=patch_size,
+                                                 padding='valid',
+                                                 name="embedding")#PatchEmbeddings(embedding_dimension=patch_embedding_dim,
+                      #                         patch_size=patch_size,
+                      #                         name="embedding")
 
     cls_layer = ClassToken(name="class_token",
                                 embedding_dimension=patch_embedding_dim)
