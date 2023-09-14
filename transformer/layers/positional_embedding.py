@@ -25,6 +25,6 @@ class viTPositionalEmbedding(tf.keras.layers.Layer):
         config = super().get_config().copy()
         config.update({
             'embedding_dimension': self.embedding_dimension,
-            'num_of_tokens': self.num_of_token
+            'num_of_tokens': self.num_of_tokens
         })
         return config
