@@ -23,3 +23,10 @@ class ClassToken(tf.keras.layers.Layer):
             self.cls_token_broadcasted, dtype=input_tensor.dtype)
         self.output_tensor = tf.concat([self.cls_token, input_tensor], axis=1)
         return self.output_tensor
+    def get_config(self):
+
+        config = super().get_config().copy()
+        config.update({
+            'embedding_dimension': self.embedding_dimension
+        })
+        return config
