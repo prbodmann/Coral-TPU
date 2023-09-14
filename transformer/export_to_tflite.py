@@ -90,7 +90,7 @@ model = test(args.vit_size, args.num_classes)
 model.load_weights(os.path.join("finetuning_weights", args.source_name)).expect_partial()
 model.compute_output_shape(input_shape = [1] + VIT_CONFIG[args.vit_size]["image_size"])
 
-model.summary()
+model.summary(expand_nested=True)
 
 import tensorflow_model_optimization as tfmot
 
