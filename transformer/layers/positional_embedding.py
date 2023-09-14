@@ -20,3 +20,11 @@ class viTPositionalEmbedding(tf.keras.layers.Layer):
         self.pe_var = tf.cast(self.learnable_pe, dtype=input_tensor.dtype)
         output_logits = tf.math.add(input_tensor, self.pe_var)
         return output_logits
+    def get_config(self):
+
+        config = super().get_config().copy()
+        config.update({
+            'embedding_dimension': self.embedding_dimension,
+            'num_of_tokens': self.num_of_token
+        })
+        return config

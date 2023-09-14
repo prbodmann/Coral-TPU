@@ -5,6 +5,11 @@ import tensorflow as tf
 from utils.general import load_config
 import tensorflow_datasets as tfds
 from layers.class_token import ClassToken
+from layers.multihead_attention import Multihead_attention
+from layers.patch_embedding import PatchEmbeddings
+from layers.positional_embedding import viTPositionalEmbedding
+from layers.pwffn import PointWiseFeedForwardNetwork
+from layers.transformer_encoder import TransformerEncoder
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 def preprocess_dataset(is_training=True):
@@ -83,7 +88,13 @@ model.compute_output_shape(input_shape = [1] + VIT_CONFIG[args.vit_size]["image_
 import tensorflow_model_optimization as tfmot
 
 with tfmot.quantization.keras.quantize_scope(
-    {'ClassToken': ClassToken}):
+    {'ClassToken': ClassToken,
+     'Multihead_attention':Multihead_attention,
+    'PatchEmbeddings':PatchEmbeddings,
+    'viTPositionalEmbedding':viTPositionalEmbedding,
+    'PointWiseFeedForwardNetwork':PointWiseFeedForwardNetwork,
+    'TransformerEncoder':TransformerEncoder
+    }):
     # Use `quantize_apply` to actually make the model quantization aware.
     #quant_aware_model = tfmot.quantization.keras.quantize_apply(loaded_model)
 

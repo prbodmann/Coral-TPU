@@ -38,5 +38,15 @@ class TransformerEncoder(tf.keras.layers.Layer):
         return output_logits, attention_weights
         
         
-        
+    def get_config(self):
+
+        config = super().get_config().copy()
+        config.update({
+            'embedding_dimension': self.embedding_dimension,
+            'num_attention_heads': self.num_attention_heads,
+            'mlp_layer1_units': self.mlp_layer1_units,
+            'dropout_rate': self.dropout_rate
+
+        })
+        return config
         

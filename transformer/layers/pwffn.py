@@ -33,4 +33,17 @@ class PointWiseFeedForwardNetwork(tf.keras.layers.Layer):
         x = self.dense_2(x)
         x = self.dropout_2(x)
         return x
+    def get_config(self):
+
+        config = super().get_config().copy()
+        config.update({
+            'layer1_units': self.layer1_units,
+            'layer2_units': self.layer2_units,
+            'dropout_rate':self.dropout_rate,
+            'dense_1':self.dense_1,
+            'dropout_1': seld.dropout_1,
+            'dense_2':self.dense_2,
+            'dropout_2': self.dropout_2
+        })
+        return config
     

@@ -79,3 +79,12 @@ class Multihead_attention(tf.keras.layers.Layer):
         output_logits = self.FFN(concated_logits)
 
         return output_logits, attention_weights
+    def get_config(self):
+
+        config = super().get_config().copy()
+        config.update({
+            'embedding_dimension': self.embedding_dimension 
+            'number_of_heads': self.number_of_heads
+
+        })
+        return config
