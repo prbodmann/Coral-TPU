@@ -4,7 +4,7 @@ from teesting import viT, test
 import tensorflow as tf 
 from utils.general import load_config
 import tensorflow_datasets as tfds
- 
+from layers.class_token import ClassToken
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 def preprocess_dataset(is_training=True):
@@ -78,47 +78,55 @@ model = test(args.vit_size, args.num_classes)
 model.load_weights(os.path.join("finetuning_weights", args.source_name)).expect_partial()
 model.compute_output_shape(input_shape = [1] + VIT_CONFIG[args.vit_size]["image_size"])
 
+
+
 import tensorflow_model_optimization as tfmot
 
-quantize_model = tfmot.quantization.keras.quantize_model
+with quantize_scope(
+    {'DefaultDenseQuantizeConfig': DefaultDenseQuantizeConfig,
+    'ClassToken': ClassToken}):
+    # Use `quantize_apply` to actually make the model quantization aware.
+    #quant_aware_model = tfmot.quantization.keras.quantize_apply(loaded_model)
 
-# q_aware stands for for quantization aware.
-q_aware_model = quantize_model(model)
+    quantize_model = tfmot.quantization.keras.quantize_model
 
-# `quantize_model` requires a recompile.
-q_aware_model.compile(optimizer='adam',
-              loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-              metrics=['accuracy'])
+    # q_aware stands for for quantization aware.
+    q_aware_model = quantize_model(model)
 
-train_images_subset = prepare_dataset(train_dataset)
+    # `quantize_model` requires a recompile.
+    q_aware_model.compile(optimizer='adam',
+                  loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+                  metrics=['accuracy'])
 
-q_aware_model.fit(train_images_subset,
-                  batch_size=500, epochs=10, validation_split=0.1)
+    train_images_subset = prepare_dataset(train_dataset)
 
-
-
-
-
-model.summary()
-print(os.linesep)
-
-print("Conversion started..")
-#input_shape = model.inputs[0].shape.as_list()
-#input_shape[0] = batch_size
-#func = tf.function(model).get_concrete_function(
-#    tf.TensorSpec(input_shape, model.inputs[0].dtype))
-#converter_quant = tf.lite.TFLiteConverter.from_concrete_functions([func])
-
-converter_quant = tf.lite.TFLiteConverter.from_keras_model(q_aware_model)
-converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
-#converter_quant.representative_dataset = representative_data_gen
-converter_quant.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8 ]
-#converter_quant.target_spec.supported_types = [tf.int8]
-#converter_quant.experimental_new_converter = True
-converter_quant.allow_custom_ops=True
-converter_quant.input_shape=(1,280,280,3)
-vit_tflite = converter_quant.convert()
-open(args.tflite_save_name, "wb").write(vit_tflite)
+    q_aware_model.fit(train_images_subset,
+                      batch_size=500, epochs=10, validation_split=0.1)
 
 
-print(f"{args.tflite_save_name} saved.")
+
+
+
+    model.summary()
+    print(os.linesep)
+
+    print("Conversion started..")
+    #input_shape = model.inputs[0].shape.as_list()
+    #input_shape[0] = batch_size
+    #func = tf.function(model).get_concrete_function(
+    #    tf.TensorSpec(input_shape, model.inputs[0].dtype))
+    #converter_quant = tf.lite.TFLiteConverter.from_concrete_functions([func])
+
+    converter_quant = tf.lite.TFLiteConverter.from_keras_model(q_aware_model)
+    converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
+    #converter_quant.representative_dataset = representative_data_gen
+    converter_quant.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8 ]
+    #converter_quant.target_spec.supported_types = [tf.int8]
+    #converter_quant.experimental_new_converter = True
+    converter_quant.allow_custom_ops=True
+    converter_quant.input_shape=(1,280,280,3)
+    vit_tflite = converter_quant.convert()
+    open(args.tflite_save_name, "wb").write(vit_tflite)
+
+
+    print(f"{args.tflite_save_name} saved.")
