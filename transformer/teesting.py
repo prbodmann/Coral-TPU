@@ -142,7 +142,7 @@ class viT(tf.keras.Model):
         x = self.patch_embedding(input_tensor)
         # reshaping
         x = tf.reshape(
-            x, shape=(-1, x.shape[1] * x.shape[2], self.patch_embedding_dim))
+            x, shape=(-1, self.patch_size * self.patch_size, self.patch_embedding_dim))
         # input to CLS layer: (batch_size, patch_size * patch_size, patch_dimension)
         x = self.cls_layer(x)
         # adding positional embeddings
