@@ -81,7 +81,7 @@ def parse_opt():
 
 args = parse_opt()
 
-vit = test(vit_size=args.vit_size,
+vit = viT(vit_size=args.vit_size,
           num_classes=5,
           config_path=args.vit_config)
 
