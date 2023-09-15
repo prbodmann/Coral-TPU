@@ -10,7 +10,7 @@ from layers.patch_embedding import PatchEmbeddings
 from layers.positional_embedding import viTPositionalEmbedding
 from layers.pwffn import PointWiseFeedForwardNetwork
 from layers.transformer_encoder import TransformerEncoder
-from tf.raw_ops import FusedBatchNormV3
+from tensorflow.raw_ops import FusedBatchNormV3
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 batch_size=1
 resize_bigger = 280
