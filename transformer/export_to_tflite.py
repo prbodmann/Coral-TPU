@@ -132,6 +132,7 @@ converter_quant.target_spec.supported_types = [tf.int8]
 converter_quant.experimental_new_converter = True
 converter_quant.allow_custom_ops=True
 converter_quant.input_shape=(1,280,280,3)
+print('what')
 vit_tflite = converter_quant.convert()
 print('lol')
 open(args.tflite_save_name, "wb").write(vit_tflite)
