@@ -16,11 +16,14 @@ class ClassToken(tf.keras.layers.Layer):
                                             trainable=True)
 
     def call(self, input_tensor):
+        print("1" + str(input_tensor.shape))
         self.batch_size = tf.shape(input_tensor)[0]
         self.cls_token_broadcasted = tf.broadcast_to(self.cls_token_tensor,
                                                      shape=[self.batch_size, 1, self.embedding_dimension])
+        print("2" + str(input_tensor.shape))
         self.cls_token = tf.cast(
             self.cls_token_broadcasted, dtype=input_tensor.dtype)
+        print("3" + str(input_tensor.shape))
         self.output_tensor = tf.concat([self.cls_token, input_tensor], axis=1)
         return self.output_tensor
     def get_config(self):
