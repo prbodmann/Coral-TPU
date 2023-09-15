@@ -25,6 +25,8 @@ class ClassToken(tf.keras.layers.Layer):
             self.cls_token_broadcasted, dtype=input_tensor.dtype)
         print("3" + str(input_tensor.shape))
         self.output_tensor = tf.concat([self.cls_token, input_tensor], axis=1)
+        print("4" + str(input_tensor.shape))    
+        
         return self.output_tensor
     def get_config(self):
 
