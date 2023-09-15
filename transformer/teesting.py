@@ -62,6 +62,7 @@ def test(vit_size,num_classes = 5,
         x, shape=(-1, patch_size * patch_size, patch_embedding_dim))
     # input to CLS layer: (batch_size, patch_size * patch_size, patch_dimension)
     x = cls_layer(x)
+    print(x.shape)
     # adding positional embeddings
     x = pos_embedding(x)
     # input to posembedding layer: (batch_size, patch_size * patch_size + 1, patch_dimension)
