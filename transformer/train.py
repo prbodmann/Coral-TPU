@@ -59,7 +59,7 @@ def parse_opt():
 
     parser.add_argument('--validation-batch-size',
                         type=int,
-                        default=16,
+                        default=1,
                         help='validation batch size for calculating accuracy.')
 
     parser.add_argument('--global-clipnorm',
