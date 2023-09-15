@@ -59,7 +59,7 @@ def test(vit_size,num_classes = 5,
     x = patch_embedding(input_tensor)
     # reshaping
     x = tf.reshape(
-        x, shape=(-1, x.shape[1] * x.shape[2], patch_embedding_dim))
+        x, shape=(-1, patch_size * patch_size, patch_embedding_dim))
     # input to CLS layer: (batch_size, patch_size * patch_size, patch_dimension)
     x = cls_layer(x)
     # adding positional embeddings
