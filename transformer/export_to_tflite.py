@@ -65,7 +65,7 @@ def parse_opt():
     
     parser.add_argument('--tflite-save-name',
                 type=str,
-                default = "vit.tflite",
+                default = "example_vit.tflite",
                 help='name of the tflite model for saving')
 
     return parser.parse_args()
