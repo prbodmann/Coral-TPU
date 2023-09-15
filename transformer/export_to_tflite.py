@@ -92,59 +92,49 @@ model.load_weights(os.path.join("finetuning_weights", args.source_name)).expect_
 model.build(input_shape=[1] + VIT_CONFIG[args.vit_size]["image_size"])
 model.summary()
 
-import tensorflow_model_optimization as tfmot
 
-with tfmot.quantization.keras.quantize_scope(
-    {'ClassToken': ClassToken,
-     'Multihead_attention':Multihead_attention,
-    'PatchEmbeddings':PatchEmbeddings,
-    'viTPositionalEmbedding':viTPositionalEmbedding,
-    'PointWiseFeedForwardNetwork':PointWiseFeedForwardNetwork,
-    'TransformerEncoder':TransformerEncoder,
-    'FusedBatchNormV3':FusedBatchNormV3
-    }):
-    # Use `quantize_apply` to actually make the model quantization aware.
-    #quant_aware_model = tfmot.quantization.keras.quantize_apply(loaded_model)
-    train_images_subset = prepare_dataset(train_dataset)
-    #quantize_model = tfmot.quantization.keras.quantize_model
+# Use `quantize_apply` to actually make the model quantization aware.
+#quant_aware_model = tfmot.quantization.keras.quantize_apply(loaded_model)
+train_images_subset = prepare_dataset(train_dataset)
+#quantize_model = tfmot.quantization.keras.quantize_model
 
-    # q_aware stands for for quantization aware.
-    #q_aware_model = quantize_model(model)
+# q_aware stands for for quantization aware.
+#q_aware_model = quantize_model(model)
 
-    # `quantize_model` requires a recompile.
-    #q_aware_model.compile(optimizer='adam',
-    #              loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-    #              metrics=['accuracy'])
+# `quantize_model` requires a recompile.
+#q_aware_model.compile(optimizer='adam',
+#              loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+#              metrics=['accuracy'])
 
-   
 
-    #q_aware_model.fit(train_images_subset, batch_size=1, epochs=10, validation_split=0.1)
+
+#q_aware_model.fit(train_images_subset, batch_size=1, epochs=10, validation_split=0.1)
 
 
 
 
 
-    #q_aware_model.summary()
-    print(os.linesep)
+#q_aware_model.summary()
+print(os.linesep)
 
-    print("Conversion started..")
-    #input_shape = model.inputs[0].shape.as_list()
-    #input_shape[0] = batch_size
-    #func = tf.function(model).get_concrete_function(
-    #    tf.TensorSpec(input_shape, model.inputs[0].dtype))
-    #converter_quant = tf.lite.TFLiteConverter.from_concrete_functions([func])
+print("Conversion started..")
+#input_shape = model.inputs[0].shape.as_list()
+#input_shape[0] = batch_size
+#func = tf.function(model).get_concrete_function(
+#    tf.TensorSpec(input_shape, model.inputs[0].dtype))
+#converter_quant = tf.lite.TFLiteConverter.from_concrete_functions([func])
 
-    converter_quant = tf.lite.TFLiteConverter.from_keras_model(model)
-    converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
-    converter_quant.representative_dataset = representative_data_gen
-    converter_quant.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8, tf.lite.OpsSet.SELECT_TF_OPS ]
-    converter_quant.target_spec.supported_types = [tf.int8]
-    converter_quant.experimental_new_converter = True
-    converter_quant.allow_custom_ops=True
-    converter_quant.input_shape=(1,280,280,3)
-    vit_tflite = converter_quant.convert()
-    print('lol')
-    open(args.tflite_save_name, "wb").write(vit_tflite)
+converter_quant = tf.lite.TFLiteConverter.from_keras_model(model)
+converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
+converter_quant.representative_dataset = representative_data_gen
+converter_quant.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8, tf.lite.OpsSet.SELECT_TF_OPS ]
+converter_quant.target_spec.supported_types = [tf.int8]
+converter_quant.experimental_new_converter = True
+converter_quant.allow_custom_ops=True
+converter_quant.input_shape=(1,280,280,3)
+vit_tflite = converter_quant.convert()
+print('lol')
+open(args.tflite_save_name, "wb").write(vit_tflite)
 
 
-    print(f"{args.tflite_save_name} saved.")
+print(f"{args.tflite_save_name} saved.")
