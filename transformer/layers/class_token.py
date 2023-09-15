@@ -14,9 +14,9 @@ class ClassToken(tf.keras.layers.Layer):
                                             initial_value = tf.random_normal_initializer(stddev=0.06)
                                             (shape = (1, 1, self.embedding_dimension)),
                                             trainable=True)
-        
+
     def call(self, input_tensor):
-        self.batch_size = input_tensor[0]
+        self.batch_size = tf.shape(input_tensor)[0]
         self.cls_token_broadcasted = tf.broadcast_to(self.cls_token_tensor,
                                                      shape=[self.batch_size, 1, self.embedding_dimension])
         self.cls_token = tf.cast(

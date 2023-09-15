@@ -26,7 +26,7 @@ class Multihead_attention(tf.keras.layers.Layer):
                                transpose_b=True)
 
         # getting the embedding dimension from the keys
-        d = tf.shape(key)[-1]
+        d = self.embedding_dimension
         d = tf.cast(d, tf.float32)
 
         # scaling the matrix with the embedding dimension for stable gradients
@@ -49,7 +49,7 @@ class Multihead_attention(tf.keras.layers.Layer):
         return tf.transpose(splitted_input_tensor, perm=[0, 2, 1, 3])
 
     def call(self, input_tensor):
-        self.batch_size = input_tensor[0]
+        self.batch_size = tf.shape(input_tensor)[0]
         self.batch_size = tf.cast(self.batch_size, tf.int64)
 
         # learning the query, key and value matrices
