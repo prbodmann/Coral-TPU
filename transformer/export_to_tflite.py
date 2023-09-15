@@ -130,7 +130,7 @@ converter_quant.representative_dataset = representative_data_gen
 converter_quant.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8 ]
 converter_quant.target_spec.supported_types = [tf.int8]
 converter_quant.experimental_new_converter = False
-converter_quant.allow_custom_ops=True
+converter_quant.allow_custom_ops=False
 converter_quant.input_shape=(1,280,280,3)
 print('what')
 vit_tflite = converter_quant.convert()
