@@ -68,7 +68,7 @@ class viT(tf.keras.Model):
                                                     name="ExtractToken")
         self.dense_out = tf.keras.layers.Dense(5, name="head", activation="sigmoid")
 
-
+        self.build([1, self.image_height, self.image_width, self.image_channels])
     def call(self, input_tensor, training=False):
         # input_tensor: (batch_size, image_height, image_width, image_channels)
         x = self.patch_embedding(input_tensor)
