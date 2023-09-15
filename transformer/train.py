@@ -85,7 +85,7 @@ vit = viT(vit_size=args.vit_size,
           num_classes=5,
           config_path=args.vit_config)
 
-batch_size = 32
+batch_size = 1
 auto  = tf.data.experimental.AUTOTUNE
 resize_bigger = 320
 num_classes = 5
@@ -164,7 +164,7 @@ history = vit.fit(train_ds,
                   validation_batch_size=args.validation_batch_size,
                   callbacks=[chekpoint],
                   epochs=args.epochs)
-
+vit.summary()
 print(os.linesep)
 
 if args.save_training_stats:

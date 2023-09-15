@@ -90,6 +90,7 @@ model = viT(args.vit_size, args.num_classes)
 model.load_weights(os.path.join("finetuning_weights", args.source_name)).expect_partial()
 #model.compute_output_shape(input_shape = [1] + VIT_CONFIG[args.vit_size]["image_size"])
 model.build(input_shape=[1] + VIT_CONFIG[args.vit_size]["image_size"])
+
 model.summary()
 
 
