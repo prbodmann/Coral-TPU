@@ -164,7 +164,7 @@ history = vit.fit(train_ds,
                   validation_batch_size=args.validation_batch_size,
                   callbacks=[chekpoint],
                   epochs=args.epochs)
-test=tf.ones((1,self.image_height, self.image_width, self.image_channels))
+test=tf.ones((1,image_size, image_size, 3))
 self(test)
 vit.save(os.path.join("finetuning_weights", f"{args.vit_size}_{args.model_name}"))
 vit.summary()
