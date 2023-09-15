@@ -34,7 +34,7 @@ class TransformerEncoder(tf.keras.layers.Layer):
         x = tf.math.add(x, input_tensor)
         y = self.layernorm2(x)
         y = self.pwffn(y)
-        output_logits = tf.math.add(x, y)
+        self.output_logits = tf.math.add(x, y)
         return output_logits, attention_weights
         
         
@@ -49,4 +49,5 @@ class TransformerEncoder(tf.keras.layers.Layer):
 
         })
         return config
-        
+    def compute_output_shape(self, input_shape):
+            return (input_shape[0], self.output_logits.shape[1:])

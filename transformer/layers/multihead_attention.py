@@ -76,9 +76,9 @@ class Multihead_attention(tf.keras.layers.Layer):
         concated_logits = tf.reshape(logits,
                                      (self.batch_size, -1, self.embedding_dimension))
 
-        output_logits = self.FFN(concated_logits)
+        self.output_logits = self.FFN(concated_logits)
 
-        return output_logits, attention_weights
+        return self.output_logits, attention_weights
     def get_config(self):
 
         config = super().get_config().copy()
@@ -88,3 +88,5 @@ class Multihead_attention(tf.keras.layers.Layer):
 
         })
         return config
+    def compute_output_shape(self, input_shape):
+            return (input_shape[0], self.output_logits.shape[1:])

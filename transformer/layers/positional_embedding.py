@@ -18,8 +18,8 @@ class viTPositionalEmbedding(tf.keras.layers.Layer):
 
     def call(self, input_tensor):
         self.pe_var = tf.cast(self.learnable_pe, dtype=input_tensor.dtype)
-        output_logits = tf.math.add(input_tensor, self.pe_var)
-        return output_logits
+        self.output_logits = tf.math.add(input_tensor, self.pe_var)
+        return self.output_logits
     def get_config(self):
 
         config = super().get_config().copy()
@@ -28,3 +28,5 @@ class viTPositionalEmbedding(tf.keras.layers.Layer):
             'num_of_tokens': self.num_of_tokens
         })
         return config
+    def compute_output_shape(self, input_shape):
+            return (input_shape[0], self.output_logits.shape[1:])

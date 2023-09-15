@@ -30,3 +30,5 @@ class ClassToken(tf.keras.layers.Layer):
             'embedding_dimension': self.embedding_dimension
         })
         return config
+    def compute_output_shape(self, input_shape):
+            return (input_shape[0], self.output_tensor.shape[1:])

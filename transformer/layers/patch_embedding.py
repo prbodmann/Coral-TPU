@@ -13,8 +13,8 @@ class PatchEmbeddings(tf.keras.layers.Layer):
                                                  name="embedding")
 
     def call(self, input_tensor):
-        output_embedding_logits = self.projection(input_tensor)
-        return output_embedding_logits
+        self.output_embedding_logits = self.projection(input_tensor)
+        return self.output_embedding_logits
     def get_config(self):
 
         config = super().get_config().copy()
@@ -24,3 +24,5 @@ class PatchEmbeddings(tf.keras.layers.Layer):
             'projection': self.projection
         })
         return config
+    def compute_output_shape(self, input_shape):
+            return (input_shape[0], self.output_embedding_logits.shape[1:])
