@@ -31,9 +31,9 @@ class PointWiseFeedForwardNetwork(tf.keras.layers.Layer):
         x = self.dense_1(input_tensor)
         x = igelu(x)
         x = self.dense_2(x)
-        x = self.dropout_2(x)
-        self.output = x
-        return x
+        self.x = self.dropout_2(x)
+
+        return self.x
     def get_config(self):
 
         config = super().get_config().copy()
