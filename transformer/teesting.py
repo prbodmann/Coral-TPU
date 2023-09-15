@@ -9,76 +9,7 @@ from layers.transformer_encoder import TransformerEncoder
 from utils.general import load_config
 from tensorflow.keras import Sequential, Model
 from tensorflow.keras.layers import Reshape, Input
-
-def test(vit_size,num_classes = 5,
-                 class_activation="softmax",
-                 config_path="vit_architectures.yaml"):
-    vit_attr = load_config(config_path)[vit_size]
-
-    patch_size = vit_attr["patch_size"]
-    mlp_layer1_units = vit_attr["units_in_mlp"]
-    dropout_rate = vit_attr["dropout_rate"]
-    num_stacked_encoders = vit_attr["encoder_layers"]
-    num_attention_heads = vit_attr["attention_heads"]
-    patch_embedding_dim = vit_attr["patch_embedding_dim"]
-    image_size = vit_attr["image_size"]
-    image_height, image_width, image_channels = image_size
-    patch_embedding = tf.keras.layers.Conv2D(filters=patch_embedding_dim,
-                                                 kernel_size=patch_size,
-                                                 strides=patch_size,
-                                                 padding='valid',
-                                                 name="embedding")#PatchEmbeddings(embedding_dimension=patch_embedding_dim,
-                      #                         patch_size=patch_size,
-                      #                         name="embedding")
-
-    cls_layer = ClassToken(name="class_token",
-                                embedding_dimension=patch_embedding_dim)
-
-    pos_embedding = viTPositionalEmbedding(
-        num_of_tokens=(image_height // patch_size) *
-        (image_width // patch_size) + 1,
-        embedding_dimension=patch_embedding_dim,
-        name="Transformer/posembed_input")
-
-    stacked_encoders = [TransformerEncoder(embedding_dimension=patch_embedding_dim,
-                                                num_attention_heads=num_attention_heads,
-                                                mlp_layer1_units=mlp_layer1_units,
-                                                dropout_rate=dropout_rate,
-                                                name=f"Transformer/encoderblock_{layr}")
-                             for layr in range(num_stacked_encoders)]
-
-    layernorm = tf.keras.layers.LayerNormalization(
-        name="Transformer/encoder_norm")
-
-    get_CLS_token = tf.keras.layers.Lambda(lambda CLS: CLS[:, 0],
-                                                name="ExtractToken")
-    dense_out = tf.keras.layers.Dense(5, name="head", activation="sigmoid")
-    input_tensor = Input(shape=(image_height,image_width,image_channels))
-
-   # input_tensor: (batch_size, image_height, image_width, image_channels)
-    x = patch_embedding(input_tensor)
-    # reshaping
-    x = tf.reshape(
-        x, shape=(-1, patch_size * patch_size, patch_embedding_dim))
-    # input to CLS layer: (batch_size, patch_size * patch_size, patch_dimension)
-    x = cls_layer(x)
-    print(x.shape)
-    # adding positional embeddings
-    x = pos_embedding(x)
-    # input to posembedding layer: (batch_size, patch_size * patch_size + 1, patch_dimension)
-    for tf_enc in stacked_encoders:
-        # passing the input through all the transformer encoders
-        x, _ = tf_enc(x)
-    # input to layernorm layer: (batch_size, patch_size * patch_size + 1, patch_dimension)
-    x = layernorm(x)
-    # input to get_CLS_token layer: (batch_size, patch_size * patch_size + 1, patch_dimension)
-    x = get_CLS_token(x)
-    # input to out_dense layer: (batch_size, 1, patch_dimension)
-    x = dense_out(x)
-    # output shape: (batch_size, 1000)
-    return Model(input_tensor,x)
-    
-   
+ 
 
 
 class viT(tf.keras.Model):
@@ -141,9 +72,12 @@ class viT(tf.keras.Model):
     def call(self, input_tensor, training=False):
         # input_tensor: (batch_size, image_height, image_width, image_channels)
         x = self.patch_embedding(input_tensor)
+        print('a' + str(x.shape))
         # reshaping
         x = tf.reshape(
-            x, shape=(-1, self.patch_size * self.patch_size, self.patch_embedding_dim))
+            x, shape=(-1, self.patch_size * self.patch_size, self.patch_embedding_dim)) 
+        print('a' + str(x.shape))
+        
         # input to CLS layer: (batch_size, patch_size * patch_size, patch_dimension)
         x = self.cls_layer(x)
         # adding positional embeddings

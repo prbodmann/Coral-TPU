@@ -1,7 +1,7 @@
 import os
 import json
 import argparse
-from teesting import viT, test
+from teesting import viT
 import tensorflow as tf
 from utils.loss import vit_loss
 from utils.plots import plot_accuracy, plot_loss
@@ -87,7 +87,7 @@ vit = viT(vit_size=args.vit_size,
 
 batch_size = 32
 auto  = tf.data.experimental.AUTOTUNE
-resize_bigger = 280
+resize_bigger = 320
 num_classes = 5
 image_size=280
 

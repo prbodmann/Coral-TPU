@@ -1,6 +1,6 @@
 import os
 import argparse
-from teesting import viT, test
+from teesting import viT
 import tensorflow as tf 
 from utils.general import load_config
 import tensorflow_datasets as tfds
