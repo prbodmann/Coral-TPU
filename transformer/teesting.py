@@ -67,7 +67,7 @@ class viT(tf.keras.Model):
         self.get_CLS_token = tf.keras.layers.Lambda(lambda CLS: CLS[:, 0],
                                                     name="ExtractToken")
         self.dense_out = tf.keras.layers.Dense(5, name="head", activation="sigmoid")
-        test=tf.ones((self.image_height, self.image_width, self.image_channels))
+        test=tf.ones((1,self.image_height, self.image_width, self.image_channels))
         self(test)
         self.build([1, self.image_height, self.image_width, self.image_channels])
        
