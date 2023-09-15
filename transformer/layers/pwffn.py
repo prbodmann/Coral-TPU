@@ -26,7 +26,7 @@ class PointWiseFeedForwardNetwork(tf.keras.layers.Layer):
         self.dense_2 = tf.keras.layers.Dense(units = self.layer2_units,
                                              name=f"{self.name}/Dense_1")
         self.dropout_2 = tf.keras.layers.Dropout(self.dropout_rate)
-        self.output=None
+        
     def call(self, input_tensor):
         x = self.dense_1(input_tensor)
         x = igelu(x)
