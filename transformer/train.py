@@ -17,7 +17,7 @@ def parse_opt():
     parser = argparse.ArgumentParser()
     parser.add_argument('--epochs',
                         type=int,
-                        default=10,
+                        default=2,
                         help='Total training epochs for finetuning')
 
     parser.add_argument('--batch-size',
