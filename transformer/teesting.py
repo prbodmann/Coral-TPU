@@ -71,6 +71,7 @@ class viT(tf.keras.Model):
         #self.build([1, self.image_height, self.image_width, self.image_channels])
        
     def call(self, input_tensor, training=False):
+        print('a' + str(input_tensor.shape))
         # input_tensor: (batch_size, image_height, image_width, image_channels)
         x = self.patch_embedding(input_tensor)
         print('a' + str(x.shape))
@@ -95,6 +96,6 @@ class viT(tf.keras.Model):
         # output shape: (batch_size, 1000)
         return x
     def model(self):
-        x = Input(shape=( 280, 280, 3))
+        x = Input(shape=(280, 280, 3))
         return Model(inputs=[x], outputs=self.call(x))
 
