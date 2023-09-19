@@ -182,7 +182,7 @@ def representative_data_gen():
 print("Conversion started..")
 input_shape = vit.inputs[0].shape.as_list()
 input_shape[0] = batch_size
-func = tf.function(model).get_concrete_function(
+func = tf.function(vit).get_concrete_function(
     tf.TensorSpec(input_shape, vit.inputs[0].dtype))
 converter_quant = tf.lite.TFLiteConverter.from_concrete_functions([func])
 
