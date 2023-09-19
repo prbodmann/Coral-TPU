@@ -195,7 +195,7 @@ converter_quant.inference_input_type = tf.uint8 # changed from tf.uint8
 converter_quant.inference_output_type = tf.uint8 # changed from tf.uint8
 converter_quant.experimental_new_converter = True
 converter_quant.allow_custom_ops=True
-#converter_quant.input_shape=(1,280,280,3)
+converter_quant.input_shape=(1,280,280,3)
 print('what')
 vit_tflite = converter_quant.convert()
 #print(vit_tflite)
@@ -203,4 +203,4 @@ print('lol')
 open(f"{args.vit_size}_{args.model_name}.tflite", "wb").write(vit_tflite)
 
 
-print(f"{args.tflite_save_name} saved.")
+print(f"{args.vit_size}_{args.model_name}.tflite saved.")
