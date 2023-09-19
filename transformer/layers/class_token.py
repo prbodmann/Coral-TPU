@@ -16,7 +16,7 @@ class ClassToken(tf.keras.layers.Layer):
                                             trainable=True)
 
     def call(self, input_tensor):
-        print("lol "+str(input_tensor.shape))
+        print("lol "+str(self.cls_token_tensor.shape))
         #print("1" + str(input_tensor.shape))
         self.batch_size = tf.shape(input_tensor)[0]
         self.cls_token_broadcasted = tf.broadcast_to(self.cls_token_tensor,
