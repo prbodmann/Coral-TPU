@@ -1,5 +1,5 @@
 import tensorflow as tf
-
+from tensorflow.keras.layers import Reshape
 
 class Multihead_attention(tf.keras.layers.Layer):
     def __init__(self,
@@ -42,10 +42,11 @@ class Multihead_attention(tf.keras.layers.Layer):
 
         return output_logits, attention_weights
 
-    def split_to_heads(self, input_tensor, batch_size):
-        splitted_shape = (
-            batch_size, -1, self.number_of_heads, self.head_dimension)
-        splitted_input_tensor = tf.reshape(input_tensor, splitted_shape)
+    def split_to_heads(self, input_tensor):
+        
+        #splitted_shape = (
+        #    batch_size, -1, self.number_of_heads, self.head_dimension)
+        splitted_input_tensor = Reshape(target_shape=(self.number_of_heads, self.head_dimension))(input_tensor) #tf.reshape(input_tensor, splitted_shape)
         return tf.transpose(splitted_input_tensor, perm=[0, 2, 1, 3])
 
     def call(self, input_tensor):
@@ -59,9 +60,9 @@ class Multihead_attention(tf.keras.layers.Layer):
 
         # splitting the last embedding dimension with number_of_heads, head_dimension
         # shape of all the tensors: [batch_size, num_attention_heads, sequence_length, head_dimension]
-        self.queries = self.split_to_heads(queries, self.batch_size)
-        self.keys = self.split_to_heads(keys, self.batch_size)
-        self.values = self.split_to_heads(values, self.batch_size)
+        self.queries = self.split_to_heads(queries)
+        self.keys = self.split_to_heads(keys)
+        self.values = self.split_to_heads(values)
 
         # Computing logits and attention weights using scaled dot product attention
         logits, attention_weights = self.scaled_dot_product_attention(self.queries,
