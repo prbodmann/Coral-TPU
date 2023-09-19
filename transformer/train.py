@@ -200,7 +200,7 @@ print('what')
 vit_tflite = converter_quant.convert()
 #print(vit_tflite)
 print('lol')
-open(args.tflite_save_name, "wb").write(vit_tflite)
+open(f"{args.vit_size}_{args.model_name}.tflite", "wb").write(vit_tflite)
 
 
 print(f"{args.tflite_save_name} saved.")
