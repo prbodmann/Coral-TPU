@@ -180,13 +180,13 @@ def representative_data_gen():
         yield [image]
 
 print("Conversion started..")
-input_shape = vit.inputs[0].shape.as_list()
-input_shape[0] = batch_size
-func = tf.function(vit).get_concrete_function(
-    tf.TensorSpec(input_shape, vit.inputs[0].dtype))
-converter_quant = tf.lite.TFLiteConverter.from_concrete_functions([func])
+#input_shape = vit.inputs[0].shape.as_list()
+#input_shape[0] = batch_size
+#func = tf.function(vit).get_concrete_function(
+#    tf.TensorSpec(input_shape, vit.inputs[0].dtype))
+#converter_quant = tf.lite.TFLiteConverter.from_concrete_functions([func])
 
-#converter_quant = tf.lite.TFLiteConverter.from_keras_model(vit)
+converter_quant = tf.lite.TFLiteConverter.from_keras_model(vit)
 converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
 converter_quant.representative_dataset = representative_data_gen
 converter_quant.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8,tf.lite.OpsSet.SELECT_TF_OPS]
