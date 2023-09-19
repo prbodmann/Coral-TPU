@@ -50,8 +50,8 @@ class Multihead_attention(tf.keras.layers.Layer):
         return tf.transpose(splitted_input_tensor, perm=[0, 2, 1, 3])
 
     def call(self, input_tensor):
-        self.batch_size = tf.shape(input_tensor)[0]
-        self.batch_size = tf.cast(self.batch_size, tf.int64)
+        #self.batch_size = tf.shape(input_tensor)[0]
+        #self.batch_size = tf.cast(self.batch_size, tf.int64)
 
         # learning the query, key and value matrices
         queries = self.wQ(input_tensor)
@@ -77,10 +77,11 @@ class Multihead_attention(tf.keras.layers.Layer):
 
         #concated_logits = tf.reshape(logits,
         #                             (self.batch_size, -1, self.embedding_dimension))
-
+        print("mh1: "+str(logits.shape))
         concated_logits = Reshape(target_shape=(-1,self.embedding_dimension))(logits)
+        print("mh2: "+str(concated_logits.shape))
         self.output_logits = self.FFN(concated_logits)
-
+        
         return self.output_logits, attention_weights
     def get_config(self):
 
