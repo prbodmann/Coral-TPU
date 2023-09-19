@@ -18,9 +18,9 @@ class ClassToken(tf.keras.layers.Layer):
     def call(self, input_tensor):
         print("lol "+str(self.cls_token_tensor.shape))
         #print("1" + str(input_tensor.shape))
-        self.batch_size = tf.shape(input_tensor)[0]
-        self.cls_token_broadcasted = tf.broadcast_to(self.cls_token_tensor,
-                                                     shape=[self.batch_size, 1, self.embedding_dimension])
+        #self.batch_size = tf.shape(input_tensor)[0]
+        #self.cls_token_broadcasted = tf.broadcast_to(self.cls_token_tensor,
+        #                                             shape=[self.batch_size, 1, self.embedding_dimension])
         print("lol2 "+str(self.cls_token_broadcasted.shape))
         #print("2" + str(self.cls_token_broadcasted.shape))
         self.cls_token = tf.cast(
