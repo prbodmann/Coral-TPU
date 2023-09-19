@@ -84,7 +84,7 @@ args = parse_opt()
 vit = viT(vit_size=args.vit_size,
           num_classes=5,
           config_path=args.vit_config)
-vit = vit.model()
+
 batch_size = 1
 auto  = tf.data.experimental.AUTOTUNE
 resize_bigger = 320
@@ -153,7 +153,7 @@ chekpoint = tf.keras.callbacks.ModelCheckpoint(
     monitor="val_acc",
     save_best_only=True,
     save_weights_only=True)
-
+vit = vit.model()
 vit.compile(optimizer=optimizer,
             loss="categorical_crossentropy",
             metrics=["acc"])
@@ -164,9 +164,9 @@ history = vit.fit(train_ds,
                   validation_batch_size=args.validation_batch_size,
                   callbacks=[chekpoint],
                   epochs=args.epochs)
-test=tf.ones((1,image_size, image_size, 3))
-vit(test)
-vit.save(os.path.join("finetuning_weights", f"{args.vit_size}_{args.model_name}"))
+#test=tf.ones((1,image_size, image_size, 3))
+#vit(test)
+#vit.save(os.path.join("finetuning_weights", f"{args.vit_size}_{args.model_name}"))
 vit.summary()
 print(os.linesep)
 
