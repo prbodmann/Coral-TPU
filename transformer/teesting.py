@@ -58,7 +58,7 @@ class viT(tf.keras.Model):
                                                     num_attention_heads=self.num_attention_heads,
                                                     mlp_layer1_units=self.mlp_layer1_units,
                                                     dropout_rate=self.dropout_rate,
-                                                    sequence_lenght = (self.patch_size * self.patch_size) +1
+                                                    sequence_lenght = (self.patch_size * self.patch_size) +1,
                                                     name=f"Transformer/encoderblock_{layr}")
                                  for layr in range(self.num_stacked_encoders)]
 
