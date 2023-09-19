@@ -76,7 +76,7 @@ class viT(tf.keras.Model):
         x = self.patch_embedding(input_tensor)
         print('a' + str(x.shape))
         # reshaping
-        x = Reshape( shape=(-1, (self.patch_size+1) * (self.patch_size+1), self.patch_embedding_dim))(x)
+        x = Reshape( target_shape=(-1, (self.patch_size+1) * (self.patch_size+1), self.patch_embedding_dim))(x)
         print('a' + str(x.shape))
         
         # input to CLS layer: (batch_size, patch_size * patch_size, patch_dimension)
