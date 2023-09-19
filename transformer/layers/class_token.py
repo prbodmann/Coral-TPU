@@ -24,7 +24,7 @@ class ClassToken(tf.keras.layers.Layer):
         self.cls_token = tf.cast(
             self.cls_token_broadcasted, dtype=input_tensor.dtype)
         print("3" + str(self.cls_token.shape))
-        self.output_tensor = tf.keras.layers.Concatenate([self.cls_token, input_tensor], axis=1)
+        self.output_tensor = tf.keras.layers.Concatenate(axis=1)([self.cls_token, input_tensor])
         print("4" + str(self.output_tensor.shape))    
         
         return self.output_tensor
