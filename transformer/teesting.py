@@ -40,7 +40,7 @@ class viT(tf.keras.Model):
 
         self.class_activation = "sigmoid"
         self.num_classes = self.num_classes
-        self.input_layer = Input(shape=(self.image_height,self.image_height, self.image_channels), name="input_layer")
+        #self.input_layer = Input(shape=(self.image_height,self.image_height, self.image_channels), name="input_layer")
         self.patch_embedding = PatchEmbeddings(embedding_dimension=self.patch_embedding_dim,
                                                patch_size=self.patch_size,
                                                name="embedding") 
