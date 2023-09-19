@@ -12,7 +12,7 @@ class ClassToken(tf.keras.layers.Layer):
         self.embedding_dimension = embedding_dimension
         self.cls_token_tensor = tf.Variable(name="cls",
                                             initial_value = tf.random_normal_initializer(stddev=0.06)
-                                            (shape = (1, self.embedding_dimension)),
+                                            (shape = (1,1, self.embedding_dimension)),
                                             trainable=True)
 
     def call(self, input_tensor):
