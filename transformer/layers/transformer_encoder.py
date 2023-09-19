@@ -35,7 +35,7 @@ class TransformerEncoder(tf.keras.layers.Layer):
         y = self.layernorm2(x)
         y = self.pwffn(y)
         self.output_logits = tf.math.add(x, y)
-        return self.output_logits, attention_weights
+        return self.output_logits
         
         
     def get_config(self):
