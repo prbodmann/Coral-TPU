@@ -173,3 +173,34 @@ print(os.linesep)
 if args.save_training_stats:
     plot_accuracy(history, "runs")
     plot_loss(history, "runs")
+
+def representative_data_gen():
+    for x in train_ds:
+        image = tf.image.resize(x[0], (resize_bigger, resize_bigger))            
+        yield [tf.expand_dims(image,axis=0)]
+
+print("Conversion started..")
+#input_shape = model.inputs[0].shape.as_list()
+#input_shape[0] = batch_size
+#func = tf.function(model).get_concrete_function(
+#    tf.TensorSpec(input_shape, model.inputs[0].dtype))
+#converter_quant = tf.lite.TFLiteConverter.from_concrete_functions([func])
+
+converter_quant = tf.lite.TFLiteConverter.from_keras_model(vit)
+converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
+converter_quant.representative_dataset = representative_data_gen
+converter_quant.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8,tf.lite.OpsSet.SELECT_TF_OPS]
+converter_quant.target_spec.supported_types = [tf.int8]
+converter_quant.inference_input_type = tf.float32 # changed from tf.uint8
+converter_quant.inference_output_type = tf.float32 # changed from tf.uint8
+converter_quant.experimental_new_converter = True
+converter_quant.allow_custom_ops=True
+converter_quant.input_shape=(1,280,280,3)
+print('what')
+vit_tflite = converter_quant.convert()
+#print(vit_tflite)
+print('lol')
+open(args.tflite_save_name, "wb").write(vit_tflite)
+
+
+print(f"{args.tflite_save_name} saved.")
