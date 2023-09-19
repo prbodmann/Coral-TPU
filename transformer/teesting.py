@@ -68,7 +68,7 @@ class viT(tf.keras.Model):
                                                     name="ExtractToken")
         self.dense_out = tf.keras.layers.Dense(5, name="head", activation="sigmoid")
 
-        self.build([1, self.image_height, self.image_width, self.image_channels])
+        #self.build([1, self.image_height, self.image_width, self.image_channels])
        
     def call(self, input_tensor, training=False):
         # input_tensor: (batch_size, image_height, image_width, image_channels)
@@ -85,7 +85,7 @@ class viT(tf.keras.Model):
         # input to posembedding layer: (batch_size, patch_size * patch_size + 1, patch_dimension)
         for tf_enc in self.stacked_encoders:
             # passing the input through all the transformer encoders
-            x, _ = tf_enc(x, training=training)
+            x = tf_enc(x, training=training)
         # input to layernorm layer: (batch_size, patch_size * patch_size + 1, patch_dimension)
         x = self.layernorm(x)
         # input to get_CLS_token layer: (batch_size, patch_size * patch_size + 1, patch_dimension)
