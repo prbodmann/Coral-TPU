@@ -95,6 +95,6 @@ class viT(tf.keras.Model):
         # output shape: (batch_size, 1000)
         return x
     def model(self):
-        x = Input(shape=( self.image_size,  self.image_size, 3))
+        x = Input(shape=( 280, 280, 3))
         return Model(inputs=[x], outputs=self.call(x))
 
