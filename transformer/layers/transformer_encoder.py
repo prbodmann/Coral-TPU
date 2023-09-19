@@ -8,15 +8,17 @@ class TransformerEncoder(tf.keras.layers.Layer):
                  num_attention_heads: int,
                  mlp_layer1_units: int,
                  dropout_rate: float,
+                 sequence_lenght: int,
                  **kwargs):
         super(TransformerEncoder, self).__init__(**kwargs)
         self.embedding_dimension = embedding_dimension
         self.num_attention_heads = num_attention_heads
         self.mlp_layer1_units = mlp_layer1_units
         self.dropout_rate = dropout_rate
-    
+        self.sequence_lenght = sequence_lenght
         self.mha = Multihead_attention(embedding_dimension = self.embedding_dimension,
                                         number_of_heads = self.num_attention_heads,
+                                        sequence_lenght = self.sequence_lenght,
                                         name = "MultiHeadDotProductAttention_1")
         
         self.pwffn = PointWiseFeedForwardNetwork(layer1_units= self.mlp_layer1_units,

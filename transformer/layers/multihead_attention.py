@@ -5,11 +5,13 @@ class Multihead_attention(tf.keras.layers.Layer):
     def __init__(self,
                  embedding_dimension,
                  number_of_heads: int,
+                 sequence_lenght: int,
                  **kwargs):
         super(Multihead_attention, self).__init__(**kwargs)
         self.number_of_heads = number_of_heads
         self.embedding_dimension = embedding_dimension
         self.head_dimension = embedding_dimension // self.number_of_heads
+        self.sequence_lenght = sequence_lenght
         assert (self.head_dimension * self.number_of_heads) == self.embedding_dimension, \
             "Embedding dimension should be divisible by the numbe of heads"
 
@@ -46,7 +48,7 @@ class Multihead_attention(tf.keras.layers.Layer):
         
         #splitted_shape = (
         #    batch_size, -1, self.number_of_heads, self.head_dimension)
-        splitted_input_tensor = Reshape(target_shape=(-1,self.number_of_heads, self.head_dimension))(input_tensor) #tf.reshape(input_tensor, splitted_shape)
+        splitted_input_tensor = Reshape(target_shape=(self.sequence_lenght,self.number_of_heads, self.head_dimension))(input_tensor) #tf.reshape(input_tensor, splitted_shape)
         return tf.transpose(splitted_input_tensor, perm=[0, 2, 1, 3])
 
     def call(self, input_tensor):
@@ -78,7 +80,7 @@ class Multihead_attention(tf.keras.layers.Layer):
         #concated_logits = tf.reshape(logits,
         #                             (self.batch_size, -1, self.embedding_dimension))
         print("mh1: "+str(logits.shape))
-        concated_logits = Reshape(target_shape=(-1,self.embedding_dimension))(logits)
+        concated_logits = Reshape(target_shape=(self.sequence_lenght,self.embedding_dimension))(logits)
         print("mh2: "+str(concated_logits.shape))
         self.output_logits = self.FFN(concated_logits)
         
