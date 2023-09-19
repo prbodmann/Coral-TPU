@@ -177,7 +177,7 @@ if args.save_training_stats:
 def representative_data_gen():
     for x in train_ds:
         image = tf.image.resize(x[0], (resize_bigger, resize_bigger))            
-        yield [tf.expand_dims(image,axis=0)]
+        yield [image]
 
 print("Conversion started..")
 #input_shape = model.inputs[0].shape.as_list()
