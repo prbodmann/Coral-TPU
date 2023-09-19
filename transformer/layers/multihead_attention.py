@@ -46,7 +46,7 @@ class Multihead_attention(tf.keras.layers.Layer):
         
         #splitted_shape = (
         #    batch_size, -1, self.number_of_heads, self.head_dimension)
-        splitted_input_tensor = Reshape(target_shape=(self.number_of_heads, self.head_dimension))(input_tensor) #tf.reshape(input_tensor, splitted_shape)
+        splitted_input_tensor = Reshape(target_shape=(-1,self.number_of_heads, self.head_dimension))(input_tensor) #tf.reshape(input_tensor, splitted_shape)
         return tf.transpose(splitted_input_tensor, perm=[0, 2, 1, 3])
 
     def call(self, input_tensor):
@@ -74,11 +74,11 @@ class Multihead_attention(tf.keras.layers.Layer):
         logits = tf.transpose(logits, perm=[0, 2, 1, 3])
         # number_of_heads, head_dimension -> embedding_dimension, concating the logits
         # concatenating to [batch_size, sequence length, num_attention heads * head_dimenson]
-        print("mh1: "+str(logits.shape))
-        concated_logits = tf.reshape(logits,
-                                     (self.batch_size, -1, self.embedding_dimension))
-        print("mh2: "+str(concated_logits.shape))
-        #concated_logits = Reshape(target_shape=(self.embedding_dimension))(logits)
+
+        #concated_logits = tf.reshape(logits,
+        #                             (self.batch_size, -1, self.embedding_dimension))
+
+        concated_logits = Reshape(target_shape=(-1,self.embedding_dimension))(logits)
         self.output_logits = self.FFN(concated_logits)
 
         return self.output_logits, attention_weights
