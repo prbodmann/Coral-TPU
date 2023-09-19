@@ -23,8 +23,10 @@ class ClassToken(tf.keras.layers.Layer):
         #                                             shape=[self.batch_size, 1, self.embedding_dimension])
         #print("lol2 "+str(self.cls_token_broadcasted.shape))
         #print("2" + str(self.cls_token_broadcasted.shape))
+        #self.cls_token = tf.cast(
+        #    self.cls_token_broadcasted, dtype=input_tensor.dtype)
         self.cls_token = tf.cast(
-            self.cls_token_broadcasted, dtype=input_tensor.dtype)
+            self.cls_token_tensor, dtype=input_tensor.dtype)
         #print("3" + str(self.cls_token.shape))
         self.output_tensor = tf.keras.layers.Concatenate(axis=1)([self.cls_token, input_tensor])
         #print("4" + str(self.output_tensor.shape))    
