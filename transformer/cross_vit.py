@@ -1,21 +1,15 @@
 import argparse
 import tensorflow as tf
 
-from tensorflow.keras import Model
-from tensorflow.keras.layers import Layer
-from tensorflow.keras import Sequential, datasets
+
+from tensorflow.keras import Sequential, datasets,Model
 import tensorflow.keras.layers as nn
 from tensorflow.keras.utils import to_categorical
-from einops import rearrange
-from einops.layers.tensorflow import Reduce
+from einops.layers.tensorflow import Reduce, Rearrange
 from tensorflow.keras.losses import CategoricalCrossentropy
 from tensorflow.keras.optimizers import Adam
-from grouped_conv2d import GroupConv2D
 from einops import rearrange, repeat
-from einops.layers.tensorflow import Rearrange
-from tensorflow import einsum
-
-
+from math import ceil
 batch_size = 100
 learning_rate = 0.002
 label_smoothing_factor = 0.1
@@ -23,270 +17,378 @@ label_smoothing_factor = 0.1
 optimizer = Adam(learning_rate=learning_rate)
 loss_fn = CategoricalCrossentropy(label_smoothing=label_smoothing_factor)
 
-import tensorflow as tf
-from tensorflow.keras import Model
-from tensorflow.keras.layers import Layer
-from tensorflow.keras import Sequential
-import tensorflow.keras.layers as nn
-from tensorflow import einsum
 
-from einops import rearrange
-from einops.layers.tensorflow import Rearrange, Reduce
-from math import ceil
 
-def exists(val):
-    return val is not None
 
-def default(val, d):
-    return val if exists(val) else d
 
-def cast_tuple(val, length = 1):
-    return val if isinstance(val, tuple) else ((val,) * length)
 
-def divisible_by(val, d):
-    return (val % d) == 0
+def pair(t):
+    return t if isinstance(t, tuple) else (t, t)
 
-def gelu(x, approximate=False):
-    if approximate:
-        coeff = tf.cast(0.044715, x.dtype)
-        return 0.5 * x * (1.0 + tf.tanh(0.7978845608028654 * (x + coeff * tf.pow(x, 3))))
-    else:
-        return 0.5 * x * (1.0 + tf.math.erf(x / tf.cast(1.4142135623730951, x.dtype)))
+# Pre-defined CCT Models
+__all__ = ['cct_2', 'cct_4', 'cct_6', 'cct_7', 'cct_8', 'cct_14', 'cct_16']
 
-class GELU(Layer):
-    def __init__(self, approximate=False):
-        super(GELU, self).__init__()
-        self.approximate = approximate
 
-    def call(self, x, training=True):
-        return gelu(x, self.approximate)
+def cct_2(*args, **kwargs):
+    return _cct(num_layers=2, num_heads=2, mlp_ratio=1, embedding_dim=128,
+                *args, **kwargs)
 
-class Identity(Layer):
-    def __init__(self):
-        super(Identity, self).__init__()
 
-    def call(self, x, training=True):
-        return tf.identity(x)
+def cct_4(*args, **kwargs):
+    return _cct(num_layers=4, num_heads=2, mlp_ratio=1, embedding_dim=128,
+                *args, **kwargs)
 
-class Downsample(Layer):
-    def __init__(self, dim):
-        super(Downsample, self).__init__()
-        self.conv = nn.Conv2D(filters=dim, kernel_size=3, strides=2, padding='SAME')
 
-    def call(self, x, training=True):
-        x = self.conv(x)
+def cct_6(*args, **kwargs):
+    return _cct(num_layers=6, num_heads=4, mlp_ratio=2, embedding_dim=256,
+                *args, **kwargs)
+
+
+def cct_7(*args, **kwargs):
+    return _cct(num_layers=7, num_heads=4, mlp_ratio=2, embedding_dim=256,
+                *args, **kwargs)
+
+
+def cct_8(*args, **kwargs):
+    return _cct(num_layers=8, num_heads=4, mlp_ratio=2, embedding_dim=256,
+                *args, **kwargs)
+
+
+def cct_14(*args, **kwargs):
+    return _cct(num_layers=14, num_heads=6, mlp_ratio=3, embedding_dim=384,
+                *args, **kwargs)
+
+
+def cct_16(*args, **kwargs):
+    return _cct(num_layers=16, num_heads=6, mlp_ratio=3, embedding_dim=384,
+                *args, **kwargs)
+
+
+def _cct(num_layers, num_heads, mlp_ratio, embedding_dim,
+         kernel_size=3, stride=None,
+         *args, **kwargs):
+    stride = stride if stride is not None else max(1, (kernel_size // 2) - 1)
+    return CCT(num_layers=num_layers,
+               num_heads=num_heads,
+               mlp_ratio=mlp_ratio,
+               embedding_dim=embedding_dim,
+               kernel_size=kernel_size,
+               stride=stride,
+               *args, **kwargs)
+
+
+@tf.function
+def my_igelu(x):    
+    coeff = tf.cast(0.044715, x.dtype)
+    return 0.5 * x * (1.0 + tf.tanh(0.7978845608028654 * (x + coeff * tf.pow(x, 3))))
+
+
+
+
+def drop_path(x, drop_prob=0.0, training=False):
+    """
+    Obtained from: github.com:rwightman/pytorch-image-models
+    Drop paths (Stochastic Depth) per sample (when applied in main path of residual blocks).
+    This is the same as the DropConnect impl I created for EfficientNet, etc networks, however,
+    the original name is misleading as 'Drop Connect' is a different form of dropout in a separate paper...
+    See discussion: https://github.com/tensorflow/tpu/issues/494#issuecomment-532968956 ... I've opted for
+    changing the layer and argument names to 'drop path' rather than mix DropConnect as a layer name and use
+    'survival rate' as the argument.
+    """
+    if drop_prob == 0.0 or not training:
         return x
+    keep_prob = 1 - drop_prob
+    #shape = [None] + [1] * (tf.rank(x).numpy() - 1)  # work with diff dim tensors, not just 2D ConvNets
+    shape = [1,4,384]  # work with diff dim tensors, not just 2D ConvNets
+    random_tensor = keep_prob + tf.random.uniform(shape=shape, minval=0.0, maxval=1.0, dtype=x.dtype)#tf.random.uniform(shape=shape, minval=0.0, maxval=1.0, dtype=x.dtype)
+    random_tensor = tf.floor(random_tensor) # binarize
+    x = tf.divide(x, keep_prob) * random_tensor
+    return x
 
-class PEG(Layer):
-    def __init__(self, dim, kernel_size=3):
-        super(PEG, self).__init__()
-        self.proj = nn.Conv2D(filters=dim, kernel_size=kernel_size, strides=1, padding='SAME', groups=dim)
-
-    def call(self, x, training=True):
-        x = self.proj(x) + x
-        return x
-
-
-class MLP(Layer):
-    def __init__(self, dim, mult=4, dropout=0.0):
-        super(MLP, self).__init__()
-
-        self.net = Sequential([
-            nn.LayerNormalization(),
-            nn.Dense(units=dim * mult),
-            GELU(),
-            nn.Dropout(rate=dropout),
-            nn.Dense(units=dim)
-        ])
+class DropPath(nn.Layer):
+    """
+    Obtained from: github.com:rwightman/pytorch-image-models
+    Drop paths (Stochastic Depth) per sample  (when applied in main path of residual blocks).
+    """
+    def __init__(self, drop_prob=None):
+        super(DropPath, self).__init__()
+        self.drop_prob = drop_prob
 
     def call(self, x, training=True):
-        return self.net(x, training=training)
+        return drop_path(x, self.drop_prob, training=training)
 
-class Attention(Layer):
-    def __init__(self, dim, heads=4, dim_head=32, dropout=0.0):
+class Attention(nn.Layer):
+    def __init__(self, dim, num_heads=8, attention_dropout=0.1, projection_dropout=0.1):
         super(Attention, self).__init__()
 
-        inner_dim = dim_head * heads
-        self.heads = heads
-        self.scale = dim_head ** -0.5
+        self.num_heads = num_heads
+        head_dim = dim // self.num_heads
+        self.scale = head_dim ** -0.5
 
-        self.norm = nn.LayerNormalization()
+        self.to_qkv = nn.Dense(units=dim * 3, use_bias=False)
         self.attend = nn.Softmax()
-        self.to_qkv = nn.Dense(units=inner_dim * 3, use_bias=False)
+        self.attn_drop = nn.Dropout(rate=attention_dropout)
 
-        self.to_out = nn.Dense(units=dim)
+        self.proj = [
+            nn.Dense(units=dim),
+            nn.Dropout(rate=projection_dropout)
+        ]
 
-    def call(self, x, rel_pos_bias=None, training=True):
-        h = self.heads
+        self.proj = Sequential(self.proj)
 
-        # prenorm
-        x = self.norm(x)
+    def call(self, x, training=True):
         qkv = self.to_qkv(x)
         qkv = tf.split(qkv, num_or_size_splits=3, axis=-1)
-        q, k, v = map(lambda t: rearrange(t, 'b n (h d) -> b h n d', h=h), qkv)
-        q = q * self.scale
+        q, k, v = map(lambda t: rearrange(t, 'b n (h d) -> b h n d', h=self.num_heads), qkv)
 
-        sim = einsum('b h i d, b h j d -> b h i j', q, k)
+        dots = tf.matmul(q, tf.transpose(k, perm=[0, 1, 3, 2])) * self.scale
 
-        # add relative positional bias for local tokens
-        if exists(rel_pos_bias):
-            sim = sim + rel_pos_bias
-        attn = self.attend(sim)
+        attn = self.attend(dots)
+        attn = self.attn_drop(attn, training=training)
 
-        # merge heads
-
-        x = einsum('b h i j, b h j d -> b h i d', attn, v)
+        x = tf.matmul(attn, v)
         x = rearrange(x, 'b h n d -> b n (h d)')
-        x = self.to_out(x)
-
+        x = self.proj(x, training=training)
         return x
 
-class R2LTransformer(Layer):
-    def __init__(self, dim, window_size, depth=4, heads=4, dim_head=32, attn_dropout=0.0, ff_dropout=0.0):
-        super(R2LTransformer, self).__init__()
+class TransformerEncoderLayer(nn.Layer):
+    def __init__(self, d_model, nhead, dim_feedforward=2048, dropout=0.1,
+                 attention_dropout=0.1, drop_path_rate=0.1):
+        super(TransformerEncoderLayer, self).__init__()
 
-        self.layers = []
+        self.pre_norm = nn.LayerNormalization()
+        self.self_attn = Attention(dim=d_model, num_heads=nhead, attention_dropout=attention_dropout, projection_dropout=dropout)
 
-        self.window_size = window_size
-        rel_positions = 2 * window_size - 1
-        self.local_rel_pos_bias = nn.Embedding(rel_positions ** 2, heads)
+        self.linear1 = nn.Dense(units=dim_feedforward)
+        self.dropout1 = nn.Dropout(rate=dropout)
+        self.norm1 = nn.LayerNormalization()
+        self.linear2 = nn.Dense(units=d_model)
+        self.dropout2 = nn.Dropout(rate=dropout)
+        self.drop_path_rate = drop_path_rate
 
-        for _ in range(depth):
-            self.layers.append([
-                Attention(dim, heads=heads, dim_head=dim_head, dropout=attn_dropout),
-                MLP(dim, dropout=ff_dropout)
-            ])
+        if drop_path_rate > 0:
+            self.drop_path = DropPath(drop_path_rate)
 
+        self.activation = my_igelu
 
-    def call(self, local_tokens, region_tokens=None, training=True):
-        lh, lw = local_tokens.shape[1:3]
-        rh, rw = region_tokens.shape[1:3]
-        window_size_h, window_size_w = lh // rh, lw // rw
-
-        local_tokens = rearrange(local_tokens, 'b h w c -> b (h w) c')
-        region_tokens = rearrange(region_tokens, 'b h w c -> b (h w) c')
-
-        # calculate local relative positional bias
-        h_range = tf.range(window_size_h)
-        w_range = tf.range(window_size_w)
-
-        grid_x, grid_y = tf.meshgrid(h_range, w_range, indexing='ij')
-        grid = tf.stack([grid_x, grid_y])
-        grid = rearrange(grid, 'c h w -> c (h w)')
-        grid = (grid[:, :, None] - grid[:, None, :]) + (self.window_size - 1)
-
-        bias_indices = tf.reduce_sum((grid * tf.convert_to_tensor([1, self.window_size * 2 - 1])[:, None, None]), axis=0)
-        rel_pos_bias = self.local_rel_pos_bias(bias_indices)
-        rel_pos_bias = rearrange(rel_pos_bias, 'i j h -> () h i j')
-        rel_pos_bias = tf.pad(rel_pos_bias, paddings=[[0, 0], [0, 0], [1, 0], [1, 0]])
-
-        # go through r2l transformer layers
-        for attn, ff in self.layers:
-            region_tokens = attn(region_tokens) + region_tokens
-
-            # concat region tokens to local tokens
-
-            local_tokens = rearrange(local_tokens, 'b (h w) d -> b h w d', h=lh)
-            local_tokens = rearrange(local_tokens, 'b (h p1) (w p2) d -> (b h w) (p1 p2) d', p1=window_size_h, p2=window_size_w)
-            region_tokens = rearrange(region_tokens, 'b n d -> (b n) () d')
-
-            # do self attention on local tokens, along with its regional token
-            region_and_local_tokens = tf.concat([region_tokens, local_tokens], axis=1)
-            region_and_local_tokens = attn(region_and_local_tokens, rel_pos_bias=rel_pos_bias) + region_and_local_tokens
-
-            # feedforward
-            region_and_local_tokens = ff(region_and_local_tokens, training=training) + region_and_local_tokens
-
-            # split back local and regional tokens
-            region_tokens, local_tokens = region_and_local_tokens[:, :1], region_and_local_tokens[:, 1:]
-            local_tokens = rearrange(local_tokens, '(b h w) (p1 p2) d -> b (h p1 w p2) d', h=lh // window_size_h, w=lw // window_size_w, p1=window_size_h)
-            region_tokens = rearrange(region_tokens, '(b n) () d -> b n d', n=rh * rw)
-
-        local_tokens = rearrange(local_tokens, 'b (h w) c -> b h w c', h=lh, w=lw)
-        region_tokens = rearrange(region_tokens, 'b (h w) c -> b h w c', h=rh, w=rw)
-
-        return local_tokens, region_tokens
-
-class RegionViT(Model):
-    def __init__(self,
-                 dim=(64, 128, 256, 512),
-                 depth=(2, 2, 8, 2),
-                 window_size=7,
-                 num_classes=1000,
-                 tokenize_local_3_conv=False,
-                 local_patch_size=4,
-                 use_peg=False,
-                 attn_dropout=0.0,
-                 ff_dropout=0.0,
-                 ):
-        super(RegionViT, self).__init__()
-        dim = cast_tuple(dim, 4)
-        depth = cast_tuple(depth, 4)
-        assert len(dim) == 4, 'dim needs to be a single value or a tuple of length 4'
-        assert len(depth) == 4, 'depth needs to be a single value or a tuple of length 4'
-
-        self.local_patch_size = local_patch_size
-
-        region_patch_size = local_patch_size * window_size
-        self.region_patch_size = local_patch_size * window_size
-
-        init_dim, *_, last_dim = dim
-
-        # local and region encoders
-        if tokenize_local_3_conv:
-            self.local_encoder = Sequential([
-                nn.Conv2D(filters=init_dim, kernel_size=3, strides=2, padding='SAME'),
-                nn.LayerNormalization(),
-                GELU(),
-                nn.Conv2D(filters=init_dim, kernel_size=3, strides=2, padding='SAME'),
-                nn.LayerNormalization(),
-                GELU(),
-                nn.Conv2D(filters=init_dim, kernel_size=3, strides=1, padding='SAME')
-            ])
+    def call(self, src, training=True):
+        if self.drop_path_rate > 0.0:
+            src = src + self.drop_path(self.self_attn(self.pre_norm(src)))
         else:
-            self.local_encoder = nn.Conv2D(filters=init_dim, kernel_size=8, strides=4, padding='SAME')
+            src = src + self.self_attn(self.pre_norm(src))
 
-        self.region_encoder = Sequential([
-            Rearrange('b (h p1) (w p2) c -> b h w (c p1 p2) ', p1=region_patch_size, p2=region_patch_size),
-            nn.Conv2D(filters=init_dim, kernel_size=1, strides=1)
-        ])
+        src = self.norm1(src)
+        src2 = self.linear2(self.dropout1(self.activation(self.linear1(src)), training=training))
+        src2 = self.dropout2(src2, training=training)
 
-        # layers
-        self.region_layers = []
+        if self.drop_path_rate > 0.0:
+            src = src + self.drop_path(src2, training=training)
+        else:
+            src = src + src2
 
-        for ind, dim, num_layers in zip(range(4), dim, depth):
-            not_first = ind != 0
-            need_downsample = not_first
-            need_peg = not_first and use_peg
+        return src
 
-            self.region_layers.append([
-                Downsample(dim) if need_downsample else Identity(),
-                PEG(dim) if need_peg else Identity(),
-                R2LTransformer(dim, depth=num_layers, window_size=window_size, attn_dropout=attn_dropout, ff_dropout=ff_dropout)
-            ])
+class Tokenizer(nn.Layer):
+    def __init__(self,
+                 kernel_size, stride,
+                 pooling_kernel_size=3, pooling_stride=2,
+                 n_conv_layers=1,
+                 n_output_channels=64,
+                 in_planes=64,
+                 activation=None,
+                 max_pool=True,
+                 conv_bias=False):
+        super(Tokenizer, self).__init__()
 
-        # final logits
-        self.to_logits = Sequential([
-            Reduce('b h w c -> b c', 'mean'),
-            nn.LayerNormalization(),
-            nn.Dense(units=num_classes)
-        ])
+        conv_layers = []
 
-    def call(self, x, training=True, **kwargs):
-        _, h, w, _ = x.shape
-        assert divisible_by(h, self.region_patch_size) and divisible_by(w, self.region_patch_size), 'height and width must be divisible by region patch size'
-        assert divisible_by(h, self.local_patch_size) and divisible_by(w, self.local_patch_size), 'height and width must be divisible by local patch size'
+        for i in range(n_conv_layers):
+            if i == n_conv_layers-1:
+                channels = n_output_channels
+            else:
+                channels = in_planes
 
-        local_tokens = self.local_encoder(x)
-        region_tokens = self.region_encoder(x)
+            conv_layers += [nn.Conv2D(filters=channels, kernel_size=kernel_size, strides=stride, padding='SAME', use_bias=conv_bias)]
+            if activation is not None:
+                conv_layers += [activation()]
+            if max_pool:
+                conv_layers += [nn.MaxPool2D(pool_size=pooling_kernel_size, strides=pooling_stride, padding='SAME')]
 
-        for down, peg, transformer in self.region_layers:
-            local_tokens, region_tokens = down(local_tokens), down(region_tokens)
-            local_tokens = peg(local_tokens)
-            local_tokens, region_tokens = transformer(local_tokens, region_tokens, training=training)
+        self.conv_layers = Sequential(conv_layers)
 
-        x = self.to_logits(region_tokens)
+    def sequence_length(self, n_channels=3, height=224, width=224):
+        x = tf.zeros(shape=[1, height, width, n_channels])
+        x = self.call(x)
+        x = x.shape[1]
+
         return x
+
+    def call(self, x, **kwargs):
+        x = self.conv_layers(x)
+        #print(x.shape)
+        x = tf.keras.layers.Reshape(target_shape=[4, 384])(x)
+        #print(x.shape)
+        return x
+
+class TransformerClassifier(nn.Layer):
+    def __init__(self,
+                 seq_pool=True,
+                 embedding_dim=768,
+                 num_layers=12,
+                 num_heads=12,
+                 mlp_ratio=4.0,
+                 num_classes=100,
+                 dropout_rate=0.1,
+                 attention_dropout=0.1,
+                 stochastic_depth_rate=0.1,
+                 positional_embedding='sine',
+                 sequence_length=None,
+                 *args, **kwargs):
+        super(TransformerClassifier, self).__init__()
+
+        positional_embedding = positional_embedding if \
+            positional_embedding in ['sine', 'learnable', 'none'] else 'sine'
+        dim_feedforward = int(embedding_dim * mlp_ratio)
+        self.embedding_dim = embedding_dim
+        self.sequence_length = sequence_length
+        self.seq_pool = seq_pool
+
+        assert sequence_length is not None or positional_embedding == 'none', \
+            f"Positional embedding is set to {positional_embedding} and" \
+            f" the sequence length was not specified."
+
+        
+        self.attention_pool = nn.Dense(units=1)
+
+        if positional_embedding != 'none':
+            if positional_embedding == 'learnable':
+                self.positional_emb = tf.Variable(tf.random.truncated_normal(shape=[1, sequence_length, embedding_dim], stddev=0.2))
+            else:
+                self.positional_emb = tf.Variable(self.sinusoidal_embedding(sequence_length, embedding_dim), trainable=False)
+        else:
+            self.positional_emb = None
+
+        self.dropout = nn.Dropout(rate=dropout_rate)
+        dpr = [x.numpy() for x in tf.linspace(0.0, stochastic_depth_rate, num_layers)]
+
+        self.blocks = Sequential()
+        for i in range(num_layers):
+            self.blocks.add(TransformerEncoderLayer(d_model=embedding_dim, nhead=num_heads,
+                                                    dim_feedforward=dim_feedforward, dropout=dropout_rate,
+                                                    attention_dropout=attention_dropout, drop_path_rate=dpr[i]))
+        self.norm = nn.LayerNormalization()
+        self.fc = nn.Dense(units=num_classes)
+
+    def sinusoidal_embedding(self, n_channels, dim):
+        pe = tf.cast(([[p / (10000 ** (2 * (i // 2) / dim)) for i in range(dim)] for p in range(n_channels)]), tf.float32)
+        pe[:, 0::2] = tf.sin(pe[:, 0::2])
+        pe[:, 1::2] = tf.cos(pe[:, 1::2])
+        pe = tf.expand_dims(pe, axis=0)
+
+        return pe
+
+    def call(self, x, training=True):
+        if self.positional_emb is None and x.shape[1] < self.sequence_length :
+
+            x = tf.pad(x, [[0, 0], [0, self.sequence_length - x.shape[1]], [0, 0]])
+        
+
+        if self.positional_emb is not None:
+            x += self.positional_emb
+
+        x = self.dropout(x, training=training)
+
+        x = self.blocks(x, training=training)
+        x = self.norm(x)
+
+
+        x_init = x
+        x = self.attention_pool(x)
+        x = tf.nn.softmax(x, axis=1)
+        x = tf.transpose(x, perm=[0, 2, 1])
+        x = tf.matmul(x, x_init)
+        x = tf.squeeze(x, axis=1)
+        x = self.fc(x)
+
+        return x
+
+class CCT(Model):
+    def __init__(self,
+                 img_size=224,
+                 embedding_dim=768,
+                 n_input_channels=3,
+                 n_conv_layers=1,
+                 kernel_size=7,
+                 stride=2,
+                 pooling_kernel_size=3,
+                 pooling_stride=2,
+                 *args, **kwargs):
+        super(CCT, self).__init__()
+        img_height, img_width = pair(img_size)
+        self.tokenizer = Tokenizer(n_output_channels=embedding_dim,
+                                   kernel_size=kernel_size,
+                                   stride=stride,
+                                   pooling_kernel_size=pooling_kernel_size,
+                                   pooling_stride=pooling_stride,
+                                   max_pool=True,
+                                   activation=nn.ReLU,
+                                   n_conv_layers=n_conv_layers,
+                                   conv_bias=False)
+
+        self.classifier = TransformerClassifier(
+            sequence_length=self.tokenizer.sequence_length(n_channels=n_input_channels,
+                                                           height=img_height,
+                                                           width=img_width),
+            embedding_dim=embedding_dim,
+            seq_pool=True,
+            dropout_rate=0.,
+            attention_dropout=0.1,
+            stochastic_depth_rate=0.1,
+            *args, **kwargs)
+
+
+    def call(self, img, training=None, **kwargs):
+        x = self.tokenizer(img, training=training)
+        x = self.classifier(x, training=training)
+        return x
+    def model(self):
+        x = nn.Input(shape=(32, 32, 3),batch_size=1)
+        return Model(inputs=[x], outputs=self.call(x))
+
+""" Usage 
+v = CCT(
+    img_size = (224, 448),
+    embedding_dim = 384,
+    n_conv_layers = 2,
+    kernel_size = 7,
+    stride = 2,
+    padding = 3,
+    pooling_kernel_size = 3,
+    pooling_stride = 2,
+    pooling_padding = 1,
+    num_layers = 14,
+    num_heads = 6,
+    mlp_radio = 3.,
+    num_classes = 1000,
+    positional_embedding = 'learnable', # ['sine', 'learnable', 'none']
+)
+
+# cct = cct_2(
+#     img_size = 224,
+#     n_conv_layers = 1,
+#     kernel_size = 7,
+#     stride = 2,
+#     padding = 3,
+#     pooling_kernel_size = 3,
+#     pooling_stride = 2,
+#     pooling_padding = 1,
+#     num_classes = 1000,
+#     positional_embedding = 'learnable', # ['sine', 'learnable', 'none']
+# )
+
+img = tf.random.normal(shape=[5, 224, 224, 3])
+preds = v(img) # (1, 1000)
+"""
 
 
 parser = argparse.ArgumentParser(description='Process some integers.')
@@ -302,20 +404,25 @@ y_test = to_categorical(y_test)
 # convert from integers to floats
 x_train = x_train.astype('float32')
 x_test = x_test.astype('float32')
-# normalize to range 0-1
-x_train = x_train / 255.0
-x_test = x_test / 255.0
 
 if args.training:
 
 
-    cait_xxs24_224 =  RegionViT(
-    dim = (64, 128, 256, 512),      # tuple of size 4, indicating dimension at each stage
-    depth = (2, 2, 8, 2),           # depth of the region to local transformer at each stage
-    window_size = 8,                # window size, which should be either 7 or 14
-    num_classes = 100,             # number of output classes
-    tokenize_local_3_conv = False,  # whether to use a 3 layer convolution to encode the local tokens from the image. the paper uses this for the smaller models, but uses only 1 conv (set to False) for the larger models
-    use_peg = False,                # whether to use positional generating module. they used this for object detection for a boost in performance
+    cait_xxs24_224 = CCT(
+    img_size = (32, 32),
+    embedding_dim = 384,
+    n_conv_layers = 2,
+    kernel_size = 7,
+    stride = 2,
+    padding = 3,
+    pooling_kernel_size = 3,
+    pooling_stride = 2,
+    pooling_padding = 1,
+    num_layers = 14,
+    num_heads = 6,
+    mlp_radio = 3.,
+    num_classes = 100,
+    positional_embedding = 'learnable', # ['sine', 'learnable', 'none']
 )
 
 
@@ -333,7 +440,7 @@ if args.training:
     cait_xxs24_224.summary()
     results= cait_xxs24_224.evaluate(x_test, y_test,batch_size=batch_size)
     
-    img = tf.random.normal(shape=[1, 224, 224, 3])
+    img = tf.random.normal(shape=[1, 32, 32, 3])
     preds = cait_xxs24_224(img) # (1, 1000)
     #cait_xxs24_224.save('cross_vit',save_format="tf")
     print(results)
@@ -342,19 +449,23 @@ else:
     cait_xxs24_224=  tf.keras.models.load_model('cross_vit')
 
 batch_size=1
+#print([tf.expand_dims(tf.dtypes.cast(x_train[0], tf.float32),0)])
 def representative_data_gen():
-    for x in x_test[100]:            
-        yield [x[0]]
-
+    for x in x_train:            
+        yield [tf.expand_dims(tf.dtypes.cast(x, tf.float32),0)]
+cait_xxs24_224 = cait_xxs24_224.model()
 converter_quant = tf.lite.TFLiteConverter.from_keras_model(cait_xxs24_224) 
-
+converter_quant.input_shape=(1,32,32,3)
 converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
-converter_quant.input_shape=(1,224,224,3)
 converter_quant.representative_dataset = representative_data_gen
-converter_quant.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
+converter_quant.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8,tf.lite.OpsSet.SELECT_TF_OPS]
 converter_quant.target_spec.supported_types = [tf.int8]
+converter_quant.inference_input_type = tf.float32 # changed from tf.uint8
+converter_quant.inference_output_type = tf.float32 # changed from tf.uint8
 converter_quant.experimental_new_converter = True
 converter_quant.allow_custom_ops=True
+
+print('what')
 tflite_model = converter_quant.convert()
 print("finished converting")
 open("cross_vit.tflite", "wb").write(tflite_model)
