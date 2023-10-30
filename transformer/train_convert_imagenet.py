@@ -23,7 +23,7 @@ def preprocess_dataset(is_training=True):
             image = tf.image.random_flip_left_right(image)
         else:
             image = tf.image.resize(image, (image_size, image_size))
-        image /= 255.0
+        image = tf.keras.applications.mobilenet.preprocess_input(image, mode='tf')
         label = tf.one_hot(label, depth=num_classes)
         return image, label
 
