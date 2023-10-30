@@ -2,7 +2,7 @@ import argparse
 import tensorflow as tf
 from tensorflow.keras import datasets
 from tensorflow.keras.utils import to_categorical
-from pit import PiT
+from regionvit import RegionViT
 import tensorflow_datasets as tfds
 
 resize_bigger = 300
@@ -74,8 +74,8 @@ if args.training:
     model.summary()
     results= model.evaluate(val_dataset,batch_size=batch_size)
     
-    img = tf.random.normal(shape=[1, image_size, image_size, 3])
-    preds = model(img) # (1, 1000)
+    #img = tf.random.normal(shape=[1, image_size, image_size, 3])
+    #preds = model(img) # (1, 1000)
     #model.save('cross_vit',save_format="tf")
     print(results)
     
