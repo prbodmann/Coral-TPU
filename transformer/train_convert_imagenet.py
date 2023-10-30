@@ -51,7 +51,7 @@ if args.training:
 
 
     model = RegionViT(
-    dim = (64, 128, 256, 512),      # tuple of size 4, indicating dimension at each stage
+    dim = (32, 64, 128, 256),      # tuple of size 4, indicating dimension at each stage
     depth = (2, 2, 8, 2),           # depth of the region to local transformer at each stage
     window_size = 7,                # window size, which should be either 7 or 14
     num_classes = 1000,             # number of output classes
