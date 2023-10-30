@@ -6,9 +6,9 @@ from pit import PiT
 import tensorflow_datasets as tfds
 
 resize_bigger = 300
-image_size = 256
+image_size = 224
 num_classes = 1000
-batch_size = 10
+batch_size = 100
 learning_rate = 0.002
 label_smoothing_factor = 0.1
 
@@ -50,16 +50,13 @@ val_dataset = prepare_dataset(ds[1], is_training=False,batch_size_=batch_size)
 if args.training:
 
 
-    model = PiT(
-    image_size = 256,
-    patch_size = 16,
-    dim = 256,
-    num_classes = 1000,
-    depth = (3, 3, 3),     # list of depths, indicating the number of rounds of each stage before a downsample
-    heads = 16,
-    mlp_dim = 2048,
-    dropout = 0.1,
-    emb_dropout = 0.1
+    model = RegionViT(
+    dim = (64, 128, 256, 512),      # tuple of size 4, indicating dimension at each stage
+    depth = (2, 2, 8, 2),           # depth of the region to local transformer at each stage
+    window_size = 7,                # window size, which should be either 7 or 14
+    num_classes = 1000,             # number of output classes
+    tokenize_local_3_conv = False,  # whether to use a 3 layer convolution to encode the local tokens from the image. the paper uses this for the smaller models, but uses only 1 conv (set to False) for the larger models
+    use_peg = False,                # whether to use positional generating module. they used this for object detection for a boost in performance
 )
 
 
