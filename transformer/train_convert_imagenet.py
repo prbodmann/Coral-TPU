@@ -4,6 +4,7 @@ from tensorflow.keras import datasets
 from tensorflow.keras.utils import to_categorical
 from regionvit import RegionViT
 import tensorflow_datasets as tfds
+import numpy as np
 
 resize_bigger = 300
 image_size = 224
