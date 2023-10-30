@@ -2,7 +2,7 @@ import argparse
 import tensorflow as tf
 from tensorflow.keras import datasets
 from tensorflow.keras.utils import to_categorical
-from nest import NesT
+from vit import ViT
 import tensorflow_datasets as tfds
 
 resize_bigger = 300
@@ -50,14 +50,16 @@ val_dataset = prepare_dataset(ds[1], is_training=False,batch_size_=batch_size)
 if args.training:
 
 
-    model =  NesT(
-    image_size = image_size,
-    patch_size = 4,
-    dim = 96,
-    heads = 3,
-    num_hierarchies = 3,        # number of hierarchies
-    block_repeats = (2, 2, 8),  # the number of transformer blocks at each heirarchy, starting from the bottom
-    num_classes = num_classes
+    model =  = ViT(
+    image_size = 256,
+    patch_size = 32,
+    num_classes = 1000,
+    dim = 1024,
+    depth = 6,
+    heads = 16,
+    mlp_dim = 2048,
+    dropout = 0.1,
+    emb_dropout = 0.1
 )
 
 
