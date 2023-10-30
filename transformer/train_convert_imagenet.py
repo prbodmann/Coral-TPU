@@ -12,6 +12,7 @@ num_classes = 1000
 batch_size = 50
 learning_rate = 0.0002
 label_smoothing_factor = 0.1
+optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
 
 def preprocess_dataset(is_training=True):
     def _pp(image, label):
@@ -63,8 +64,9 @@ if args.training:
 )
 
     lol =  tf.keras.applications.resnet50.ResNet50(weights='imagenet')
+    lol.compile(optimizer = optimizer, loss = "categorical_crossentropy", metrics = ["accuracy"] )
     print(lol.evaluate(val_dataset, batch_size=100))
-    optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
+   
     model.compile(optimizer = optimizer, loss = "categorical_crossentropy", metrics = ["accuracy"] )
     #model.build((batch_size, 224, 224, 3))
     #model.summary()
