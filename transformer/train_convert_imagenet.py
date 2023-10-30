@@ -4,6 +4,30 @@ from tensorflow.keras import datasets
 from tensorflow.keras.utils import to_categorical
 from nest import NesT
 
+
+def preprocess_dataset(is_training=True):
+    def _pp(image, label):
+        if is_training:
+            # Resize to a bigger spatial resolution and take the random
+            # crops.
+            image = tf.image.resize(image, (resize_bigger, resize_bigger))
+            image = tf.image.random_crop(image, (image_size, image_size, 3))
+            image = tf.image.random_flip_left_right(image)
+        else:
+            image = tf.image.resize(image, (image_size, image_size))
+        label = tf.one_hot(label, depth=num_classes)
+        return image, label
+
+    return _pp
+
+
+def prepare_dataset(dataset, is_training=True,batch_size_=1):
+    if is_training:
+        dataset = dataset.shuffle(batch_size_ * 10)
+    dataset = dataset.map(preprocess_dataset(is_training))
+    return dataset.batch(batch_size_).prefetch(batch_size_)
+
+
 batch_size = 100
 learning_rate = 0.002
 label_smoothing_factor = 0.1
@@ -13,18 +37,11 @@ parser = argparse.ArgumentParser(description='Process some integers.')
 parser.add_argument('--training', action = 'store_const', dest = 'training',
                            default = False, required = False,const=True)
 args = parser.parse_args()
-ds = tf.load('imagenet2012', data_dir='/mnt/dataset', download=False))
+ds = tf.load('imagenet2012', split=["train[:90%]", "train[90%:]"], as_supervised=True, data_dir='/mnt/dataset', download=False))
 
-# one hot encode target values
-y_train = to_categorical(y_train)
-y_test = to_categorical(y_test)
+train_dataset = prepare_dataset(train_dataset1, is_training=True,batch_size_=batch_size)
+val_dataset = prepare_dataset(val_dataset1, is_training=False,batch_size_=batch_size)
 
-# convert from integers to floats
-
-x_train = x_train.astype('float32')
-x_test = x_test.astype('float32')
-x_train = x_train / 255.0
-x_test = x_test / 255.0
 if args.training:
 
 
@@ -44,8 +61,8 @@ if args.training:
     #model.summary()
 
     model.fit(
-        x=x_train,y= y_train,
-        validation_data=(x_test, y_test),
+        x=train_dataset,
+        validation_data=val_dataset,
         epochs=2,
         batch_size=batch_size,
         verbose=1   
@@ -58,13 +75,12 @@ if args.training:
     #model.save('cross_vit',save_format="tf")
     print(results)
     
-else:
-    model=  tf.keras.models.load_model('cvt')
+
 
 batch_size=1
 #print([tf.expand_dims(tf.dtypes.cast(x_train[0], tf.float32),0)])
 def representative_data_gen():
-    data = tf.data.Dataset.from_tensor_slices(x_train).batch(1).take(100)
+    data = tf.data.Dataset.from_tensor_slices(val_dataset).batch(1).take(100)
     for input_value in data:
         yield [input_value]
 model = model.model()
