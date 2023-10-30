@@ -4,7 +4,8 @@ from tensorflow.keras import datasets
 from tensorflow.keras.utils import to_categorical
 from nest import NesT
 
-
+resize_bigger = 230
+image_size = 256
 def preprocess_dataset(is_training=True):
     def _pp(image, label):
         if is_training:
@@ -46,7 +47,7 @@ if args.training:
 
 
     model =  NesT(
-    image_size = 32,
+    image_size = image_size,
     patch_size = 4,
     dim = 96,
     heads = 3,
