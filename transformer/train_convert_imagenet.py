@@ -8,6 +8,10 @@ import tensorflow_datasets as tfds
 resize_bigger = 300
 image_size = 256
 num_classes = 1000
+batch_size = 10
+learning_rate = 0.002
+label_smoothing_factor = 0.1
+
 def preprocess_dataset(is_training=True):
     def _pp(image, label):
         if is_training:
@@ -31,9 +35,7 @@ def prepare_dataset(dataset, is_training=True,batch_size_=1):
     return dataset.batch(batch_size_).prefetch(batch_size_)
 
 
-batch_size = 100
-learning_rate = 0.002
-label_smoothing_factor = 0.1
+
 
 
 parser = argparse.ArgumentParser(description='Process some integers.')
