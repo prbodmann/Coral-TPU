@@ -1,7 +1,7 @@
 import argparse
 import tensorflow as tf
 from tensorflow.keras import datasets
-from tensorflow.keras.utils import to_categorical
+
 from regionvit import RegionViT
 import tensorflow_datasets as tfds
 import numpy as np
@@ -43,7 +43,7 @@ def preprocess_dataset(is_training=True):
         image = tf.cast(image,tf.float32)
         
         image = resize_image(image, (image_size, image_size))
-        image = image/255.0
+        image = tf.keras.applications.resnet50.preprocess_input(image, mode = 'tf')
         label = tf.one_hot(label, depth=num_classes)
         print(label)
         return image, label
