@@ -70,9 +70,9 @@ if args.training:
         verbose=1   
     )
     model.summary()
-    results= model.evaluate(x_test, y_test,batch_size=batch_size)
+    results= model.evaluate(val_dataset,batch_size=batch_size)
     
-    img = tf.random.normal(shape=[1, 32, 32, 3])
+    img = tf.random.normal(shape=[1, image_size, image_size, 3])
     preds = model(img) # (1, 1000)
     #model.save('cross_vit',save_format="tf")
     print(results)
@@ -87,7 +87,7 @@ def representative_data_gen():
         yield [input_value]
 model = model.model()
 converter_quant = tf.lite.TFLiteConverter.from_keras_model(model) 
-converter_quant.input_shape=(1,32,32,3)
+converter_quant.input_shape=(1,image_size,image_size,3)
 converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
 converter_quant.representative_dataset = representative_data_gen
 converter_quant.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8,tf.lite.OpsSet.SELECT_TF_OPS]

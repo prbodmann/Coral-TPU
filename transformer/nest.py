@@ -161,6 +161,7 @@ class NesT(Model):
                  ):
         super(NesT, self).__init__()
         assert (image_size % patch_size) == 0, 'Image dimensions must be divisible by the patch size.'
+        self.image_size=image_size
         fmap_size = image_size // patch_size
         blocks = 2 ** (num_hierarchies - 1)
 
@@ -215,7 +216,7 @@ class NesT(Model):
 
         return x
     def model(self):
-        x = nn.Input(shape=(32, 32, 3),batch_size=1)
+        x = nn.Input(shape=(self.image_size, self.image_size, 3),batch_size=1)
         return Model(inputs=[x], outputs=self.call(x))
 """ Usage
 v = NesT(
