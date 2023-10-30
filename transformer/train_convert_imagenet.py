@@ -62,6 +62,8 @@ if args.training:
     use_peg = False,                # whether to use positional generating module. they used this for object detection for a boost in performance
 )
 
+    lol =  tf.keras.applications.resnet50.ResNet50(weights='imagenet')
+    lol.evaluate(val_dataset, batch_size=100)
     optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
     model.compile(optimizer = optimizer, loss = "categorical_crossentropy", metrics = ["accuracy"] )
     #model.build((batch_size, 224, 224, 3))
