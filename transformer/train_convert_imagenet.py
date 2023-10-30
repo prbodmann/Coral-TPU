@@ -67,7 +67,7 @@ if args.training:
     model.fit(
         x=train_dataset,
         validation_data=val_dataset,
-        epochs=2,
+        epochs=7,
         batch_size=batch_size,
         verbose=1   
     )
