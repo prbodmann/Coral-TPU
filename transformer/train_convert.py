@@ -32,7 +32,7 @@ if args.training:
     image_size=(32, 32),
     dims=[96, 120, 144],
     channels=[16, 32, 48, 48, 64, 64, 80, 80, 96, 96, 384],
-    num_classes=1000
+    num_classes=100
 )
 
 
