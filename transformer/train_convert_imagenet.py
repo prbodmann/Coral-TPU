@@ -15,6 +15,7 @@ label_smoothing_factor = 0.1
 
 def preprocess_dataset(is_training=True):
     def _pp(image, label):
+        image = tf.cast(image,tf.float32)
         if is_training:
             # Resize to a bigger spatial resolution and take the random
             # crops.
@@ -23,7 +24,7 @@ def preprocess_dataset(is_training=True):
             image = tf.image.random_flip_left_right(image)
         else:
             image = tf.image.resize(image, (image_size, image_size))
-        image = tf.keras.applications.mobilenet.preprocess_input(image, mode='tf')
+        image = image/255.0
         label = tf.one_hot(label, depth=num_classes)
         return image, label
 
