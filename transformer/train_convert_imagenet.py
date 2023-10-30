@@ -16,26 +16,26 @@ label_smoothing_factor = 0.1
 optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
 
 def resize_image(image, shape = (224,224)):
-  target_width = shape[0]
-  target_height = shape[1]
-  initial_width = tf.shape(image)[0]
-  initial_height = tf.shape(image)[1]
-  im = image
-  ratio = 0
-  if(initial_width < initial_height):
-    ratio = tf.cast(256 / initial_width, tf.float32)
-    h = tf.cast(initial_height, tf.float32) * ratio
-    im = tf.image.resize(im, (256, h), method="bicubic")
-  else:
-    ratio = tf.cast(256 / initial_height, tf.float32)
-    w = tf.cast(initial_width, tf.float32) * ratio
-    im = tf.image.resize(im, (w, 256), method="bicubic")
-  width = tf.shape(im)[0]
-  height = tf.shape(im)[1]
-  startx = width//2 - (target_width//2)
-  starty = height//2 - (target_height//2)
-  im = tf.image.crop_to_bounding_box(im, startx, starty, target_width, target_height)
-  return im
+    target_width = shape[0]
+    target_height = shape[1]
+    initial_width = tf.shape(image)[0]
+    initial_height = tf.shape(image)[1]
+    im = image
+    ratio = 0
+    if(initial_width < initial_height):
+        ratio = tf.cast(256 / initial_width, tf.float32)
+        h = tf.cast(initial_height, tf.float32) * ratio
+        im = tf.image.resize(im, (256, h), method="bicubic")
+    else:
+        ratio = tf.cast(256 / initial_height, tf.float32)
+        w = tf.cast(initial_width, tf.float32) * ratio
+        im = tf.image.resize(im, (w, 256), method="bicubic")
+    width = tf.shape(im)[0]
+    height = tf.shape(im)[1]
+    startx = width//2 - (target_width//2)
+    starty = height//2 - (target_height//2)
+    im = tf.image.crop_to_bounding_box(im, startx, starty, target_width, target_height)
+    return im
 
 
 def preprocess_dataset(is_training=True):
