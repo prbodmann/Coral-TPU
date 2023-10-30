@@ -50,7 +50,7 @@ val_dataset = prepare_dataset(ds[1], is_training=False,batch_size_=batch_size)
 if args.training:
 
 
-    model =  = ViT(
+    model = ViT(
     image_size = 256,
     patch_size = 32,
     num_classes = 1000,
