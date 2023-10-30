@@ -43,7 +43,7 @@ def preprocess_dataset(is_training=True):
         image = tf.cast(image,tf.float32)
         
         image = resize_image(image, (image_size, image_size))
-        image = tf.keras.applications.resnet50.preprocess_input(image, data_format=None, mode='tf')
+        image = tf.keras.applications.resnet50.preprocess_input(image, data_format=None)
         label = tf.one_hot(label, depth=num_classes)
         print(label)
         return image, label
