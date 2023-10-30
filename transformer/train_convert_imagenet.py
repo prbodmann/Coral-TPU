@@ -39,7 +39,7 @@ parser = argparse.ArgumentParser(description='Process some integers.')
 parser.add_argument('--training', action = 'store_const', dest = 'training',
                            default = False, required = False,const=True)
 args = parser.parse_args()
-ds = tfds.load('imagenet2012', split=["train[:90%]", "validation[90%:]"], shuffle=False, as_supervised=True, data_dir='/mnt/dataset', download=True)
+ds = tfds.load('imagenet2012', split=["train[:90%]", "validation[90%:]"], as_supervised=True, data_dir='/mnt/dataset', download=True)
 
 train_dataset = prepare_dataset(ds[0], is_training=True,batch_size_=batch_size)
 val_dataset = prepare_dataset(ds[1], is_training=False,batch_size_=batch_size)
