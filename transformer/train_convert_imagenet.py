@@ -9,7 +9,7 @@ resize_bigger = 300
 image_size = 224
 num_classes = 1000
 batch_size = 50
-learning_rate = 0.002
+learning_rate = 0.0002
 label_smoothing_factor = 0.1
 
 def preprocess_dataset(is_training=True):
@@ -22,6 +22,8 @@ def preprocess_dataset(is_training=True):
             image = tf.image.random_flip_left_right(image)
         else:
             image = tf.image.resize(image, (image_size, image_size))
+        image -= np.mean(image, axis=0)
+        image /= np.std(image, axis=0)
         label = tf.one_hot(label, depth=num_classes)
         return image, label
 
