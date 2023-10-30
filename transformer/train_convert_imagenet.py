@@ -44,7 +44,7 @@ def preprocess_dataset(is_training=True):
         if is_training:
            i = image
            i = tf.cast(i, tf.float32)
-           i = resize_image(i, (224,224))
+           image = resize_image(i, (224,224))
         else:
             image = tf.image.resize(image, (image_size, image_size))
         image = image/255.0
