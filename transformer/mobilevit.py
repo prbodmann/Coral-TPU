@@ -1,427 +1,283 @@
-"""
-Title: MobileViT: A mobile-friendly Transformer-based model for image classification
-Author: [Sayak Paul](https://twitter.com/RisingSayak)
-Date created: 2021/10/20
-Last modified: 2021/10/20
-Description: MobileViT for image classification with combined benefits of convolutions and Transformers.
-Accelerator: GPU
-"""
-"""
-## Introduction
-
-In this example, we implement the MobileViT architecture
-([Mehta et al.](https://arxiv.org/abs/2110.02178)),
-which combines the benefits of Transformers
-([Vaswani et al.](https://arxiv.org/abs/1706.03762))
-and convolutions. With Transformers, we can capture long-range dependencies that result
-in global representations. With convolutions, we can capture spatial relationships that
-model locality.
-
-Besides combining the properties of Transformers and convolutions, the authors introduce
-MobileViT as a general-purpose mobile-friendly backbone for different image recognition
-tasks. Their findings suggest that, performance-wise, MobileViT is better than other
-models with the same or higher complexity ([MobileNetV3](https://arxiv.org/abs/1905.02244),
-for example), while being efficient on mobile devices.
-"""
-
-"""
-## Imports
-"""
-
 import tensorflow as tf
+from tensorflow.keras import Model
+from tensorflow.keras.layers import Layer
+from tensorflow.keras import Sequential
+import tensorflow.keras.layers as nn
 
-from tensorflow.keras import layers
-
-from tensorflow.keras import backend as K
-import tensorflow_datasets as tfds
-
-import os
-tfds.disable_progress_bar()
-import itertools
-import numpy as np
-import head
-from tensorflow import math, matmul, reshape, shape, transpose, cast, float32, keras
-from tensorflow.keras.applications import imagenet_utils
-
-from tensorflow.keras.backend import softmax
-"""
-## Hyperparameters
-"""
-"""
-## Hyperparameters
-"""
-
-# Values are from table 4.
-patch_size = 4  # 2x2, for the Transformer blocks.
-image_size = 256
-expansion_factor = 2  # expansion factor for the MobileNetV2 blocks.
-
-"""
-## MobileViT utilities
-
-The MobileViT architecture is comprised of the following blocks:
-
-* Strided 3x3 convolutions that process the input image.
-* [MobileNetV2](https://arxiv.org/abs/1801.04381)-style inverted residual blocks for
-downsampling the resolution of the intermediate feature maps.
-* MobileViT blocks that combine the benefits of Transformers and convolutions. It is
-presented in the figure below (taken from the
-[original paper](https://arxiv.org/abs/2110.02178)):
+from einops import rearrange
+from einops.layers.tensorflow import Reduce
 
 
-![](https://i.imgur.com/mANnhI7.png)
-"""
-
-def correct_pad(inputs, kernel_size):
-    """Returns a tuple for zero-padding for 2D convolution with downsampling.
-
-    Args:
-      inputs: Input tensor.
-      kernel_size: An integer or tuple/list of 2 integers.
-
-    Returns:
-      A tuple.
-    """
-    img_dim = 2 if K.image_data_format() == "channels_first" else 1
-    input_size = K.int_shape(inputs)[img_dim : (img_dim + 2)]
-    if isinstance(kernel_size, int):
-        kernel_size = (kernel_size, kernel_size)
-    if input_size[0] is None:
-        adjust = (1, 1)
+def gelu(x, approximate=True):
+    if approximate:
+        coeff = tf.cast(0.044715, x.dtype)
+        return 0.5 * x * (1.0 + tf.tanh(0.7978845608028654 * (x + coeff * tf.pow(x, 3))))
     else:
-        adjust = (1 - input_size[0] % 2, 1 - input_size[1] % 2)
-    correct = (kernel_size[0] // 2, kernel_size[1] // 2)
-    return (
-        (correct[0] - adjust[0], correct[0]),
-        (correct[1] - adjust[1], correct[1]),
-    )
+        return 0.5 * x * (1.0 + tf.math.erf(x / tf.cast(1.4142135623730951, x.dtype)))
 
 
+class GELU(Layer):
+    def __init__(self, approximate=False):
+        super(GELU, self).__init__()
+        self.approximate = approximate
 
-def conv_block(x, filters=16, kernel_size=3, strides=2):
-    conv_layer = layers.Conv2D(
-        filters, kernel_size, strides=strides, activation=tf.nn.swish, padding="same"
-    )
-    return conv_layer(x)
-
-
-# Reference: https://git.io/JKgtC
+    def call(self, x, training=True):
+        return gelu(x, self.approximate)
 
 
-def inverted_residual_block(x, expanded_channels, output_channels, strides=1):
-    m = layers.Conv2D(expanded_channels, 1, padding="same", use_bias=False)(x)
-    m = layers.BatchNormalization()(m)
-    m = tf.nn.swish(m)
+class Swish(Layer):
+    def __init__(self):
+        super(Swish, self).__init__()
 
-    if strides == 2:
-        m = layers.ZeroPadding2D(padding=correct_pad(m, 3))(m)
-    m = layers.DepthwiseConv2D(
-        3, strides=strides, padding="same" if strides == 1 else "valid", use_bias=False
-    )(m)
-    m = layers.BatchNormalization()(m)
-    m = tf.nn.swish(m)
-
-    m = layers.Conv2D(output_channels, 1, padding="same", use_bias=False)(m)
-    m = layers.BatchNormalization()(m)
-
-    if tf.math.equal(x.shape[-1], output_channels) and strides == 1:
-        return layers.Add()([m, x])
-    return m
+    def call(self, x, training=True):
+        x = tf.keras.activations.swish(x)
+        return x
 
 
-# Reference:
-# https://keras.io/examples/vision/image_classification_with_vision_transformer/
+class Conv_NxN_BN(Layer):
+    def __init__(self, dim, kernel_size=1, stride=1):
+        super(Conv_NxN_BN, self).__init__()
+
+        self.layers = Sequential([
+            nn.Conv2D(filters=dim, kernel_size=kernel_size, strides=stride, padding='SAME', use_bias=False),
+            nn.BatchNormalization(momentum=0.9, epsilon=1e-5),
+            Swish()
+        ])
+
+    def call(self, x, training=True):
+        x = self.layers(x, training=training)
+        return x
 
 
-def mlp(x, hidden_units, dropout_rate):
-    for units in hidden_units:
-        x = layers.Dense(units, activation=tf.nn.swish)(x)
-        x = layers.Dropout(dropout_rate)(x)
-    return x
+class PreNorm(Layer):
+    def __init__(self, fn):
+        super(PreNorm, self).__init__()
+
+        self.norm = nn.LayerNormalization()
+        self.fn = fn
+
+    def call(self, x, training=True):
+        return self.fn(self.norm(x), training=training)
 
 
-def transformer_block(x, transformer_layers, projection_dim, num_heads=2):
-    for _ in range(transformer_layers):
-        # Layer normalization 1.
-        x1 = layers.LayerNormalization(epsilon=1e-6)(x)
-        # Create a multi-head attention layer.
-        attention_output = head.MultiHeadAttention(
-            num_heads=num_heads, key_dim=projection_dim)(x1, x1)
-        # Skip connection 1.
-        x2 = layers.Add()([attention_output, x])
-        # Layer normalization 2.
-        x3 = layers.LayerNormalization(epsilon=1e-6)(x2)
-        # MLP.
-        x3 = mlp(
-            x3,
-            hidden_units=[x.shape[-1] * 2, x.shape[-1]],
-            dropout_rate=0.1,
-        )
-        # Skip connection 2.
-        x = layers.Add()([x3, x2])
+class MLP(Layer):
+    def __init__(self, dim, hidden_dim, dropout=0.0):
+        super(MLP, self).__init__()
 
-    return x
+        self.net = Sequential([
+            nn.Dense(units=hidden_dim),
+            Swish(),
+            nn.Dropout(rate=dropout),
+            nn.Dense(units=dim),
+            nn.Dropout(rate=dropout)
+        ])
+
+    def call(self, x, training=True):
+        return self.net(x, training=training)
 
 
-def mobilevit_block(x, num_blocks, projection_dim, strides=1):
-    # Local projection with convolutions.
-    local_features = conv_block(x, filters=projection_dim, strides=strides)
-    local_features = conv_block(
-        local_features, filters=projection_dim, kernel_size=1, strides=strides
-    )
+class Attention(Layer):
+    def __init__(self, dim, heads=8, dim_head=64, dropout=0.0):
+        super(Attention, self).__init__()
 
-    # Unfold into patches and then pass through Transformers.
-    num_patches = int((local_features.shape[1] * local_features.shape[2]) / patch_size)
-    non_overlapping_patches = layers.Reshape((patch_size, num_patches, projection_dim))(
-        local_features
-    )
-    global_features = transformer_block(
-        non_overlapping_patches, num_blocks, projection_dim
-    )
+        inner_dim = dim_head * heads
+        self.heads = heads
+        self.scale = dim_head ** -0.5
 
-    # Fold into conv-like feature-maps.
-    folded_feature_map = layers.Reshape((*local_features.shape[1:-1], projection_dim))(
-        global_features
-    )
+        self.attend = nn.Softmax()
+        self.to_qkv = nn.Dense(units=inner_dim * 3, use_bias=False)
 
-    # Apply point-wise conv -> concatenate with the input features.
-    folded_feature_map = conv_block(
-        folded_feature_map, filters=x.shape[-1], kernel_size=1, strides=strides
-    )
-    local_global_features = layers.Concatenate(axis=-1)([x, folded_feature_map])
+        self.to_out = Sequential([
+            nn.Dense(units=dim),
+            nn.Dropout(rate=dropout)
+        ])
 
-    # Fuse the local and global features using a convoluion layer.
-    local_global_features = conv_block(
-        local_global_features, filters=projection_dim, strides=strides
-    )
+    def call(self, x, training=True):
+        qkv = self.to_qkv(x)
+        qkv = tf.split(qkv, num_or_size_splits=3, axis=-1)
 
-    return local_global_features
+        q, k, v = map(lambda t: rearrange(t, 'b p n (h d) -> b p h n d', h=self.heads), qkv)
+
+        dots = tf.matmul(q, tf.transpose(k, perm=[0, 1, 3, 2])) * self.scale
+        attn = self.attend(dots)
+        out = tf.matmul(attn, v)
+        out = rearrange(out, 'b p h n d -> b p n (h d)')
+        out = self.to_out(out, training=training)
+
+        return out
 
 
-"""
-**More on the MobileViT block**:
+class Transformer(Layer):
+    def __init__(self, dim, depth, heads, dim_head, mlp_dim, dropout=0.0):
+        super(Transformer, self).__init__()
 
-* First, the feature representations (A) go through convolution blocks that capture local
-relationships. The expected shape of a single entry here would be `(h, w, num_channels)`.
-* Then they get unfolded into another vector with shape `(p, n, num_channels)`,
-where `p` is the area of a small patch, and `n` is `(h * w) / p`. So, we end up with `n`
-non-overlapping patches.
-* This unfolded vector is then passed through a Tranformer block that captures global
-relationships between the patches.
-* The output vector (B) is again folded into a vector of shape `(h, w, num_channels)`
-resembling a feature map coming out of convolutions.
+        self.layers = []
 
-Vectors A and B are then passed through two more convolutional layers to fuse the local
-and global representations. Notice how the spatial resolution of the final vector remains
-unchanged at this point. The authors also present an explanation of how the MobileViT
-block resembles a convolution block of a CNN. For more details, please refer to the
-original paper.
-"""
+        for _ in range(depth):
+            self.layers.append([
+                PreNorm(Attention(dim, heads, dim_head, dropout)),
+                PreNorm(MLP(dim, mlp_dim, dropout))
+            ])
 
-"""
-Next, we combine these blocks together and implement the MobileViT architecture (XXS
-variant). The following figure (taken from the original paper) presents a schematic
-representation of the architecture:
+    def call(self, x, training=True):
+        for attn, ff in self.layers:
+            x = attn(x, training=training) + x
+            x = ff(x, training=training) + x
 
-![](https://i.ibb.co/sRbVRBN/image.png)
-"""
+        return x
 
 
-def create_mobilevit(num_classes=5):
-    inputs = keras.Input((image_size, image_size, 3))
-    x = tf.keras.layers.experimental.preprocessing.Rescaling(scale=1.0 / 255)(inputs)
+class MV2Block(Layer):
+    def __init__(self, dim_in, dim_out, stride=1, expansion=4):
+        super(MV2Block, self).__init__()
 
-    # Initial conv-stem -> MV2 block.
-    x = conv_block(x, filters=16)
-    x = inverted_residual_block(
-        x, expanded_channels=16 * expansion_factor, output_channels=16
-    )
+        assert stride in [1, 2]
 
-    # Downsampling with MV2 block.
-    x = inverted_residual_block(
-        x, expanded_channels=16 * expansion_factor, output_channels=24, strides=2
-    )
-    x = inverted_residual_block(
-        x, expanded_channels=24 * expansion_factor, output_channels=24
-    )
-    x = inverted_residual_block(
-        x, expanded_channels=24 * expansion_factor, output_channels=24
-    )
+        hidden_dim = int(dim_in * expansion)
+        self.use_res_connect = stride == 1 and dim_in == dim_out
 
-    # First MV2 -> MobileViT block.
-    x = inverted_residual_block(
-        x, expanded_channels=24 * expansion_factor, output_channels=48, strides=2
-    )
-    x = mobilevit_block(x, num_blocks=2, projection_dim=64)
-
-    # Second MV2 -> MobileViT block.
-    x = inverted_residual_block(
-        x, expanded_channels=64 * expansion_factor, output_channels=64, strides=2
-    )
-    x = mobilevit_block(x, num_blocks=4, projection_dim=80)
-
-    # Third MV2 -> MobileViT block.
-    x = inverted_residual_block(
-        x, expanded_channels=80 * expansion_factor, output_channels=80, strides=2
-    )
-    x = mobilevit_block(x, num_blocks=3, projection_dim=96)
-    x = conv_block(x, filters=320, kernel_size=1, strides=1)
-
-    # Classification head.
-    x = layers.GlobalAvgPool2D()(x)
-    outputs = layers.Dense(num_classes, activation="softmax")(x)
-
-    return keras.Model(inputs, outputs)
-
-
-"""
-## Dataset preparation
-
-We will be using the
-[`tf_flowers`](https://www.tensorflow.org/datasets/catalog/tf_flowers)
-dataset to demonstrate the model. Unlike other Transformer-based architectures,
-MobileViT uses a simple augmentation pipeline primarily because it has the properties
-of a CNN.
-"""
-
-batch_size = 32
-auto = tf.data.experimental.AUTOTUNE
-resize_bigger = 280
-num_classes = 5
-
-
-
-def preprocess_dataset(is_training=True):
-    def _pp(image, label):
-        if is_training:
-            # Resize to a bigger spatial resolution and take the random
-            # crops.
-            image = tf.image.resize(image, (resize_bigger, resize_bigger))
-            image = tf.image.random_crop(image, (image_size, image_size, 3))
-            image = tf.image.random_flip_left_right(image)
+        if expansion == 1:
+            self.conv = Sequential([
+                # dw
+                nn.Conv2D(filters=hidden_dim, kernel_size=3, strides=stride, padding='SAME', groups=hidden_dim,
+                          use_bias=False),
+                nn.BatchNormalization(momentum=0.9, epsilon=1e-5),
+                Swish(),
+                # pw-linear
+                nn.Conv2D(filters=dim_out, kernel_size=1, strides=1, use_bias=False),
+                nn.BatchNormalization(momentum=0.9, epsilon=1e-5)
+            ])
         else:
-            image = tf.image.resize(image, (image_size, image_size))
-        label = tf.one_hot(label, depth=num_classes)
-        return image, label
+            self.conv = Sequential([
+                # pw
+                nn.Conv2D(filters=hidden_dim, kernel_size=1, strides=1, use_bias=False),
+                nn.BatchNormalization(momentum=0.9, epsilon=1e-5),
+                Swish(),
+                # dw
+                nn.Conv2D(filters=hidden_dim, kernel_size=3, strides=stride, padding='SAME', groups=hidden_dim,
+                          use_bias=False),
+                nn.BatchNormalization(momentum=0.9, epsilon=1e-5),
+                Swish(),
+                # pw-linear
+                nn.Conv2D(filters=dim_out, kernel_size=1, strides=1, use_bias=False),
+                nn.BatchNormalization(momentum=0.9, epsilon=1e-5)
+            ])
 
-    return _pp
+    def call(self, x, training=True):
+        out = self.conv(x, training=training)
+        if self.use_res_connect:
+            out = out + x
+        return out
 
 
-def prepare_dataset(dataset, is_training=True):
-    if is_training:
-        dataset = dataset.shuffle(batch_size * 10)
-    dataset = dataset.map(preprocess_dataset(is_training), num_parallel_calls=auto)
-    return dataset.batch(batch_size).prefetch(auto)
+class MobileViTBlock(Layer):
+    def __init__(self, dim, depth, channel, kernel_size, patch_size, mlp_dim, dropout=0.0):
+        super(MobileViTBlock, self).__init__()
+
+        self.ph, self.pw = patch_size
+
+        self.conv1 = Conv_NxN_BN(channel, kernel_size=kernel_size, stride=1)
+        self.conv2 = Conv_NxN_BN(dim, kernel_size=1, stride=1)
+
+        self.transformer = Transformer(dim=dim, depth=depth, heads=4, dim_head=8, mlp_dim=mlp_dim, dropout=dropout)
+
+        self.conv3 = Conv_NxN_BN(channel, kernel_size=1, stride=1)
+        self.conv4 = Conv_NxN_BN(channel, kernel_size=kernel_size, stride=1)
+
+    def call(self, x, training=True):
+        y = tf.identity(x)
+
+        # Local representations
+        x = self.conv1(x, training=training)
+        x = self.conv2(x, training=training)
+
+        # Global representations
+        _, h, w, c = x.shape
+        x = rearrange(x, 'b (h ph) (w pw) d -> b (ph pw) (h w) d', ph=self.ph, pw=self.pw)
+        x = self.transformer(x, training=training)
+        x = rearrange(x, 'b (ph pw) (h w) d -> b (h ph) (w pw) d', h=h // self.ph, w=w // self.pw, ph=self.ph,
+                      pw=self.pw)
+
+        # Fusion
+        x = self.conv3(x, training=training)
+        x = tf.concat([x, y], axis=-1)
+        x = self.conv4(x, training=training)
+
+        return x
 
 
-"""
-The authors use a multi-scale data sampler to help the model learn representations of
-varied scales. In this example, we discard this part.
-"""
+class MobileViT(Model):
+    def __init__(self,
+                 image_size,
+                 dims,
+                 channels,
+                 num_classes,
+                 expansion=4,
+                 kernel_size=3,
+                 patch_size=(2, 2),
+                 depths=(2, 4, 3)
+                 ):
+        super(MobileViT, self).__init__()
+        assert len(dims) == 3, 'dims must be a tuple of 3'
+        assert len(depths) == 3, 'depths must be a tuple of 3'
 
-"""
-## Load and prepare the dataset
-"""
+        ih, iw = image_size
+        ph, pw = patch_size
+        assert ih % ph == 0 and iw % pw == 0
 
-train_dataset, val_dataset = tfds.load(
-    "tf_flowers", split=["train[:90%]", "train[90%:]"], as_supervised=True
+        init_dim, *_, last_dim = channels
+
+        self.conv1 = Conv_NxN_BN(init_dim, kernel_size=3, stride=2)
+
+        self.stem = Sequential()
+        self.stem.add(MV2Block(channels[0], channels[1], stride=1, expansion=expansion))
+        self.stem.add(MV2Block(channels[1], channels[2], stride=2, expansion=expansion))
+        self.stem.add(MV2Block(channels[2], channels[3], stride=1, expansion=expansion))
+        self.stem.add(MV2Block(channels[2], channels[3], stride=1, expansion=expansion))
+
+        self.trunk = []
+        self.trunk.append([
+            MV2Block(channels[3], channels[4], stride=2, expansion=expansion),
+            MobileViTBlock(dims[0], depths[0], channels[5], kernel_size, patch_size, mlp_dim=int(dims[0] * 2))
+        ])
+
+        self.trunk.append([
+            MV2Block(channels[5], channels[6], stride=2, expansion=expansion),
+            MobileViTBlock(dims[1], depths[1], channels[7], kernel_size, patch_size, mlp_dim=int(dims[1] * 4))
+        ])
+
+        self.trunk.append([
+            MV2Block(channels[7], channels[8], stride=2, expansion=expansion),
+            MobileViTBlock(dims[2], depths[2], channels[9], kernel_size, patch_size, mlp_dim=int(dims[2] * 4))
+        ])
+
+        self.to_logits = Sequential([
+            Conv_NxN_BN(last_dim, kernel_size=1, stride=1),
+            Reduce('b h w c -> b c', 'mean'),
+            nn.Dense(units=num_classes, use_bias=False)
+        ])
+
+    def call(self, x, training=True, **kwargs):
+        x = self.conv1(x, training=training)
+
+        x = self.stem(x, training=training)
+
+        for conv, attn in self.trunk:
+            x = conv(x, training=training)
+            x = attn(x, training=training)
+
+        x = self.to_logits(x, training=training)
+
+        return x
+
+""" Usage
+v = MobileViT(
+    image_size=(256, 256),
+    dims=[96, 120, 144],
+    channels=[16, 32, 48, 48, 64, 64, 80, 80, 96, 96, 384],
+    num_classes=1000
 )
 
-import argparse
-parser = argparse.ArgumentParser(description='Process some integers.')
-parser.add_argument('--training', action = 'store_const', dest = 'training',
-                           default = False, required = False,const=True)
-args = parser.parse_args()
-
-
-
-
-print(train_dataset)
-if not args.training:
-    batch_size=1
-    train_dataset = prepare_dataset(train_dataset, is_training=True)
-    val_dataset = prepare_dataset(val_dataset, is_training=False)
-    inputs = keras.Input((image_size, image_size, 3),batch_size=1)
-    mobilevit_xxs = create_mobilevit()
-    
-    def representative_data_gen():
-        for x in train_dataset:            
-            yield [x[0]]
-    mobilevit_xxs.load_weights('mobilevit_xxs.h5')
-    converter_quant = tf.lite.TFLiteConverter.from_keras_model(mobilevit_xxs) 
-    
-    converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
-    converter_quant.input_shape=(1,image_size,image_size,3)
-    converter_quant.representative_dataset = representative_data_gen
-    converter_quant.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
-    converter_quant.target_spec.supported_types = [tf.int8]
-    converter_quant.experimental_new_converter = True
-    converter_quant.allow_custom_ops=True
-    tflite_model = converter_quant.convert()
-    open("mobilevit_xxs.tflite", "wb").write(tflite_model)
-    exit()
-
-"""
-## Train a MobileViT (XXS) model
-"""
-train_dataset = prepare_dataset(train_dataset, is_training=True)
-val_dataset = prepare_dataset(val_dataset, is_training=False)
-learning_rate = 0.002
-label_smoothing_factor = 0.1
-epochs = 30
-
-optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
-loss_fn = keras.losses.CategoricalCrossentropy(label_smoothing=label_smoothing_factor)
-
-
-def run_experiment(epochs=epochs):
-    inputs = keras.Input((image_size, image_size, 3),batch_size=batch_size)
-    mobilevit_xxs = create_mobilevit()
-    mobilevit_xxs.compile(optimizer=optimizer, loss=loss_fn, metrics=["accuracy"])
-
-    checkpoint_filepath = "/tmp/checkpoint"
-    checkpoint_callback = keras.callbacks.ModelCheckpoint(
-        checkpoint_filepath,
-        monitor="val_accuracy",
-        save_best_only=True,
-        save_weights_only=True,
-    )
-
-    mobilevit_xxs.fit(
-        train_dataset,
-        validation_data=val_dataset,
-        epochs=epochs,
-        callbacks=[checkpoint_callback],
-    )
-    mobilevit_xxs.load_weights(checkpoint_filepath)
-    _, accuracy = mobilevit_xxs.evaluate(val_dataset)
-    print(f"Validation accuracy: {round(accuracy * 100, 2)}%")
-    return mobilevit_xxs
-
-
-mobilevit_xxs = run_experiment()
-
-"""
-## Results and TFLite conversion
-
-With about one million parameters, getting to ~85% top-1 accuracy on 256x256 resolution is
-a strong result. This MobileViT mobile is fully compatible with TensorFlow Lite (TFLite)
-and can be converted with the following code:
-"""
-
-# Serialize the model as a SavedModel.
-#mobilevit_xxs.save("mobilevit_xxs")
-mobilevit_xxs.save_weights('mobilevit_xxs.h5')
-# Convert to TFLite. This form of quantization is called
-# post-training dynamic-range quantization in TFLite.
-
-
-
-"""
-To learn more about different quantization recipes available in TFLite and running
-inference with TFLite models, check out
-[this official resource](https://www.tensorflow.org/lite/performance/post_training_quantization).
-
-You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/mobile-vit-xxs)
-and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/Flowers-Classification-MobileViT).
+img = tf.random.normal(shape=[1, 256, 256, 3])
+preds = v(img)  # (1, 1000)
 """
