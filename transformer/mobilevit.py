@@ -97,7 +97,7 @@ class Attention(Layer):
         qkv = tf.split(qkv, num_or_size_splits=3, axis=-1)
 
         q, k, v = map(lambda t: rearrange(t, 'b p n (h d) -> b p h n d', h=self.heads), qkv)
-
+        print(self.scale)
         dots = tf.matmul(q, tf.transpose(k, perm=[0, 1, 3, 2])) * self.scale
         attn = self.attend(dots)
         out = tf.matmul(attn, v)
