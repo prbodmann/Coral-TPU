@@ -20,7 +20,7 @@ def cast_tuple(val, length = 1):
 def divisible_by(val, d):
     return (val % d) == 0
 
-def gelu(x, approximate=False):
+def gelu(x, approximate=True):
     if approximate:
         coeff = tf.cast(0.044715, x.dtype)
         return 0.5 * x * (1.0 + tf.tanh(0.7978845608028654 * (x + coeff * tf.pow(x, 3))))
@@ -69,7 +69,7 @@ class MLP(Layer):
             nn.LayerNormalization(),
             nn.Dense(units=dim * mult),
             GELU(),
-            nn.Dropout(rate=dropout),
+            #nn.Dropout(rate=dropout),
             nn.Dense(units=dim)
         ])
 
