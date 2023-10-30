@@ -41,12 +41,8 @@ def resize_image(image, shape = (224,224)):
 def preprocess_dataset(is_training=True):
     def _pp(image, label):
         image = tf.cast(image,tf.float32)
-        if is_training:
-           i = image
-           i = tf.cast(i, tf.float32)
-           image = resize_image(i, (224,224))
-        else:
-            image = tf.image.resize(image, (image_size, image_size))
+        
+        image = resize_image(image, (image_size, image_size))
         image = image/255.0
         label = tf.one_hot(label, depth=num_classes)
         print(label)
