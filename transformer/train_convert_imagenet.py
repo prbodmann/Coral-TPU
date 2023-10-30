@@ -8,7 +8,7 @@ import tensorflow_datasets as tfds
 resize_bigger = 300
 image_size = 224
 num_classes = 1000
-batch_size = 100
+batch_size = 50
 learning_rate = 0.002
 label_smoothing_factor = 0.1
 
