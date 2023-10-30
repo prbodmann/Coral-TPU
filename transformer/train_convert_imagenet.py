@@ -7,6 +7,7 @@ import tensorflow_datasets as tfds
 
 resize_bigger = 300
 image_size = 256
+num_classes = 1000
 def preprocess_dataset(is_training=True):
     def _pp(image, label):
         if is_training:
@@ -54,7 +55,7 @@ if args.training:
     heads = 3,
     num_hierarchies = 3,        # number of hierarchies
     block_repeats = (2, 2, 8),  # the number of transformer blocks at each heirarchy, starting from the bottom
-    num_classes = 100
+    num_classes = num_classes
 )
 
 
