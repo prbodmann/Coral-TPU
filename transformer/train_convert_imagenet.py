@@ -6,6 +6,7 @@ from regionvit import RegionViT
 import tensorflow_datasets as tfds
 import numpy as np
 
+
 resize_bigger = 300
 image_size = 224
 num_classes = 1000
@@ -26,7 +27,8 @@ def preprocess_dataset(is_training=True):
         else:
             image = tf.image.resize(image, (image_size, image_size))
         image = image/255.0
-        label = tf.one_hot(label, depth=num_classes)
+        label = tf.keras.utils.to_categorical(label,num_classes=1000)#tf.one_hot(label, depth=num_classes)
+
         return image, label
 
     return _pp
