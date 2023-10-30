@@ -214,7 +214,9 @@ class NesT(Model):
         x = self.mlp_head(x)
 
         return x
-
+    def model(self):
+        x = nn.Input(shape=(32, 32, 3),batch_size=1)
+        return Model(inputs=[x], outputs=self.call(x))
 """ Usage
 v = NesT(
     image_size = 224,
