@@ -62,7 +62,7 @@ if args.training:
     use_peg = False,                # whether to use positional generating module. they used this for object detection for a boost in performance
 )
 
-    optimizer = tf.keras.optimizers.Adam(lr=learning_rate)
+    optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
     model.compile(optimizer = optimizer, loss = "mean_squared_error", metrics = ["accuracy"] )
     #model.build((batch_size, 224, 224, 3))
     #model.summary()
