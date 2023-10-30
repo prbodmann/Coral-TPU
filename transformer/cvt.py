@@ -16,9 +16,6 @@ batch_size = 100
 learning_rate = 0.002
 label_smoothing_factor = 0.1
 
-optimizer = Adam(learning_rate=learning_rate)
-loss_fn = CategoricalCrossentropy(label_smoothing=label_smoothing_factor)
-
 import tensorflow as tf
 from tensorflow import einsum
 from tensorflow.keras import Model
@@ -73,7 +70,7 @@ class Attention(Layer):
         self.attend = nn.Softmax()
         self.to_qkv = nn.Dense(units=inner_dim * 3, use_bias=False)
 
-        self.reattn_weights = tf.Variable(initial_value=tf.zeros([heads, heads]))
+        self.reattn_weights = tf.Variable(initial_value=tf.ones([heads, heads]))
 
         self.reattn_norm = [
             Rearrange('b h i j -> b i j h'),
@@ -142,8 +139,8 @@ class DeepViT(Model):
             nn.Dense(units=dim)
         ], name='patch_embedding')
 
-        self.pos_embedding = tf.Variable(initial_value=tf.zeros([1, num_patches + 1, dim]))
-        self.cls_token = tf.Variable(initial_value=tf.zeros([1, 1, dim]))
+        self.pos_embedding = tf.Variable(initial_value=tf.ones([1, num_patches + 1, dim]))
+        self.cls_token = tf.Variable(initial_value=tf.ones([1, 1, dim]))
         self.dropout = nn.Dropout(rate=emb_dropout)
 
         self.transformer = Transformer(dim, depth, heads, dim_head, mlp_dim, dropout)
@@ -211,24 +208,23 @@ y_test = to_categorical(y_test)
 
 x_train = x_train.astype('float32')
 x_test = x_test.astype('float32')
-x_train = x_train / 255.0
-x_test = x_test / 255.0
+
 if args.training:
 
 
     cait_xxs24_224 =DeepViT(
     image_size = 32,
-    patch_size = 32,
+    patch_size = 8,
     num_classes = 100,
-    dim = 1024,
+    dim = 512,
     depth = 6,
-    heads = 16,
-    mlp_dim = 2048,
+    heads = 8,
+    mlp_dim = 1024,
     dropout = 0.1,
     emb_dropout = 0.1
 )
 
-    cait_xxs24_224.compile(optimizer, loss_fn,  run_eagerly=True)
+    cait_xxs24_224.compile(optimizer = 'adam', loss = "categorical_crossentropy", metrics = ["accuracy"] )
     #cait_xxs24_224.build((batch_size, 224, 224, 3))
     #cait_xxs24_224.summary()
 
