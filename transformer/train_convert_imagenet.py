@@ -2,7 +2,7 @@ import argparse
 import tensorflow as tf
 from tensorflow.keras import datasets
 from tensorflow.keras.utils import to_categorical
-from vit import ViT
+from pit import PiT
 import tensorflow_datasets as tfds
 
 resize_bigger = 300
@@ -50,12 +50,12 @@ val_dataset = prepare_dataset(ds[1], is_training=False,batch_size_=batch_size)
 if args.training:
 
 
-    model = ViT(
+    model = PiT(
     image_size = 256,
-    patch_size = 32,
+    patch_size = 16,
+    dim = 256,
     num_classes = 1000,
-    dim = 1024,
-    depth = 6,
+    depth = (3, 3, 3),     # list of depths, indicating the number of rounds of each stage before a downsample
     heads = 16,
     mlp_dim = 2048,
     dropout = 0.1,
