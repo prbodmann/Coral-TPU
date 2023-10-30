@@ -23,8 +23,7 @@ def preprocess_dataset(is_training=True):
             image = tf.image.random_flip_left_right(image)
         else:
             image = tf.image.resize(image, (image_size, image_size))
-        image -= np.mean(image, axis=0)
-        image /= np.std(image, axis=0)
+        image /= 255.0
         label = tf.one_hot(label, depth=num_classes)
         return image, label
 
