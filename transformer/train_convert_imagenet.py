@@ -27,8 +27,8 @@ def preprocess_dataset(is_training=True):
         else:
             image = tf.image.resize(image, (image_size, image_size))
         image = image/255.0
-        label = tf.keras.utils.to_categorical(label,num_classes=1000)#tf.one_hot(label, depth=num_classes)
-
+        label = tf.one_hot(label, depth=num_classes)
+        print(label)
         return image, label
 
     return _pp
