@@ -38,7 +38,7 @@ parser = argparse.ArgumentParser(description='Process some integers.')
 parser.add_argument('--training', action = 'store_const', dest = 'training',
                            default = False, required = False,const=True)
 args = parser.parse_args()
-ds = tf.load('imagenet2012', split=["train[:90%]", "train[90%:]"], as_supervised=True, data_dir='/mnt/dataset', download=False))
+ds = tf.load('imagenet2012', split=["train[:90%]", "train[90%:]"], as_supervised=True, data_dir='/mnt/dataset', download=False)
 
 train_dataset = prepare_dataset(train_dataset1, is_training=True,batch_size_=batch_size)
 val_dataset = prepare_dataset(val_dataset1, is_training=False,batch_size_=batch_size)
