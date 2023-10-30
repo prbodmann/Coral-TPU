@@ -2,7 +2,7 @@ import argparse
 import tensorflow as tf
 from tensorflow.keras import datasets
 from tensorflow.keras.utils import to_categorical
-from mobilevit import MobileViT
+from nest import NesT
 
 batch_size = 100
 learning_rate = 0.002
@@ -28,11 +28,14 @@ x_test = x_test / 255.0
 if args.training:
 
 
-    model = MobileViT(
-    image_size=(32, 32),
-    dims=[96, 120, 144],
-    channels=[16, 32, 48, 48, 64, 64, 80, 80, 96, 96, 384],
-    num_classes=100
+    model =  NesT(
+    image_size = 32,
+    patch_size = 4,
+    dim = 96,
+    heads = 3,
+    num_hierarchies = 3,        # number of hierarchies
+    block_repeats = (2, 2, 8),  # the number of transformer blocks at each heirarchy, starting from the bottom
+    num_classes = 100
 )
 
 
