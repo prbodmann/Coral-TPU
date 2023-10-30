@@ -63,7 +63,7 @@ if args.training:
 )
 
     optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
-    model.compile(optimizer = optimizer, loss = "mean_squared_error", metrics = ["accuracy"] )
+    model.compile(optimizer = optimizer, loss = "categorical_crossentropy", metrics = ["accuracy"] )
     #model.build((batch_size, 224, 224, 3))
     #model.summary()
 
