@@ -4,8 +4,7 @@ from tensorflow.keras import datasets
 from regionvit import RegionViT
 import tensorflow_datasets as tfds
 import numpy as np
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
-import albumentations as A
+
 
 resize_bigger = 300
 image_size = 224
@@ -15,7 +14,7 @@ learning_rate = 0.0002
 
 optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
 
-'''def resize_image(image, shape = (224,224)):
+def resize_image(image, shape = (224,224)):
     target_width = shape[0]
     target_height = shape[1]
     initial_width = tf.shape(image)[0]
@@ -46,40 +45,6 @@ def preprocess_dataset(is_training=True):
         image = tf.image.per_image_standardization(image)#tf.keras.applications.imagenet_utils.preprocess_input(image, data_format=None,mode = 'tf')
         label = tf.one_hot(label, depth=num_classes)
         print(label)
-        return image, label
-
-    return _pp
-
-
-def prepare_dataset(dataset, is_training=True,batch_size_=1):
-    if is_training:
-        dataset = dataset.shuffle(batch_size_ * 10)
-    dataset = dataset.map(preprocess_dataset(is_training))
-    return dataset.batch(batch_size_).prefetch(batch_size_)
-'''
-
-train_transforms = A.Compose([
-            A.Rotate(limit=40),
-            A.Cutout(num_holes=4,max_h_size=8,max_w_size=8),
-            A.ShiftScaleRotate(),
-            A.RandomRotate90(),
-            A.HorizontalFlip(),
-            A.VerticalFlip(),
-            A.RandomGridShuffle()
-        ])
-
-def augumentation_preproc(image):
-    data = {"image":image}
-    aug_data = train_transforms(**data)
-    aug_img = aug_data["image"]
-    return aug_img
-    
-def preprocess_dataset(is_training=True):
-    def _pp(image, label):
-        image = tf.cast(image,tf.float32)        
-        image = augumentation_preproc(image)
-        label = tf.one_hot(label, depth=num_classes)
-        #print(label)
         return image, label
 
     return _pp
