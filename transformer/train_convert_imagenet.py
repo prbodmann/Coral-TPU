@@ -5,6 +5,7 @@ from regionvit import RegionViT
 import tensorflow_datasets as tfds
 import numpy as np
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
+import albumentations as A
 
 resize_bigger = 300
 image_size = 224
