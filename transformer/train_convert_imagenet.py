@@ -34,6 +34,7 @@ def resize_image(image, shape = (224,224)):
     startx = width//2 - (target_width//2)
     starty = height//2 - (target_height//2)
     im = tf.image.crop_to_bounding_box(im, startx, starty, target_width, target_height)
+    im /= 255.0
     return im
 
 
