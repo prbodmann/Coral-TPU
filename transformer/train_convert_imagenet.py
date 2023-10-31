@@ -52,7 +52,7 @@ def preprocess_dataset(is_training=True):
 '''
 
 crop_layer = tf.keras.layers.CenterCrop(image_size, image_size)
-norm_layer = tf.eras.layers.Normalization(
+norm_layer = tf.keras.layers.Normalization(
     mean=[0.485 * 255, 0.456 * 255, 0.406 * 255],
     variance=[(0.229 * 255) ** 2, (0.224 * 255) ** 2, (0.225 * 255) ** 2],
 )
