@@ -77,11 +77,11 @@ ds = tfds.load('imagenet2012', split=["train[:90%]", "validation[90%:]"], as_sup
 
 ds[0] = ds[0].map(normalize())
 ds[1] = ds[1].map(normalize())
-mean = train_dataset.mean(axis=(0,1,2))
-std = train_dataset.std(axis=(0,1,2))
+mean = ds[0].mean(axis=(0,1,2))
+std = ds[0].std(axis=(0,1,2))
 train_dataset = prepare_dataset(ds[0], is_training=True,batch_size_=batch_size)
-mean = val_dataset.mean(axis=(0,1,2))
-std = val_dataset.std(axis=(0,1,2))
+mean = ds[1].mean(axis=(0,1,2))
+std = ds[1].std(axis=(0,1,2))
 val_dataset = prepare_dataset(ds[1], is_training=False,batch_size_=batch_size)
 
 
