@@ -62,7 +62,7 @@ def preprocess_dataset(is_training=True):
     def _pp(image, label):
         image = tf.cast(image,tf.float32)
         
-        image_resized = tf.expand_dims(image, 0)
+
         image_resized = tf.image.resize(
             image_resized, (image_size, image_size), method="bicubic"
         )
