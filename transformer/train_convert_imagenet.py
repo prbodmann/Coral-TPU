@@ -61,6 +61,9 @@ def preprocess_dataset(is_training=True):
 
     return _pp
 
+def norm_dataset(dataset, is_training=True,batch_size_=1):
+    dataset = dataset.map(normalize())
+    return dataset.batch(batch_size_).prefetch(batch_size_)
 
 def prepare_dataset(dataset, is_training=True,batch_size_=1):
     if is_training:
@@ -75,8 +78,8 @@ args = parser.parse_args()
 ds = tfds.load('imagenet2012', split=["train[:90%]", "validation[90%:]"], as_supervised=True, data_dir='/mnt/dataset', download=True)
 
 
-ds[0] = ds[0].map(normalize())
-ds[1] = ds[1].map(normalize())
+ds[0] = norm_dataset(ds[0], is_training=True,batch_size_=batch_size)
+ds[1] = norm_dataset(ds[1], is_training=True,batch_size_=batch_size)
 mean = ds[0].mean(axis=(0,1,2))
 std = ds[0].std(axis=(0,1,2))
 train_dataset = prepare_dataset(ds[0], is_training=True,batch_size_=batch_size)
