@@ -93,7 +93,7 @@ train_dataset=train_datagen.flow_from_dataframe(
     seed=42,
     shuffle=True,
     class_mode="categorical",
-    target_size=(IMAGE_SIZE,IMAGE_SIZE),
+    target_size=(image_size,image_size),
   
 )
 
@@ -108,7 +108,7 @@ valid_generator=val_datagen.flow_from_dataframe(
     seed=42,
     shuffle=True,
     class_mode="categorical",
-    target_size=(IMAGE_SIZE,IMAGE_SIZE)
+    target_size=(image_size,image_size)
 )
 
 
