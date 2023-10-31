@@ -81,7 +81,7 @@ parser.add_argument('--training', action = 'store_const', dest = 'training',
                            default = False, required = False,const=True)
 args = parser.parse_args()
 ds = tfds.load('imagenet2012', split=["train[:90%]", "validation[90%:]"], as_supervised=True, data_dir='/mnt/dataset', download=True)
-
+ds = tf.data.Dataset.from_tensor_slices(list(ds))
 train_datagen = ImageDataGenerator(rescale=1./255.,  preprocessing_function=augumentation_preproc)
 
 train_dataset=train_datagen.flow_from_dataframe(
