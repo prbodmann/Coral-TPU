@@ -30,9 +30,8 @@ print(f"x_train shape: {x_train.shape} - y_train shape: {y_train.shape}")
 print(f"x_test shape: {x_test.shape} - y_test shape: {y_test.shape}")
 
 def igelu(x):
-    x1=x
-    t1 = K.tanh(1000.0*x1)
-    t2 = t1*(0.2888*(K.minimum(x1*t1, 1.769)-1.769)**2+1.0)
+    coeff = tf.cast(0.044715, x.dtype)
+    return 0.5 * x * (1.0 + tf.tanh(0.7978845608028654 * (x + coeff * tf.pow(x, 3))))
     return t2
 
 
