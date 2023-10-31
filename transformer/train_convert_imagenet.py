@@ -64,7 +64,7 @@ def preprocess_dataset(is_training=True):
         
 
         image_resized = tf.image.resize(
-            image_resized, (image_size, image_size), method="bicubic"
+            image, (image_size, image_size), method="bicubic"
         )
         image = crop_layer(image_resized)
         image = norm_layer(image)
