@@ -74,49 +74,35 @@ def augumentation_preproc(image):
     aug_img = aug_data["image"]
     return aug_img
     
+def preprocess_dataset(is_training=True):
+    def _pp(image, label):
+        image = tf.cast(image,tf.float32)        
+        image = augumentation_preproc(image)
+        label = tf.one_hot(label, depth=num_classes)
+        #print(label)
+        return image, label
 
+    return _pp
+
+
+def prepare_dataset(dataset, is_training=True,batch_size_=1):
+    if is_training:
+        dataset = dataset.shuffle(batch_size_ * 10)
+    dataset = dataset.map(preprocess_dataset(is_training))
+    return dataset.batch(batch_size_).prefetch(batch_size_)
 
 parser = argparse.ArgumentParser(description='Process some integers.')
 parser.add_argument('--training', action = 'store_const', dest = 'training',
                            default = False, required = False,const=True)
 args = parser.parse_args()
 ds = tfds.load('imagenet2012', split=["train[:90%]", "validation[90%:]"], as_supervised=True, data_dir='/mnt/dataset', download=True)
-ds_t = tf.data.Dataset.from_tensor_slices(list(ds[0]))
-ds_v = tf.data.Dataset.from_tensor_slices(list(ds[1]))
-train_datagen = ImageDataGenerator(rescale=1./255.,  preprocessing_function=augumentation_preproc)
-
-train_dataset=train_datagen.flow_from_dataframe(
-    dataframe=ds_t,
-    x_col="Image",
-    y_col="Class",
-    subset="training",
-    batch_size=batch_size ,
-    seed=42,
-    shuffle=True,
-    class_mode="categorical",
-    target_size=(image_size,image_size),
-  
-)
-
-val_datagen = ImageDataGenerator(rescale=1./255.)
-
-valid_generator=val_datagen.flow_from_dataframe(
-    dataframe=ds_v,
-    x_col="Image",
-    y_col="Class",
-    subset="training",
-    batch_size=batch_size ,
-    seed=42,
-    shuffle=True,
-    class_mode="categorical",
-    target_size=(image_size,image_size)
-)
 
 
 
 
-#train_dataset = prepare_dataset(ds[0], is_training=True,batch_size_=batch_size)
-#val_dataset = prepare_dataset(ds[1], is_training=False,batch_size_=batch_size)
+
+train_dataset = prepare_dataset(ds[0], is_training=True,batch_size_=batch_size)
+val_dataset = prepare_dataset(ds[1], is_training=False,batch_size_=batch_size)
 
 if args.training:
 
