@@ -13,9 +13,8 @@ batch_size = 50
 learning_rate = 0.0002
 
 optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
-mean = None
-std = None
-def resize_image(image, shape = (224,224)):
+
+'''def resize_image(image, shape = (224,224)):
     target_width = shape[0]
     target_height = shape[1]
     initial_width = tf.shape(image)[0]
@@ -35,21 +34,39 @@ def resize_image(image, shape = (224,224)):
     startx = width//2 - (target_width//2)
     starty = height//2 - (target_height//2)
     im = tf.image.crop_to_bounding_box(im, startx, starty, target_width, target_height)
-
+    im /= 255.0
     return im
-       
 
 
 def preprocess_dataset(is_training=True):
     def _pp(image, label):
         image = tf.cast(image,tf.float32)
-        image = image / 255.0
+        
         image = resize_image(image, (image_size, image_size))
-        mean = tf.math.reduce_mean(image,axis=2)
-        image = tf.math.subtract(image, mean)
-        std = tf.math.reduce_std(image,axis=2)    
-        image = tf.math.divide(image,std)
-        #image = tf.image.per_image_standardization(image)#tf.keras.applications.imagenet_utils.preprocess_input(image, data_format=None,mode = 'tf')
+        image = tf.image.per_image_standardization(image)#tf.keras.applications.imagenet_utils.preprocess_input(image, data_format=None,mode = 'tf')
+        label = tf.one_hot(label, depth=num_classes)
+        print(label)
+        return image, label
+
+    return _pp
+'''
+
+crop_layer = keras.layers.CenterCrop(image_size, image_size)
+norm_layer = keras.layers.Normalization(
+    mean=[0.485 * 255, 0.456 * 255, 0.406 * 255],
+    variance=[(0.229 * 255) ** 2, (0.224 * 255) ** 2, (0.225 * 255) ** 2],
+)
+
+
+def preprocess_dataset(is_training=True):
+    def _pp(image, label):
+        image = tf.cast(image,tf.float32)
+        
+        image_resized = tf.expand_dims(image, 0)
+        image_resized = tf.image.resize(
+            image_resized, (image_size, image_size), method="bicubic"
+        )
+        image = crop_layer(image_resized)
         label = tf.one_hot(label, depth=num_classes)
         print(label)
         return image, label
@@ -62,52 +79,52 @@ def prepare_dataset(dataset, is_training=True,batch_size_=1):
     dataset = dataset.map(preprocess_dataset(is_training))
     return dataset.batch(batch_size_).prefetch(batch_size_)
 
+
 parser = argparse.ArgumentParser(description='Process some integers.')
 parser.add_argument('--training', action = 'store_const', dest = 'training',
                            default = False, required = False,const=True)
 args = parser.parse_args()
 ds = tfds.load('imagenet2012', split=["train[:90%]", "validation[90%:]"], as_supervised=True, data_dir='/mnt/dataset', download=True)
 
+
+
+
+
 train_dataset = prepare_dataset(ds[0], is_training=True,batch_size_=batch_size)
 val_dataset = prepare_dataset(ds[1], is_training=False,batch_size_=batch_size)
 
-
-
-if args.training:
-
-
-    model = RegionViT(
-    dim = (32, 64, 128, 256),      # tuple of size 4, indicating dimension at each stage
-    depth = (2, 2, 8, 2),           # depth of the region to local transformer at each stage
-    window_size = 7,                # window size, which should be either 7 or 14
-    num_classes = 1000,             # number of output classes
-    tokenize_local_3_conv = False,  # whether to use a 3 layer convolution to encode the local tokens from the image. the paper uses this for the smaller models, but uses only 1 conv (set to False) for the larger models
-    use_peg = False,                # whether to use positional generating module. they used this for object detection for a boost in performance
+model = RegionViT(
+dim = (32, 64, 128, 256),      # tuple of size 4, indicating dimension at each stage
+depth = (2, 2, 8, 2),           # depth of the region to local transformer at each stage
+window_size = 7,                # window size, which should be either 7 or 14
+num_classes = 1000,             # number of output classes
+tokenize_local_3_conv = False,  # whether to use a 3 layer convolution to encode the local tokens from the image. the paper uses this for the smaller models, but uses only 1 conv (set to False) for the larger models
+use_peg = False,                # whether to use positional generating module. they used this for object detection for a boost in performance
 )
 
-    lol =  tf.keras.applications.resnet50.ResNet50(weights='imagenet')
-    lol.compile(optimizer = optimizer, loss = "categorical_crossentropy", metrics = ["accuracy"] )
-    print(lol.evaluate(val_dataset, batch_size=100))
-   
-    model.compile(optimizer = optimizer, loss = "categorical_crossentropy", metrics = ["accuracy"] )
-    #model.build((batch_size, 224, 224, 3))
-    #model.summary()
+lol =  tf.keras.applications.resnet50.ResNet50(weights='imagenet')
+lol.compile(optimizer = optimizer, loss = "categorical_crossentropy", metrics = ["accuracy"] )
+print(lol.evaluate(val_dataset, batch_size=100))
 
-    model.fit(
-        x=train_dataset,
-        validation_data=val_dataset,
-        epochs=7,
-        batch_size=batch_size,
-        verbose=1   
-    )
-    model.summary()
-    results= model.evaluate(val_dataset,batch_size=batch_size)
-    
-    #img = tf.random.normal(shape=[1, image_size, image_size, 3])
-    #preds = model(img) # (1, 1000)
-    #model.save('cross_vit',save_format="tf")
-    print(results)
-    
+model.compile(optimizer = optimizer, loss = "categorical_crossentropy", metrics = ["accuracy"] )
+#model.build((batch_size, 224, 224, 3))
+#model.summary()
+
+model.fit(
+    x=train_dataset,
+    validation_data=val_dataset,
+    epochs=7,
+    batch_size=batch_size,
+    verbose=1   
+)
+model.summary()
+results= model.evaluate(val_dataset,batch_size=batch_size)
+
+#img = tf.random.normal(shape=[1, image_size, image_size, 3])
+#preds = model(img) # (1, 1000)
+#model.save('cross_vit',save_format="tf")
+print(results)
+
 
 
 batch_size=1
