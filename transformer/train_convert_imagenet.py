@@ -63,7 +63,7 @@ def preprocess_dataset(is_training=True):
 
 def norm_dataset(dataset, is_training=True,batch_size_=1):
     dataset = dataset.map(normalize())
-    return dataset.batch(batch_size_).prefetch(batch_size_)
+    return dataset.batch(batch_size_)
 
 def prepare_dataset(dataset, is_training=True,batch_size_=1):
     if is_training:
