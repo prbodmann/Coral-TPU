@@ -40,6 +40,7 @@ def resize_image(image, shape = (224,224)):
 
 def normalize():
     def _lol_pp(image, label):
+        image = tf.cast(image,tf.float32)
         image = image / 255.0
         return image, label
     return _lol_pp    
