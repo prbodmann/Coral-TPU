@@ -27,6 +27,13 @@ input_shape = (32, 32, 3)
 print(f"x_train shape: {x_train.shape} - y_train shape: {y_train.shape}")
 print(f"x_test shape: {x_test.shape} - y_test shape: {y_test.shape}")
 
+def igelu(x):
+    x1=x
+    t1 = K.tanh(1000.0*x1)
+    t2 = t1*(0.2888*(K.minimum(x1*t1, 1.769)-1.769)**2+1.0)
+    return t2
+
+
 def run_experiment(model):
     optimizer = tfa.optimizers.AdamW(
         learning_rate=learning_rate, weight_decay=weight_decay
@@ -84,7 +91,7 @@ data_augmentation.layers[0].adapt(x_train)
 
 def mlp(x, hidden_units, dropout_rate):
     for units in hidden_units:
-        x = layers.Dense(units, activation=tf.nn.gelu)(x)
+        x = layers.Dense(units, activation=igelu)(x)
         x = layers.Dropout(dropout_rate)(x)
     return x
 
