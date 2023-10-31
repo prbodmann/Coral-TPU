@@ -1,11 +1,10 @@
 import argparse
 import tensorflow as tf
 from tensorflow.keras import datasets
-
 from regionvit import RegionViT
 import tensorflow_datasets as tfds
 import numpy as np
-
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 resize_bigger = 300
 image_size = 224
