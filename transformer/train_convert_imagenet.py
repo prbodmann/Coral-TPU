@@ -13,7 +13,8 @@ batch_size = 50
 learning_rate = 0.0002
 
 optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
-
+mean = None
+std = None
 def resize_image(image, shape = (224,224)):
     target_width = shape[0]
     target_height = shape[1]
@@ -34,8 +35,15 @@ def resize_image(image, shape = (224,224)):
     startx = width//2 - (target_width//2)
     starty = height//2 - (target_height//2)
     im = tf.image.crop_to_bounding_box(im, startx, starty, target_width, target_height)
-    im /= 255.0
+
     return im
+
+def normalize():
+    def _lol_pp(image, label):
+        image = image / 255.0
+        return image, label
+    return _lol_pp    
+        
 
 
 def preprocess_dataset(is_training=True):
@@ -43,7 +51,9 @@ def preprocess_dataset(is_training=True):
         image = tf.cast(image,tf.float32)
         
         image = resize_image(image, (image_size, image_size))
-        image = tf.image.per_image_standardization(image)#tf.keras.applications.imagenet_utils.preprocess_input(image, data_format=None,mode = 'tf')
+        image = image - mean
+        image = image / std
+        #image = tf.image.per_image_standardization(image)#tf.keras.applications.imagenet_utils.preprocess_input(image, data_format=None,mode = 'tf')
         label = tf.one_hot(label, depth=num_classes)
         print(label)
         return image, label
@@ -64,11 +74,16 @@ args = parser.parse_args()
 ds = tfds.load('imagenet2012', split=["train[:90%]", "validation[90%:]"], as_supervised=True, data_dir='/mnt/dataset', download=True)
 
 
-
-
-
+ds[0] = ds[0].map(normalize())
+ds[1] = ds[1].map(normalize())
+mean = train_dataset.mean(axis=(0,1,2))
+std = train_dataset.std(axis=(0,1,2))
 train_dataset = prepare_dataset(ds[0], is_training=True,batch_size_=batch_size)
+mean = val_dataset.mean(axis=(0,1,2))
+std = val_dataset.std(axis=(0,1,2))
 val_dataset = prepare_dataset(ds[1], is_training=False,batch_size_=batch_size)
+
+
 
 if args.training:
 
