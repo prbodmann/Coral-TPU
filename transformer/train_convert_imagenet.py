@@ -12,10 +12,10 @@ image_size = 224
 num_classes = 1000
 batch_size = 50
 learning_rate = 0.0002
-label_smoothing_factor = 0.1
+
 optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
 
-def resize_image(image, shape = (224,224)):
+'''def resize_image(image, shape = (224,224)):
     target_width = shape[0]
     target_height = shape[1]
     initial_width = tf.shape(image)[0]
@@ -56,9 +56,24 @@ def prepare_dataset(dataset, is_training=True,batch_size_=1):
         dataset = dataset.shuffle(batch_size_ * 10)
     dataset = dataset.map(preprocess_dataset(is_training))
     return dataset.batch(batch_size_).prefetch(batch_size_)
+'''
 
+train_transforms = A.Compose([
+            A.Rotate(limit=40),
+            A.Cutout(num_holes=4,max_h_size=8,max_w_size=8),
+            A.ShiftScaleRotate(),
+            A.RandomRotate90(),
+            A.HorizontalFlip(),
+            A.VerticalFlip(),
+            A.RandomGridShuffle()
+        ])
 
-
+def augumentation_preproc(image):
+    data = {"image":image}
+    aug_data = train_transforms(**data)
+    aug_img = aug_data["image"]
+    return aug_img
+    
 
 
 parser = argparse.ArgumentParser(description='Process some integers.')
@@ -67,8 +82,40 @@ parser.add_argument('--training', action = 'store_const', dest = 'training',
 args = parser.parse_args()
 ds = tfds.load('imagenet2012', split=["train[:90%]", "validation[90%:]"], as_supervised=True, data_dir='/mnt/dataset', download=True)
 
-train_dataset = prepare_dataset(ds[0], is_training=True,batch_size_=batch_size)
-val_dataset = prepare_dataset(ds[1], is_training=False,batch_size_=batch_size)
+train_datagen = ImageDataGenerator(rescale=1./255.,  preprocessing_function=augumentation_preproc)
+
+train_dataset=train_datagen.flow_from_dataframe(
+    dataframe=ds[0],
+    x_col="Image",
+    y_col="Class",
+    subset="training",
+    batch_size=batch_size ,
+    seed=42,
+    shuffle=True,
+    class_mode="categorical",
+    target_size=(IMAGE_SIZE,IMAGE_SIZE),
+  
+)
+
+val_datagen = ImageDataGenerator(rescale=1./255.)
+
+valid_generator=val_datagen.flow_from_dataframe(
+    dataframe=ds[1],
+    x_col="Image",
+    y_col="Class",
+    subset="training",
+    batch_size=batch_size ,
+    seed=42,
+    shuffle=True,
+    class_mode="categorical",
+    target_size=(IMAGE_SIZE,IMAGE_SIZE)
+)
+
+
+
+
+#train_dataset = prepare_dataset(ds[0], is_training=True,batch_size_=batch_size)
+#val_dataset = prepare_dataset(ds[1], is_training=False,batch_size_=batch_size)
 
 if args.training:
 
