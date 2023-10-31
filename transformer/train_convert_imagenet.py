@@ -67,6 +67,7 @@ def preprocess_dataset(is_training=True):
             image_resized, (image_size, image_size), method="bicubic"
         )
         image = crop_layer(image_resized)
+        image = norm_layer(image)
         label = tf.one_hot(label, depth=num_classes)
         print(label)
         return image, label
