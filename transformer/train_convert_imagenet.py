@@ -37,29 +37,22 @@ def resize_image(image, shape = (224,224)):
     im = tf.image.crop_to_bounding_box(im, startx, starty, target_width, target_height)
 
     return im
-
-def normalize():
-    def _lol_pp(image, label):
-        image = tf.cast(image,tf.float32)
-        image = image / 255.0
-        return image, label
-    return _lol_pp    
-        
+       
 
 
 def preprocess_dataset(is_training=True):
     def _pp(image, label):
         image = tf.cast(image,tf.float32)
-        
+        image = image / 255.0
         image = resize_image(image, (image_size, image_size))
-        mean_0 = tf.math.reduce_mean(image,axis=1)
-        mean_1 = tf.math.reduce_mean(image,axis=2)
-        mean_2 = tf.math.reduce_mean(image,axis=3)
-        mean = tf.concat([mean_0,mean_1,mean_2],axis = 1)
+        mean_0 = tf.math.reduce_mean(image,axis=0)
+        mean_1 = tf.math.reduce_mean(image,axis=1)
+        mean_2 = tf.math.reduce_mean(image,axis=2)
+        mean = tf.concat([mean_0,mean_1,mean_2],axis = 0)
         image = tf.math.subtract(image, mean)
-        std_0 = tf.math.reduce_mean(image,axis=1)
-        std_1 = tf.math.reduce_mean(image,axis=2)
-        std_2 = tf.math.reduce_mean(image,axis=3)
+        std_0 = tf.math.reduce_mean(image,axis=0)
+        std_1 = tf.math.reduce_mean(image,axis=1)
+        std_2 = tf.math.reduce_mean(image,axis=2)
         std = tf.concat([std_0,std_1,std_2],axis = 0)
     
         image = tf.math.divide(image,std)
@@ -69,10 +62,6 @@ def preprocess_dataset(is_training=True):
         return image, label
 
     return _pp
-
-def norm_dataset(dataset, is_training=True,batch_size_=1):
-    dataset = dataset.map(normalize())
-    return dataset.batch(batch_size_).prefetch(batch_size_)
 
 def prepare_dataset(dataset, is_training=True,batch_size_=1):
     if is_training:
@@ -85,10 +74,6 @@ parser.add_argument('--training', action = 'store_const', dest = 'training',
                            default = False, required = False,const=True)
 args = parser.parse_args()
 ds = tfds.load('imagenet2012', split=["train[:90%]", "validation[90%:]"], as_supervised=True, data_dir='/mnt/dataset', download=True)
-
-
-ds[0] = norm_dataset(ds[0], is_training=True,batch_size_=batch_size)
-ds[1] = norm_dataset(ds[1], is_training=True,batch_size_=batch_size)
 
 train_dataset = prepare_dataset(ds[0], is_training=True,batch_size_=batch_size)
 val_dataset = prepare_dataset(ds[1], is_training=False,batch_size_=batch_size)
