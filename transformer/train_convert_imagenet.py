@@ -52,8 +52,17 @@ def preprocess_dataset(is_training=True):
         image = tf.cast(image,tf.float32)
         
         image = resize_image(image, (image_size, image_size))
-        image = image - mean
-        image = image / std
+        mean_0 = tf.math.reduce_mean(image,axis=0)
+        mean_1 = tf.math.reduce_mean(image,axis=1)
+        mean_2 = tf.math.reduce_mean(image,axis=2)
+        mean = tf.concat([mean_0,mean_1,mean_2],axis = 0)
+        image = tf.math.subtract(image, mean)
+        std_0 = tf.math.reduce_mean(image,axis=0)
+        std_1 = tf.math.reduce_mean(image,axis=1)
+        std_2 = tf.math.reduce_mean(image,axis=2)
+        std = tf.concat([std_0,std_1,std_2],axis = 0)
+    
+        image = tf.math.divide(image,std)
         #image = tf.image.per_image_standardization(image)#tf.keras.applications.imagenet_utils.preprocess_input(image, data_format=None,mode = 'tf')
         label = tf.one_hot(label, depth=num_classes)
         print(label)
@@ -63,7 +72,7 @@ def preprocess_dataset(is_training=True):
 
 def norm_dataset(dataset, is_training=True,batch_size_=1):
     dataset = dataset.map(normalize())
-    return dataset.batch(batch_size_)
+    return dataset.batch(batch_size_).prefetch(batch_size_)
 
 def prepare_dataset(dataset, is_training=True,batch_size_=1):
     if is_training:
@@ -80,11 +89,8 @@ ds = tfds.load('imagenet2012', split=["train[:90%]", "validation[90%:]"], as_sup
 
 ds[0] = norm_dataset(ds[0], is_training=True,batch_size_=batch_size)
 ds[1] = norm_dataset(ds[1], is_training=True,batch_size_=batch_size)
-mean = ds[0].mean(axis=(0,1,2))
-std = ds[0].std(axis=(0,1,2))
+
 train_dataset = prepare_dataset(ds[0], is_training=True,batch_size_=batch_size)
-mean = ds[1].mean(axis=(0,1,2))
-std = ds[1].std(axis=(0,1,2))
 val_dataset = prepare_dataset(ds[1], is_training=False,batch_size_=batch_size)
 
 
