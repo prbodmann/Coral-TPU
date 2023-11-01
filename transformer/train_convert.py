@@ -4,21 +4,14 @@ from tensorflow.keras import datasets
 from tensorflow.keras.utils import to_categorical
 from nest import NesT
 import tensorflow_addons as tfa
+import tensorflow.keras.layers as nn
 
 learning_rate = 0.001
 weight_decay = 0.0001
 batch_size = 256
 num_epochs = 100
 image_size = 72  # We'll resize input images to this size
-
-parser = argparse.ArgumentParser(description='Process some integers.')
-parser.add_argument('--training', action = 'store_const', dest = 'training',
-                           default = False, required = False,const=True)
-args = parser.parse_args()
-
-
-(x_train, y_train), (x_test, y_test) = datasets.cifar100.load_data()
-
+AUTOTUNE = tf.data.AUTOTUNE
 data_augmentation = tf.keras.Sequential(
             [
                 nn.Normalization(),
@@ -31,14 +24,45 @@ data_augmentation = tf.keras.Sequential(
             ],
             name="data_augmentation",
         )
+
+def prepare(ds, shuffle=False, augment=False):
+    # Resize and rescale all datasets.
+    ds = ds.map(lambda x, y: (data_augmentation(x), y), 
+              num_parallel_calls=AUTOTUNE)
+
+    if shuffle:
+    ds = ds.shuffle(1000)
+
+    # Batch all datasets.
+    ds = ds.batch(batch_size)
+
+    # Use data augmentation only on the training set.
+    if augment:
+    ds = ds.map(lambda x, y: (data_augmentation(x, training=True), y), 
+                num_parallel_calls=AUTOTUNE)
+
+    # Use buffered prefetching on all datasets.
+    return ds.prefetch(buffer_size=AUTOTUNE)
+
+
+
+
+parser = argparse.ArgumentParser(description='Process some integers.')
+parser.add_argument('--training', action = 'store_const', dest = 'training',
+                           default = False, required = False,const=True)
+args = parser.parse_args()
+
+
+(x_train, y_train), (x_test, y_test) = datasets.cifar100.load_data()
+
+
         # Compute the mean and the variance of the training data for normalization.
 data_augmentation.layers[0].adapt(x_train)
 
 
-x_train = x_train.map(
-  lambda x, y: (data_augmentation(x, training=True), y))
-x_test = x_test.map(
-  lambda x, y: (data_augmentation(x, training=True), y))
+x_train = prepare(x_train, shuffle=True, augment=True)
+x_test = prepare(x_test)
+
 # one hot encode target values
 #y_train = to_categorical(y_train)
 #y_test = to_categorical(y_test)
