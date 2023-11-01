@@ -158,7 +158,7 @@ class NesT(Model):
                  block_repeats,
                  mlp_mult=4,
                  dropout=0.0,
-                 x_train
+                 x_train = None
                  ):
         super(NesT, self).__init__()
         assert (image_size % patch_size) == 0, 'Image dimensions must be divisible by the patch size.'
