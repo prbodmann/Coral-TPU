@@ -4,6 +4,7 @@ from tensorflow.keras import datasets
 from tensorflow.keras.utils import to_categorical
 from nest import NesT
 import tensorflow_addons as tfa
+import tensorflow.keras.layers as nn
 
 learning_rate = 0.001
 weight_decay = 0.0001
