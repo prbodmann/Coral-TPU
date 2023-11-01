@@ -91,7 +91,7 @@ def representative_data_gen():
     data = tf.data.Dataset.from_tensor_slices(x_train).batch(1).take(100)
     for input_value in data:
         yield [input_value]
-model = model.model()
+
 converter_quant = tf.lite.TFLiteConverter.from_keras_model(model) 
 converter_quant.input_shape=(1,32,32,3)
 converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
