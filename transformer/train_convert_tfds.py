@@ -59,7 +59,7 @@ def prepare(ds, shuffle=False, augment=False):
                 num_parallel_calls=AUTOTUNE)
 
   # Use buffered prefetching on all datasets.
-  return ds
+  return ds.prefetch(AUTOTUNE)
 
 parser = argparse.ArgumentParser(description='Process some integers.')
 parser.add_argument('--training', action = 'store_const', dest = 'training',
