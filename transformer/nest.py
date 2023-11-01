@@ -12,11 +12,10 @@ def cast_tuple(val, depth):
     return val if isinstance(val, tuple) else ((val,) * depth)
 
 def gelu(x, approximate=False):
-    if approximate:
-        coeff = tf.cast(0.044715, x.dtype)
-        return 0.5 * x * (1.0 + tf.tanh(0.7978845608028654 * (x + coeff * tf.pow(x, 3))))
-    else:
-        return 0.5 * x * (1.0 + tf.math.erf(x / tf.cast(1.4142135623730951, x.dtype)))
+
+    coeff = tf.cast(0.044715, x.dtype)
+    return 0.5 * x * (1.0 + tf.tanh(0.7978845608028654 * (x + coeff * tf.pow(x, 3))))
+
 
 class Identity(Layer):
     def __init__(self):
