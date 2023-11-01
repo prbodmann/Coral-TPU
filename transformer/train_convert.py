@@ -44,7 +44,7 @@ data_augmentation = tf.keras.Sequential(
         name="data_augmentation",
     )
     # Compute the mean and the variance of the training data for normalization.
-data_augmentation.layers[0].adapt(x_train)
+data_resize.layers[0].adapt(x_train)
 
 
 x_train = x_train.map(
