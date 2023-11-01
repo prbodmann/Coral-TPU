@@ -124,7 +124,7 @@ if args.training:
 
     model.fit(
         train_ds,
-        validation_data=val_ds,
+        validation_data=test_ds,
         epochs=num_epochs,
         batch_size=batch_size,
         verbose=1   
