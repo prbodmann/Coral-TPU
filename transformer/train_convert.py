@@ -4,7 +4,6 @@ from tensorflow.keras import datasets
 from tensorflow.keras.utils import to_categorical
 from nest import NesT
 import tensorflow_addons as tfa
-import tensorflow.keras.layers as nn
 
 learning_rate = 0.001
 weight_decay = 0.0001
@@ -12,43 +11,22 @@ batch_size = 256
 num_epochs = 100
 image_size = 72  # We'll resize input images to this size
 AUTOTUNE = tf.data.AUTOTUNE
-resize = tf.keras.Sequential(
-            [
-                nn.Normalization(),
-                nn.Resizing(image_size, image_size),               
-            ],
-            name="data_augmentation",
-        )
-augmentaton = tf.keras.Sequential(
-            [
-                nn.RandomFlip("horizontal"),
-                nn.RandomRotation(factor=0.02),
-                nn.RandomZoom(
-                    height_factor=0.2, width_factor=0.2
-                ),               
-            ],
-            name="data_augmentation",
-        )
-
-
-
 
 def prepare(ds, shuffle=False, augment=False):
-    ds = tf.convert_to_tensor(ds, dtype=tf.float32)
     # Resize and rescale all datasets.
-    ds = ds.map(lambda x, y: (resize(x), y), 
+    ds = ds.map(lambda x, y: (resize_and_rescale(x), y), 
               num_parallel_calls=AUTOTUNE)
 
     if shuffle:
-        ds = ds.shuffle(1000)
+    ds = ds.shuffle(1000)
 
     # Batch all datasets.
     ds = ds.batch(batch_size)
 
     # Use data augmentation only on the training set.
     if augment:
-        ds = ds.map(lambda x, y: (augmentaton(x, training=True), y), 
-                    num_parallel_calls=AUTOTUNE)
+    ds = ds.map(lambda x, y: (data_augmentation(x, training=True), y), 
+                num_parallel_calls=AUTOTUNE)
 
     # Use buffered prefetching on all datasets.
     return ds.prefetch(buffer_size=AUTOTUNE)
@@ -63,16 +41,38 @@ args = parser.parse_args()
 
 
 (x_train, y_train), (x_test, y_test) = datasets.cifar100.load_data()
-#x_train = x_train.astype('float32')
-#x_test = x_test.astype('float32')
 
+data_resize = tf.keras.Sequential(
+            [               
+                nn.Normalization(),
+                nn.Resizing(image_size, image_size),
+            ],
+            name="data_resize",
+        )
+
+
+
+data_augmentation = tf.keras.Sequential(
+            [
+               
+                nn.RandomFlip("horizontal"),
+                nn.RandomRotation(factor=0.02),
+                nn.RandomZoom(
+                    height_factor=0.2, width_factor=0.2
+                ),
+            ],
+            name="data_augmentation",
+        )
         # Compute the mean and the variance of the training data for normalization.
-resize.layers[0].adapt(x_train)
+data_augmentation.layers[0].adapt(x_train)
 
 
-x_train = prepare(x_train, shuffle=True, augment=True)
-x_test = prepare(x_test)
-
+x_train = x_train.map(
+  lambda x, y: (data_resize(x, training=True), y))
+x_train = x_train.map(
+  lambda x, y: (data_augmentation(x, training=True), y))
+x_test = x_test.map(
+  lambda x, y: (data_resize(x, training=True), y))
 # one hot encode target values
 #y_train = to_categorical(y_train)
 #y_test = to_categorical(y_test)
