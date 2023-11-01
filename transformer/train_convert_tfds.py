@@ -47,11 +47,11 @@ def prepare(ds, shuffle=False, augment=False):
   ds = ds.map(lambda x, y: (data_resize(x), y), 
               num_parallel_calls=AUTOTUNE)
 
-  if shuffle:
-    ds = ds.shuffle(1000)
+  #if shuffle:
+  #  ds = ds.shuffle(1000)
 
   # Batch all datasets.
-  ds = ds.batch(batch_size)
+  #ds = ds.batch(batch_size)
 
   # Use data augmentation only on the training set.
   if augment:
