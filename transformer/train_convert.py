@@ -98,8 +98,8 @@ converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
 converter_quant.representative_dataset = representative_data_gen
 converter_quant.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8,tf.lite.OpsSet.SELECT_TF_OPS]
 converter_quant.target_spec.supported_types = [tf.int8]
-converter_quant.inference_input_type = tf.float32 # changed from tf.uint8
-converter_quant.inference_output_type = tf.float32 # changed from tf.uint8
+converter_quant.inference_input_type = tf.uint8 # changed from tf.uint8
+converter_quant.inference_output_type = tf.uint8 # changed from tf.uint8
 converter_quant.experimental_new_converter = True
 converter_quant.allow_custom_ops=True
 
