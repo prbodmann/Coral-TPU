@@ -117,7 +117,7 @@ else:
 batch_size=1
 #print([tf.expand_dims(tf.dtypes.cast(x_train[0], tf.float32),0)])
 def representative_data_gen():
-    data = tf.data.Dataset.from_tensor_slices(x_train).batch(1).take(100)
+    data = test_dataset.take(100)
     for input_value in data:
         yield [input_value]
 
