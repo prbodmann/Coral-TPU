@@ -22,34 +22,6 @@ args = parser.parse_args()
 
 (x_train, y_train), (x_test, y_test) = datasets.cifar100.load_data()
 
-data_resize = tf.keras.Sequential(
-        [               
-            nn.Normalization(),
-            nn.Resizing(image_size, image_size),
-        ],
-        name="data_resize",
-    )
-
-
-
-data_augmentation = tf.keras.Sequential(
-        [
-           
-            nn.RandomFlip("horizontal"),
-            nn.RandomRotation(factor=0.02),
-            nn.RandomZoom(
-                height_factor=0.2, width_factor=0.2
-            ),
-        ],
-        name="data_augmentation",
-    )
-    # Compute the mean and the variance of the training data for normalization.
-data_resize.layers[0].adapt(x_train)
-
-
-x_train = data_resize(x_train, training=True)
-x_train = data_augmentation(x_train, training=True)
-x_test = data_resize(x_test, training=True)
 # one hot encode target values
 #y_train = to_categorical(y_train)
 #y_test = to_categorical(y_test)
