@@ -3,7 +3,6 @@ import tensorflow as tf
 from tensorflow.keras import datasets
 from tensorflow.keras.utils import to_categorical
 from nest import NesT
-import tensorflow_addons as tfa
 import tensorflow.keras.layers as nn
 import tensorflow_datasets as tfds
 
@@ -95,12 +94,11 @@ if args.training:
     heads = 3,
     num_hierarchies = 3,        # number of hierarchies
     block_repeats = (2, 2, 8),  # the number of transformer blocks at each heirarchy, starting from the bottom
-    num_classes = 100,
-    train_ds = train_ds
+    num_classes = 100
 )
 
 
-    optimizer = tfa.optimizers.AdamW(
+    optimizer = tf.keras.optimizers.AdamW(
         learning_rate=learning_rate, weight_decay=weight_decay
     )
 
