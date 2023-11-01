@@ -200,7 +200,7 @@ class NesT(Model):
             Reduce('b h w c -> b c', 'mean'),
             nn.Dense(units=num_classes)
         ])
-        self.data_augmentation = keras.Sequential(
+        self.data_augmentation = tf.keras.Sequential(
             [
                 layers.Normalization(),
                 layers.Resizing(image_size, image_size),
