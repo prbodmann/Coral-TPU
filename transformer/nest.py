@@ -216,7 +216,7 @@ class NesT(Model):
         self.data_augmentation.layers[0].adapt(x_train)
         '''
     def call(self, img, training=True, **kwargs):
-        img = self.data_augmentation(img)
+        #img = self.data_augmentation(img)
         x = self.patch_embedding(img)
 
         num_hierarchies = len(self.nest_layers)
