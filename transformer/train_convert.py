@@ -25,10 +25,10 @@ args = parser.parse_args()
 
 # convert from integers to floats
 
-x_train = x_train.astype('float32')
-x_test = x_test.astype('float32')
-x_train = x_train / 255.0
-x_test = x_test / 255.0
+#x_train = x_train.astype('float32')
+#x_test = x_test.astype('float32')
+#x_train = x_train / 255.0
+#x_test = x_test / 255.0
 if args.training:
 
 
