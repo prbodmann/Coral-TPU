@@ -213,7 +213,7 @@ class NesT(Model):
             name="data_augmentation",
         )
         # Compute the mean and the variance of the training data for normalization.
-        data_augmentation.layers[0].adapt(x_train)
+        self.data_augmentation.layers[0].adapt(x_train)
 
     def call(self, img, training=True, **kwargs):
         img = self.data_augmentation(img)
