@@ -202,11 +202,11 @@ class NesT(Model):
         ])
         self.data_augmentation = tf.keras.Sequential(
             [
-                layers.Normalization(),
-                layers.Resizing(image_size, image_size),
-                layers.RandomFlip("horizontal"),
-                layers.RandomRotation(factor=0.02),
-                layers.RandomZoom(
+                nn.Normalization(),
+                nn.Resizing(image_size, image_size),
+                nn.RandomFlip("horizontal"),
+                nn.RandomRotation(factor=0.02),
+                nn.RandomZoom(
                     height_factor=0.2, width_factor=0.2
                 ),
             ],
