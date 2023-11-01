@@ -47,12 +47,9 @@ data_augmentation = tf.keras.Sequential(
 data_resize.layers[0].adapt(x_train)
 
 
-x_train = x_train.map(
-  lambda x, y: (data_resize(x, training=True), y))
-x_train = x_train.map(
-  lambda x, y: (data_augmentation(x, training=True), y))
-x_test = x_test.map(
-  lambda x, y: (data_resize(x, training=True), y))
+x_train = data_resize(x_train, training=True)
+x_train = data_augmentation(x_train, training=True)
+x_test = data_resize(x_test, training=True)
 # one hot encode target values
 #y_train = to_categorical(y_train)
 #y_test = to_categorical(y_test)
