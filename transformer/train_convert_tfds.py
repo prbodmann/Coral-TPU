@@ -3,6 +3,7 @@ import tensorflow as tf
 from tensorflow.keras import datasets
 from tensorflow.keras.utils import to_categorical
 from nest import NesT
+import tensorflow_addons as tfa
 import tensorflow.keras.layers as nn
 import tensorflow_datasets as tfds
 
@@ -98,7 +99,7 @@ if args.training:
 )
 
 
-    optimizer = tf.keras.optimizers.AdamW(
+    optimizer = tfa.optimizers.AdamW(
         learning_rate=learning_rate, weight_decay=weight_decay
     )
 
