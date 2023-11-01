@@ -16,7 +16,7 @@ learning_rate = 0.001
 weight_decay = 0.0001
 batch_size = 256
 num_epochs = 100
-image_size = 32  # We'll resize input images to this size
+image_size = 64  # We'll resize input images to this size
 AUTOTUNE = tf.data.AUTOTUNE
 
 data_resize = tf.keras.Sequential(
@@ -59,8 +59,7 @@ def prepare(ds, shuffle=False, augment=False):
                 num_parallel_calls=AUTOTUNE)
 
   # Use buffered prefetching on all datasets.
-  return ds.prefetch(buffer_size=AUTOTUNE)
-
+  return ds
 
 parser = argparse.ArgumentParser(description='Process some integers.')
 parser.add_argument('--training', action = 'store_const', dest = 'training',
@@ -132,7 +131,7 @@ if args.training:
     model.summary()
     results= model.evaluate(train_ds, y_test,batch_size=batch_size)
     
-    img = tf.random.normal(shape=[1, 32, 32, 3])
+    img = tf.random.normal(shape=[1, image_size, image_size, 3])
     preds = model(img) # (1, 1000)
     model.save('wip_model')
     print(results)
@@ -148,7 +147,7 @@ def representative_data_gen():
         yield [input_value[0]]
 
 converter_quant = tf.lite.TFLiteConverter.from_keras_model(model) 
-converter_quant.input_shape=(1,32,32,3)
+converter_quant.input_shape=(1,image_size,image_size,3)
 converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
 converter_quant.representative_dataset = representative_data_gen
 converter_quant.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8,tf.lite.OpsSet.SELECT_TF_OPS]
