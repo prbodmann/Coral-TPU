@@ -157,7 +157,8 @@ class NesT(Model):
                  num_hierarchies,
                  block_repeats,
                  mlp_mult=4,
-                 dropout=0.0
+                 dropout=0.0,
+                 x_train
                  ):
         super(NesT, self).__init__()
         assert (image_size % patch_size) == 0, 'Image dimensions must be divisible by the patch size.'
@@ -184,7 +185,7 @@ class NesT(Model):
         block_repeats = cast_tuple(block_repeats, num_hierarchies)
 
         self.nest_layers = []
-
+        
         for level, heads, (dim_in, dim_out), block_repeat in zip(hierarchies, layer_heads, dim_pairs, block_repeats):
             is_last = level == 0
             depth = block_repeat
@@ -199,8 +200,23 @@ class NesT(Model):
             Reduce('b h w c -> b c', 'mean'),
             nn.Dense(units=num_classes)
         ])
+        self.data_augmentation = keras.Sequential(
+            [
+                layers.Normalization(),
+                layers.Resizing(image_size, image_size),
+                layers.RandomFlip("horizontal"),
+                layers.RandomRotation(factor=0.02),
+                layers.RandomZoom(
+                    height_factor=0.2, width_factor=0.2
+                ),
+            ],
+            name="data_augmentation",
+        )
+        # Compute the mean and the variance of the training data for normalization.
+        data_augmentation.layers[0].adapt(x_train)
 
     def call(self, img, training=True, **kwargs):
+        img = self.data_augmentation(img)
         x = self.patch_embedding(img)
 
         num_hierarchies = len(self.nest_layers)

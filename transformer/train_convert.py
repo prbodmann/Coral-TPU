@@ -3,16 +3,20 @@ import tensorflow as tf
 from tensorflow.keras import datasets
 from tensorflow.keras.utils import to_categorical
 from nest import NesT
+import tensorflow_addons as tfa
 
-batch_size = 100
-learning_rate = 0.002
-label_smoothing_factor = 0.1
-
+learning_rate = 0.001
+weight_decay = 0.0001
+batch_size = 256
+num_epochs = 100
+image_size = 72  # We'll resize input images to this size
 
 parser = argparse.ArgumentParser(description='Process some integers.')
 parser.add_argument('--training', action = 'store_const', dest = 'training',
                            default = False, required = False,const=True)
 args = parser.parse_args()
+
+
 (x_train, y_train), (x_test, y_test) = datasets.cifar100.load_data()
 
 # one hot encode target values
@@ -21,10 +25,10 @@ y_test = to_categorical(y_test)
 
 # convert from integers to floats
 
-x_train = x_train.astype('float32')
-x_test = x_test.astype('float32')
-x_train = x_train / 255.0
-x_test = x_test / 255.0
+#x_train = x_train.astype('float32')
+#x_test = x_test.astype('float32')
+#x_train = x_train / 255.0
+#x_test = x_test / 255.0
 if args.training:
 
 
@@ -35,11 +39,31 @@ if args.training:
     heads = 3,
     num_hierarchies = 3,        # number of hierarchies
     block_repeats = (2, 2, 8),  # the number of transformer blocks at each heirarchy, starting from the bottom
-    num_classes = 100
+    num_classes = 100,
+    x_train = x_train
 )
 
 
-    model.compile(optimizer = 'adam', loss = "mean_squared_error", metrics = ["accuracy"] )
+    optimizer = tfa.optimizers.AdamW(
+        learning_rate=learning_rate, weight_decay=weight_decay
+    )
+
+    model.compile(
+        optimizer=optimizer,
+        loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+        metrics=[
+            keras.metrics.SparseCategoricalAccuracy(name="accuracy"),
+            keras.metrics.SparseTopKCategoricalAccuracy(5, name="top-5-accuracy"),
+        ],
+    )
+
+    checkpoint_filepath = "/tmp/checkpoint"
+    checkpoint_callback = keras.callbacks.ModelCheckpoint(
+        checkpoint_filepath,
+        monitor="val_accuracy",
+        save_best_only=True,
+        save_weights_only=True,
+    )
     #model.build((batch_size, 224, 224, 3))
     #model.summary()
 
@@ -55,11 +79,11 @@ if args.training:
     
     img = tf.random.normal(shape=[1, 32, 32, 3])
     preds = model(img) # (1, 1000)
-    #model.save('cross_vit',save_format="tf")
+    model.save('wip_model')
     print(results)
     
 else:
-    model=  tf.keras.models.load_model('cvt')
+    model=  tf.keras.models.load_model('wip_model')
 
 batch_size=1
 #print([tf.expand_dims(tf.dtypes.cast(x_train[0], tf.float32),0)])
