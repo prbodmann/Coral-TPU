@@ -5,7 +5,6 @@ from tensorflow.keras.utils import to_categorical
 from nest import NesT
 import tensorflow_addons as tfa
 import tensorflow.keras.layers as nn
-import tensorflow_datasets as tfds
 
 learning_rate = 0.001
 weight_decay = 0.0001
@@ -35,6 +34,7 @@ augmentaton = tf.keras.Sequential(
 
 
 def prepare(ds, shuffle=False, augment=False):
+    ds = tf.convert_to_tensor(ds, dtype=tf.float32)
     # Resize and rescale all datasets.
     ds = ds.map(lambda x, y: (resize(x), y), 
               num_parallel_calls=AUTOTUNE)
@@ -62,14 +62,16 @@ parser.add_argument('--training', action = 'store_const', dest = 'training',
 args = parser.parse_args()
 
 
-train_ds, test_ds = tfds.load('cifar100', split=['train','test'], as_supervised=True)
+(x_train, y_train), (x_test, y_test) = datasets.cifar100.load_data()
+#x_train = x_train.astype('float32')
+#x_test = x_test.astype('float32')
 
         # Compute the mean and the variance of the training data for normalization.
-resize.layers[0].adapt(train_ds)
+resize.layers[0].adapt(x_train)
 
 
-train_ds = prepare(train_ds, shuffle=True, augment=True)
-train_ds = prepare(train_ds)
+x_train = prepare(x_train, shuffle=True, augment=True)
+x_test = prepare(x_test)
 
 # one hot encode target values
 #y_train = to_categorical(y_train)
@@ -91,7 +93,8 @@ if args.training:
     heads = 3,
     num_hierarchies = 3,        # number of hierarchies
     block_repeats = (2, 2, 8),  # the number of transformer blocks at each heirarchy, starting from the bottom
-    num_classes = 100
+    num_classes = 100,
+    x_train = x_train
 )
 
 
@@ -119,8 +122,8 @@ if args.training:
     #model.summary()
 
     model.fit(
-        x=train_ds,
-        validation_data=test_ds,
+        x=x_train,y= y_train,
+        validation_data=(x_test, y_test),
         epochs=num_epochs,
         batch_size=batch_size,
         verbose=1   
