@@ -55,8 +55,8 @@ test_dataset = test_dataset.batch(batch_size).map(lambda x, y: (data_resize(x), 
 
 # convert from integers to floats
 
-#x_train = x_train.astype('float32')
-#x_test = x_test.astype('float32')
+train_dataset = train_dataset.astype('float32')
+test_dataset = test_dataset.astype('float32')
 #x_train = x_train / 255.0
 #x_test = x_test / 255.0
 if args.training:
@@ -106,7 +106,7 @@ if args.training:
     model.summary()
     results= model.evaluate(test_dataset,batch_size=batch_size)
     
-    img = tf.random.normal(shape=[1, 32, 32, 3])
+    img = tf.random.normal(shape=[1, image_size, image_size, 3])
     preds = model(img) # (1, 1000)
     model.save('wip_model')
     print(results)
@@ -122,13 +122,13 @@ def representative_data_gen():
         yield [input_value[0]]
 
 converter_quant = tf.lite.TFLiteConverter.from_keras_model(model) 
-converter_quant.input_shape=(1,32,32,3)
+converter_quant.input_shape=(1,image_size,image_size,3)
 converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
 converter_quant.representative_dataset = representative_data_gen
 converter_quant.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8,tf.lite.OpsSet.SELECT_TF_OPS]
 converter_quant.target_spec.supported_types = [tf.int8]
-converter_quant.inference_input_type = tf.uint8 # changed from tf.uint8
-converter_quant.inference_output_type = tf.uint8 # changed from tf.uint8
+converter_quant.inference_input_type = tf.float32 # changed from tf.uint8
+converter_quant.inference_output_type = tf.float32 # changed from tf.uint8
 converter_quant.experimental_new_converter = True
 converter_quant.allow_custom_ops=True
 
