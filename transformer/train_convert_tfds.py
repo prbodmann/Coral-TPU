@@ -19,10 +19,13 @@ num_epochs = 100
 image_size = 72  # We'll resize input images to this size
 AUTOTUNE = tf.data.AUTOTUNE
 
-data_resize = tf.keras.Sequential([
-          layers.Resizing(IMG_SIZE, IMG_SIZE),
-          layers.Rescaling(1./255)
-        ])
+data_resize = tf.keras.Sequential(
+        [               
+            nn.Normalization(),
+            nn.Resizing(image_size, image_size),
+        ],
+        name="data_resize",
+    )
 
 
 
@@ -70,9 +73,13 @@ train_ds, test_ds = tfds.load(
     split=['train', 'test'],
     as_supervised=True,
 )
-
-print(train_ds)
-data_resize.layers[0].adapt(train_ds)
+(img_train, label_train), (img_test, label_test) = tfds.as_numpy(tfds.load(
+        'cifar100',
+        split=['train', 'test'],
+        as_supervised=True,
+    )
+)
+data_resize.layers[0].adapt(img_train)
 
 
 train_ds = prepare(train_ds, shuffle=True, augment=True)
