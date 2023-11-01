@@ -118,7 +118,7 @@ if args.training:
     #model.summary()
 
     model.fit(
-        x=train_ds
+        x=train_ds,
         validation_data=test_ds,
         epochs=num_epochs,
         batch_size=batch_size,
