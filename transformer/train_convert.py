@@ -20,8 +20,8 @@ args = parser.parse_args()
 (x_train, y_train), (x_test, y_test) = datasets.cifar100.load_data()
 
 # one hot encode target values
-y_train = to_categorical(y_train)
-y_test = to_categorical(y_test)
+#y_train = to_categorical(y_train)
+#y_test = to_categorical(y_test)
 
 # convert from integers to floats
 
@@ -50,10 +50,10 @@ if args.training:
 
     model.compile(
         optimizer=optimizer,
-        loss=tf.keras.losses.CategoricalCrossentropy(),
+        loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
         metrics=[
-            tf.keras.metrics.CategoricalAccuracy(name="accuracy"),
-            tf.keras.metrics.TopKCategoricalAccuracy(5, name="top-5-accuracy"),
+            tf.keras.metrics.SparseCategoricalAccuracy(name="accuracy"),
+            tf.keras.metrics.SparseTopKCategoricalAccuracy(5, name="top-5-accuracy"),
         ],
     )
 
@@ -70,7 +70,7 @@ if args.training:
     model.fit(
         x=x_train,y= y_train,
         validation_data=(x_test, y_test),
-        epochs=2,
+        epochs=num_epochs,
         batch_size=batch_size,
         verbose=1   
     )
