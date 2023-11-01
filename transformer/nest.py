@@ -156,8 +156,7 @@ class NesT(Model):
                  num_hierarchies,
                  block_repeats,
                  mlp_mult=4,
-                 dropout=0.0,
-                 x_train = None
+                 dropout=0.0
                  ):
         super(NesT, self).__init__()
         assert (image_size % patch_size) == 0, 'Image dimensions must be divisible by the patch size.'
@@ -199,21 +198,7 @@ class NesT(Model):
             Reduce('b h w c -> b c', 'mean'),
             nn.Dense(units=num_classes)
         ])
-        self.data_resize = tf.keras.Sequential(
-            [               
-                nn.Normalization(),
-                nn.Resizing(image_size, image_size),
-                nn.RandomFlip("horizontal"),
-                nn.RandomRotation(factor=0.02),
-                nn.RandomZoom(
-                    height_factor=0.2, width_factor=0.2
-                ),
-            ],
-            name="data_resize",
-        )
-        self.data_resize.layers[0].adapt(x_train)
     def call(self, img, training=True, **kwargs):
-        img = self.data_resize(img)
         x = self.patch_embedding(img)
 
         num_hierarchies = len(self.nest_layers)

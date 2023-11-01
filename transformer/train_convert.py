@@ -21,7 +21,34 @@ args = parser.parse_args()
 
 
 (x_train, y_train), (x_test, y_test) = datasets.cifar100.load_data()
+data_resize_aug = tf.keras.Sequential(
+            [               
+                nn.Normalization(),
+                nn.Resizing(image_size, image_size),
+                nn.RandomFlip("horizontal"),
+                nn.RandomRotation(factor=0.02),
+                nn.RandomZoom(
+                    height_factor=0.2, width_factor=0.2
+                ),
+            ],
+            name="data_resize_aug",
+        )
 
+data_resize.layers[0].adapt(x_train)
+
+data_resize = tf.keras.Sequential(
+            [               
+                nn.Normalization(),
+                nn.Resizing(image_size, image_size),               
+            ],
+            name="data_resize_aug",
+        )
+data_resize.layers[0].adapt(x_test)
+
+train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+train_dataset = train_dataset.batch(batch_size).map(lambda x, y: (data_resize_aug(x), y))
+test_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+test_dataset = test_dataset.batch(batch_size).map(lambda x, y: (data_resize_aug(x), y))
 # one hot encode target values
 #y_train = to_categorical(y_train)
 #y_test = to_categorical(y_test)
@@ -42,8 +69,7 @@ if args.training:
     heads = 3,
     num_hierarchies = 3,        # number of hierarchies
     block_repeats = (2, 2, 8),  # the number of transformer blocks at each heirarchy, starting from the bottom
-    num_classes = 100,
-    x_train = x_train
+    num_classes = 100
 )
 
 
@@ -71,14 +97,14 @@ if args.training:
     #model.summary()
 
     model.fit(
-        x=x_train,y= y_train,
-        validation_data=(x_test, y_test),
+        x=train_dataset,
+        validation_data=test_dataset,
         epochs=num_epochs,
         batch_size=batch_size,
         verbose=1   
     )
     model.summary()
-    results= model.evaluate(x_test, y_test,batch_size=batch_size)
+    results= model.evaluate(test_dataset,batch_size=batch_size)
     
     img = tf.random.normal(shape=[1, 32, 32, 3])
     preds = model(img) # (1, 1000)
