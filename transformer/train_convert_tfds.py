@@ -73,9 +73,10 @@ train_ds, test_ds = tfds.load(
     split=['train', 'test'],
     as_supervised=True,
 )
-img_train, img_test = tfds.as_numpy(tfds.load(
+(img_train, label_train), (img_test, label_test)  = tfds.as_numpy(tfds.load(
         'cifar100',
         split=['train', 'test'],
+        batch_size=-1,
         as_supervised=True,
     )
 )
