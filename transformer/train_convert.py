@@ -19,6 +19,26 @@ args = parser.parse_args()
 
 (x_train, y_train), (x_test, y_test) = datasets.cifar100.load_data()
 
+data_augmentation = tf.keras.Sequential(
+            [
+                nn.Normalization(),
+                nn.Resizing(image_size, image_size),
+                nn.RandomFlip("horizontal"),
+                nn.RandomRotation(factor=0.02),
+                nn.RandomZoom(
+                    height_factor=0.2, width_factor=0.2
+                ),
+            ],
+            name="data_augmentation",
+        )
+        # Compute the mean and the variance of the training data for normalization.
+data_augmentation.layers[0].adapt(x_train)
+
+
+x_train = x_train.map(
+  lambda x, y: (data_augmentation(x, training=True), y))
+x_test = x_test.map(
+  lambda x, y: (data_augmentation(x, training=True), y))
 # one hot encode target values
 #y_train = to_categorical(y_train)
 #y_test = to_categorical(y_test)
@@ -33,7 +53,7 @@ if args.training:
 
 
     model =  NesT(
-    image_size = 32,
+    image_size = image_size,
     patch_size = 4,
     dim = 96,
     heads = 3,
