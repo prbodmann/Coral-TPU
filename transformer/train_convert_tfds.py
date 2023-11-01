@@ -19,13 +19,10 @@ num_epochs = 100
 image_size = 72  # We'll resize input images to this size
 AUTOTUNE = tf.data.AUTOTUNE
 
-data_resize = tf.keras.Sequential(
-        [               
-            nn.Normalization(),
-            nn.Resizing(image_size, image_size),
-        ],
-        name="data_resize",
-    )
+data_resize = tf.keras.Sequential([
+          layers.Resizing(IMG_SIZE, IMG_SIZE),
+          layers.Rescaling(1./255)
+        ])
 
 
 
@@ -74,7 +71,7 @@ train_ds, test_ds = tfds.load(
     as_supervised=True,
 )
 
-
+print(train_ds)
 data_resize.layers[0].adapt(train_ds)
 
 
