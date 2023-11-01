@@ -34,21 +34,21 @@ data_resize_aug = tf.keras.Sequential(
             name="data_resize_aug",
         )
 
-data_resize.layers[0].adapt(x_train)
+data_resize_aug.layers[0].adapt(x_train)
 
 data_resize = tf.keras.Sequential(
             [               
                 nn.Normalization(),
                 nn.Resizing(image_size, image_size),               
             ],
-            name="data_resize_aug",
+            name="data_resize",
         )
 data_resize.layers[0].adapt(x_test)
 
 train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
 train_dataset = train_dataset.batch(batch_size).map(lambda x, y: (data_resize_aug(x), y))
 test_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
-test_dataset = test_dataset.batch(batch_size).map(lambda x, y: (data_resize_aug(x), y))
+test_dataset = test_dataset.batch(batch_size).map(lambda x, y: (data_resize(x), y))
 # one hot encode target values
 #y_train = to_categorical(y_train)
 #y_test = to_categorical(y_test)
