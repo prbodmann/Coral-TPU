@@ -51,7 +51,7 @@ class PreNorm(Layer):
         return self.fn(self.norm(x), training=training)
 
 class GELU(Layer):
-    def __init__(self, approximate=False):
+    def __init__(self, approximate=True):
         super(GELU, self).__init__()
         self.approximate = approximate
 
@@ -200,7 +200,7 @@ class NesT(Model):
             Reduce('b h w c -> b c', 'mean'),
             nn.Dense(units=num_classes)
         ])
-        self.data_augmentation = tf.keras.Sequential(
+        '''self.data_augmentation = tf.keras.Sequential(
             [
                 nn.Normalization(),
                 nn.Resizing(image_size, image_size),
@@ -214,7 +214,7 @@ class NesT(Model):
         )
         # Compute the mean and the variance of the training data for normalization.
         self.data_augmentation.layers[0].adapt(x_train)
-
+        '''
     def call(self, img, training=True, **kwargs):
         img = self.data_augmentation(img)
         x = self.patch_embedding(img)
