@@ -50,15 +50,15 @@ if args.training:
 
     model.compile(
         optimizer=optimizer,
-        loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+        loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
         metrics=[
-            keras.metrics.SparseCategoricalAccuracy(name="accuracy"),
-            keras.metrics.SparseTopKCategoricalAccuracy(5, name="top-5-accuracy"),
+            tf.keras.metrics.SparseCategoricalAccuracy(name="accuracy"),
+            tf.keras.metrics.SparseTopKCategoricalAccuracy(5, name="top-5-accuracy"),
         ],
     )
 
     checkpoint_filepath = "/tmp/checkpoint"
-    checkpoint_callback = keras.callbacks.ModelCheckpoint(
+    checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
         checkpoint_filepath,
         monitor="val_accuracy",
         save_best_only=True,
