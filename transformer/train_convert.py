@@ -12,22 +12,30 @@ batch_size = 256
 num_epochs = 100
 image_size = 72  # We'll resize input images to this size
 AUTOTUNE = tf.data.AUTOTUNE
-data_augmentation = tf.keras.Sequential(
+resize = tf.keras.Sequential(
             [
                 nn.Normalization(),
-                nn.Resizing(image_size, image_size),
+                nn.Resizing(image_size, image_size),               
+            ],
+            name="data_augmentation",
+        )
+augmentaton = tf.keras.Sequential(
+            [
                 nn.RandomFlip("horizontal"),
                 nn.RandomRotation(factor=0.02),
                 nn.RandomZoom(
                     height_factor=0.2, width_factor=0.2
-                ),
+                ),               
             ],
             name="data_augmentation",
         )
 
+
+
+
 def prepare(ds, shuffle=False, augment=False):
     # Resize and rescale all datasets.
-    ds = ds.map(lambda x, y: (data_augmentation(x), y), 
+    ds = ds.map(lambda x, y: (resize(x), y), 
               num_parallel_calls=AUTOTUNE)
 
     if shuffle:
@@ -38,7 +46,7 @@ def prepare(ds, shuffle=False, augment=False):
 
     # Use data augmentation only on the training set.
     if augment:
-        ds = ds.map(lambda x, y: (data_augmentation(x, training=True), y), 
+        ds = ds.map(lambda x, y: (augmentaton(x, training=True), y), 
                     num_parallel_calls=AUTOTUNE)
 
     # Use buffered prefetching on all datasets.
@@ -57,7 +65,7 @@ args = parser.parse_args()
 
 
         # Compute the mean and the variance of the training data for normalization.
-data_augmentation.layers[0].adapt(x_train)
+resize.layers[0].adapt(x_train)
 
 
 x_train = prepare(x_train, shuffle=True, augment=True)
