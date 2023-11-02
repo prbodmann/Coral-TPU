@@ -150,8 +150,7 @@ def create_vit_classifier():
     # Augment data.
     # Create patches.
     patches = Sequential([
-            Rearrange('b (h p1) (w p2) c -> b (h w) (p1 p2 c)', p1=patch_size, p2=patch_size),
-            nn.Dense(units=dim)
+            Rearrange('b (h p1) (w p2) c -> b (h w) (p1 p2 c)', p1=patch_size, p2=patch_size)
         ], name='patch_embedding')
     #patches = Patches(patch_size)(augmented)
     # Encode patches.
