@@ -2,7 +2,7 @@ import argparse
 import tensorflow as tf
 from tensorflow.keras import datasets
 from tensorflow.keras.utils import to_categorical
-from mobilevit import MobileViT
+from cait import Cait
 import tensorflow_addons as tfa
 import tensorflow.keras.layers as nn
 
