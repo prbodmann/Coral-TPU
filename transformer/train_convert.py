@@ -68,7 +68,7 @@ if args.training:
                                            num_classes=100,
                                            image_size=image_size,
                                            patch_size=8,
-                                           num_patches=0.2,
+                                           num_patches=(image_size // 8) ** 2,
                                            projection_dim=256,
                                            dropout=0.2,
                                            n_transformer_layers=3,
