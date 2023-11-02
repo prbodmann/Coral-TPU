@@ -48,7 +48,7 @@ class Patches2(layers.Layer):
     """
 
     def __init__(self, patch_size,num_patches):
-        super(Patches, self).__init__()
+        super(Patches2, self).__init__()
         self.patch_size = patch_size
         self.patches_layer = CreatePatches(patch_size = patch_size)
         self.num_patches = num_patches
