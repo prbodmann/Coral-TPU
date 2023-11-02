@@ -2,7 +2,7 @@ import argparse
 import tensorflow as tf
 from tensorflow.keras import datasets
 from tensorflow.keras.utils import to_categorical
-from cait import CaiT
+from vit import CaiT
 import tensorflow_addons as tfa
 import tensorflow.keras.layers as nn
 
@@ -64,20 +64,20 @@ test_dataset = test_dataset.batch(batch_size).map(lambda x, y: (data_resize(x), 
 if args.training:
 
 
-    model =  CaiT(
-        image_size = image_size,
-        patch_size = 16,
-        num_classes = 100,
-        dim = 192,
-        depth = 12,             # depth of transformer for patch to patch attention only
-        cls_depth = 2,          # depth of cross attention of CLS tokens to patch
-        heads = 4,
-        mlp_dim = 192 * 4,
-        dropout = 0.0,
-        emb_dropout = 0.0,
-        layer_dropout = 0.05    # randomly dropout 5% of the layers
-    )
-
+    model =  create_vit_classifier(input_shape=[image_size, image_size, 3],
+                                           num_classes=100,
+                                           image_size=image_size,
+                                           patch_size=8,
+                                           num_patches=0.2,
+                                           projection_dim=256,
+                                           dropout=config["dropout"],
+                                           n_transformer_layers=3,
+                                           num_heads=8,
+                                           transformer_units=[
+                                                                512,
+                                                                256,
+                                                            ],
+                                           mlp_head_units=[256])
     optimizer = tfa.optimizers.AdamW(
         learning_rate=learning_rate, weight_decay=weight_decay
     )
