@@ -4,8 +4,23 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 
-from preprocessing.image_patching import Patches, PatchEncoder
-from model.mlp import mlp
+
+
+def mlp(x: tf.Tensor, hidden_units: List[int], dropout_rate: float) -> tf.Tensor:
+    """Multi-Layer Perceptron
+
+    Args:
+        x (tf.Tensor): Input
+        hidden_units (List[int])
+        dropout_rate (float)
+
+    Returns:
+        tf.Tensor: Output
+    """
+    for units in hidden_units:
+        x = layers.Dense(units, activation=tf.nn.gelu)(x)
+        x = layers.Dropout(dropout_rate)(x)
+    return x
 
 class Patches(layers.Layer):
     """Create a a set of image patches from input. The patches all have
