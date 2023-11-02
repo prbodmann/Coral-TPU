@@ -147,7 +147,11 @@ def create_vit_classifier():
     augmented = layers.Input(shape=input_shape)
     # Augment data.
     # Create patches.
-    patches = Patches(patch_size)(augmented)
+    patches = Sequential([
+            Rearrange('b (h p1) (w p2) c -> b (h w) (p1 p2 c)', p1=patch_size, p2=patch_size),
+            nn.Dense(units=dim)
+        ], name='patch_embedding')
+    #patches = Patches(patch_size)(augmented)
     # Encode patches.
     encoded_patches = PatchEncoder(num_patches, projection_dim)(patches)
 
@@ -192,7 +196,7 @@ def representative_data_gen():
         yield [input_value]
 
 converter_quant = tf.lite.TFLiteConverter.from_keras_model(model) 
-converter_quant.input_shape=(1,32,32,3)
+converter_quant.input_shape=(1,image_size,image_size,3)
 converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
 converter_quant.representative_dataset = representative_data_gen
 converter_quant.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8,tf.lite.OpsSet.SELECT_TF_OPS]
