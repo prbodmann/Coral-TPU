@@ -1,72 +1,144 @@
-from tensorflow import math, matmul, reshape, shape, transpose, cast, float32
-from tensorflow.keras.layers import Dense, Layer
-from tensorflow.keras.backend import softmax
+import math
+import string
+from typing import Optional, Tuple
 
-# Implementing the Scaled-Dot Product Attention
-class DotProductAttention(Layer):
-    def __init__(self, **kwargs):
-        super(DotProductAttention, self).__init__(**kwargs)
+import numpy as np
+import tensorflow as tf, tf_keras
 
-    def call(self, queries, keys, values, d_k, mask=None):
-        # Scoring the queries against the keys after transposing the latter, and scaling
-        scores = matmul(queries, keys, transpose_b=True) / math.sqrt(cast(d_k, float32))
+_CHR_IDX = string.ascii_lowercase
 
-        # Apply mask to the attention scores
-        if mask is not None:
-            scores += -1e9 * mask
 
-        # Computing the weights by a softmax operation
-        weights = softmax(scores)
+def _build_attention_equation(
+    rank: int, attn_axes: Tuple[int, ...]) -> Tuple[str, str, int]:
+  """Builds einsum equations for the attention computation.
 
-        # Computing the attention by a weighted sum of the value vectors
-        return matmul(weights, values)
+  Query, key, value inputs after projection are expected to have the shape as:
+  `(bs, <non-attention dims>, <attention dims>, num_heads, channels)`.
+  `bs` and `<non-attention dims>` are treated as `<batch dims>`.
 
-# Implementing the Multi-Head Attention
-class MultiHeadAttention(Layer):
-    def __init__(self, h, d_k, d_v, d_model, **kwargs):
-        super(MultiHeadAttention, self).__init__(**kwargs)
-        self.attention = DotProductAttention()  # Scaled dot product attention
-        self.heads = h  # Number of attention heads to use
-        self.d_k = d_k  # Dimensionality of the linearly projected queries and keys
-        self.d_v = d_v  # Dimensionality of the linearly projected values
-        self.d_model = d_model  # Dimensionality of the model
-        self.W_q = Dense(d_k)  # Learned projection matrix for the queries
-        self.W_k = Dense(d_k)  # Learned projection matrix for the keys
-        self.W_v = Dense(d_v)  # Learned projection matrix for the values
-        self.W_o = Dense(d_model)  # Learned projection matrix for the multi-head output
+  The attention operations can be generalized:
+  (1) Query-key dot product:
+  `(<batch dims>, <query attention dims>, num_heads, channels), (<batch dims>,
+  <key attention dims>, num_heads, channels) -> (<batch dims>,
+  num_heads, <query attention dims>, <key attention dims>)`
+  (2) Combination:
+  `(<batch dims>, num_heads, <query attention dims>, <key attention dims>),
+  (<batch dims>, <value attention dims>, num_heads, channels) -> (<batch
+  dims>, <query attention dims>, num_heads, channels)`
 
-    def reshape_tensor(self, x, heads, flag):
-        if flag:
-            # Tensor shape after reshaping and transposing: (batch_size, heads, seq_length, -1)
-            x = reshape(x, shape=(shape(x)[0], shape(x)[1], heads, -1))
-            x = transpose(x, perm=(0, 2, 1, 3))
-        else:
-            # Reverting the reshaping and transposing operations: (batch_size, seq_length, d_k)
-            x = transpose(x, perm=(0, 2, 1, 3))
-            x = reshape(x, shape=(shape(x)[0], shape(x)[1], self.d_k))
-        return x
+  Args:
+    rank: Rank of query, key, value tensors.
+    attn_axes: List/tuple of axes, `[-1, rank)`, that attention will be
+      applied to.
 
-    def call(self, queries, keys, values, mask=None):
-        # Rearrange the queries to be able to compute all heads in parallel
-        q_reshaped = self.reshape_tensor(self.W_q(queries), self.heads, True)
-        # Resulting tensor shape: (batch_size, heads, input_seq_length, -1)
+  Returns:
+    Einsum equations.
+  """
+  target_notation = _CHR_IDX[:rank]
+  # `batch_dims` includes the head dim.
+  batch_dims = tuple(np.delete(range(rank), attn_axes + (rank - 1,)))
+  letter_offset = rank
+  source_notation = ""
+  for i in range(rank):
+    if i in batch_dims or i == rank - 1:
+      source_notation += target_notation[i]
+    else:
+      source_notation += _CHR_IDX[letter_offset]
+      letter_offset += 1
 
-        # Rearrange the keys to be able to compute all heads in parallel
-        k_reshaped = self.reshape_tensor(self.W_k(keys), self.heads, True)
-        # Resulting tensor shape: (batch_size, heads, input_seq_length, -1)
+  product_notation = "".join([target_notation[i] for i in batch_dims] +
+                             [target_notation[i] for i in attn_axes] +
+                             [source_notation[i] for i in attn_axes])
+  dot_product_equation = "%s,%s->%s" % (
+      target_notation,
+      source_notation,
+      product_notation,
+  )
+  attn_scores_rank = len(product_notation)
+  combine_equation = "%s,%s->%s" % (
+      product_notation,
+      source_notation,
+      target_notation,
+  )
+  return dot_product_equation, combine_equation, attn_scores_rank
 
-        # Rearrange the values to be able to compute all heads in parallel
-        v_reshaped = self.reshape_tensor(self.W_v(values), self.heads, True)
-        # Resulting tensor shape: (batch_size, heads, input_seq_length, -1)
 
-        # Compute the multi-head attention output using the reshaped queries, keys and values
-        o_reshaped = self.attention(q_reshaped, k_reshaped, v_reshaped, self.d_k, mask)
-        # Resulting tensor shape: (batch_size, heads, input_seq_length, -1)
+class OptimizedMultiHeadAttention(tf_keras.layers.MultiHeadAttention):
+  """MultiHeadAttention with query-key multiplication.
 
-        # Rearrange back the output into concatenated form
-        output = self.reshape_tensor(o_reshaped, self.heads, False)
-        # Resulting tensor shape: (batch_size, input_seq_length, d_v)
+  Currently, this layer only works for self-attention but not for
+  cross-attention. TODO(b/243166060).
+  """
 
-        # Apply one final linear projection to the output to generate the multi-head attention
-        # Resulting tensor shape: (batch_size, input_seq_length, d_model)
-        return self.W_o(output)
+  def _build_attention(self, rank: int) -> None:
+    """Builds multi-head dot-product attention computations.
+
+    This function builds attributes necessary for `_compute_attention` to
+    customize attention computation to replace the default dot-product
+    attention.
+
+    Args:
+      rank: the rank of query, key, value tensors.
+    """
+    if self._attention_axes is None:
+      self._attention_axes = tuple(range(1, rank - 2))
+    else:
+      self._attention_axes = tuple(self._attention_axes)
+    (
+        self._dot_product_equation,
+        self._combine_equation,
+        attn_scores_rank,
+    ) = _build_attention_equation(
+        rank, attn_axes=self._attention_axes)
+    norm_axes = tuple(
+        range(attn_scores_rank - len(self._attention_axes), attn_scores_rank))
+    self._softmax = tf_keras.layers.Softmax(axis=norm_axes)
+    self._dropout_layer = tf_keras.layers.Dropout(rate=self._dropout)
+
+  def _compute_attention(
+      self,
+      query: tf.Tensor,
+      key: tf.Tensor,
+      value: tf.Tensor,
+      attention_mask: Optional[tf.Tensor] = None,
+      training: Optional[bool] = None) -> Tuple[tf.Tensor, tf.Tensor]:
+    """Applies Dot-product attention with query, key, value tensors.
+
+    This function defines the computation inside `call` with projected
+    multi-head Q, K, V inputs. Users can override this function for
+    customized attention implementation.
+
+    Args:
+      query: Projected query `Tensor` of shape `(B, T, N, key_dim)`.
+      key: Projected key `Tensor` of shape `(B, S, N, key_dim)`.
+      value: Projected value `Tensor` of shape `(B, S, N, value_dim)`.
+      attention_mask: a boolean mask of shape `(B, T, S)`, that prevents
+        attention to certain positions. It is generally not needed if the
+        `query` and `value` (and/or `key`) are masked.
+      training: Python boolean indicating whether the layer should behave in
+        training mode (adding dropout) or in inference mode (doing nothing).
+
+    Returns:
+      attention_output: Multi-headed outputs of attention computation.
+      attention_scores: Multi-headed attention weights.
+    """
+    # Note: Applying scalar multiply at the smaller end of einsum improves
+    # XLA performance, but may introduce slight numeric differences in
+    # the Transformer attention head.
+    query = tf.multiply(query, 1.0 / math.sqrt(float(self._key_dim)))
+
+    # Take the dot product between "query" and "key" to get the raw
+    # attention scores.
+    attention_scores = tf.einsum(self._dot_product_equation, query, key)
+
+    attention_scores = self._masked_softmax(attention_scores, attention_mask)
+
+    # This is actually dropping out entire tokens to attend to, which might
+    # seem a bit unusual, but is taken from the original Transformer paper.
+    attention_scores_dropout = self._dropout_layer(
+        attention_scores, training=training)
+
+    # `context_layer` = [B, T, N, H]
+    attention_output = tf.einsum(self._combine_equation,
+                                 attention_scores_dropout, value)
+    return attention_output

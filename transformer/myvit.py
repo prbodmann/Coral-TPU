@@ -8,11 +8,12 @@ from tensorflow.keras import datasets
 import tensorflow.keras.layers as nn
 from einops.layers.tensorflow import Rearrange
 from tensorflow.keras import Sequential
+from opt_head import OptimizedMultiHeadAttention
 
 learning_rate = 0.001
 weight_decay = 0.0001
 batch_size = 256
-num_epochs = 10
+num_epochs = 4
 image_size = 32  # We'll resize input images to this size
 patch_size = 4  # Size of the patches to be extract from the input images
 num_patches = (image_size // patch_size) ** 2
@@ -161,7 +162,7 @@ def create_vit_classifier():
         # Layer normalization 1.
         x1 = layers.LayerNormalization(epsilon=1e-6)(encoded_patches)
         # Create a multi-head attention layer.
-        attention_output = layers.MultiHeadAttention(
+        attention_output = OptimizedMultiHeadAttention(
             num_heads=num_heads, key_dim=projection_dim, dropout=0.1
         )(x1, x1)
         # Skip connection 1.
