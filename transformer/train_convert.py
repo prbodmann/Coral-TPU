@@ -62,12 +62,19 @@ test_dataset = test_dataset.batch(batch_size).map(lambda x, y: (data_resize(x), 
 if args.training:
 
 
-    model = MobileViT(
-    image_size=(image_size, image_size),
-    dims=[96, 120, 144],
-    channels=[16, 32, 48, 48, 64, 64, 80, 80, 96, 96, 384],
-    num_classes=1000
-)
+    model =  CaiT(
+        image_size = image_size,
+        patch_size = 16,
+        num_classes = 100,
+        dim = DIM,
+        depth = 12,             # depth of transformer for patch to patch attention only
+        cls_depth = 2,          # depth of cross attention of CLS tokens to patch
+        heads = 4,
+        mlp_dim = DIM * MLP_RATIO,
+        dropout = 0.0,
+        emb_dropout = 0.0,
+        layer_dropout = 0.05    # randomly dropout 5% of the layers
+    )
 
     optimizer = tfa.optimizers.AdamW(
         learning_rate=learning_rate, weight_decay=weight_decay
