@@ -66,11 +66,11 @@ if args.training:
         image_size = image_size,
         patch_size = 16,
         num_classes = 100,
-        dim = DIM,
+        dim = 192,
         depth = 12,             # depth of transformer for patch to patch attention only
         cls_depth = 2,          # depth of cross attention of CLS tokens to patch
         heads = 4,
-        mlp_dim = DIM * MLP_RATIO,
+        mlp_dim = 192 * 4,
         dropout = 0.0,
         emb_dropout = 0.0,
         layer_dropout = 0.05    # randomly dropout 5% of the layers
