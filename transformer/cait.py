@@ -32,10 +32,8 @@ loss_fn = CategoricalCrossentropy(label_smoothing=label_smoothing_factor)
 
 @tf.function
 def igelu(x):
-    x1=x
-    t1 = K.tanh(1000.0*x1)
-    t2 = t1*(0.2888*(K.minimum(x1*t1, 1.769)-1.769)**2+1.0)
-    return t2
+    coeff = tf.cast(0.044715, x.dtype)
+    return 0.5 * x * (1.0 + tf.tanh(0.7978845608028654 * (x + coeff * tf.pow(x, 3))))
 
 
 get_custom_objects().update({'igelu': Activation(igelu)})
@@ -220,77 +218,77 @@ class CaiT(Model):
         return x
 
 
+if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser(description='Process some integers.')
+    parser.add_argument('--training', action = 'store_const', dest = 'training',
+                               default = False, required = False,const=True)
+    args = parser.parse_args()
+    (x_train, y_train), (x_test, y_test) = datasets.cifar100.load_data()
 
-import argparse
-parser = argparse.ArgumentParser(description='Process some integers.')
-parser.add_argument('--training', action = 'store_const', dest = 'training',
-                           default = False, required = False,const=True)
-args = parser.parse_args()
-(x_train, y_train), (x_test, y_test) = datasets.cifar100.load_data()
+    # one hot encode target values
+    y_train = to_categorical(y_train)
+    y_test = to_categorical(y_test)
 
-# one hot encode target values
-y_train = to_categorical(y_train)
-y_test = to_categorical(y_test)
+    # convert from integers to floats
+    x_train = x_train.astype('float32')
+    x_test = x_test.astype('float32')
+    # normalize to range 0-1
+    x_train = x_train / 255.0
+    x_test = x_test / 255.0
 
-# convert from integers to floats
-x_train = x_train.astype('float32')
-x_test = x_test.astype('float32')
-# normalize to range 0-1
-x_train = x_train / 255.0
-x_test = x_test / 255.0
-
-if args.training:
-
-
-    cait_xxs24_224 = CaiT(
-        image_size = 224,
-        patch_size = 16,
-        num_classes = 100,
-        dim = DIM,
-        depth = 12,             # depth of transformer for patch to patch attention only
-        cls_depth = 2,          # depth of cross attention of CLS tokens to patch
-        heads = 4,
-        mlp_dim = DIM * MLP_RATIO,
-        dropout = 0.0,
-        emb_dropout = 0.0,
-        layer_dropout = 0.05    # randomly dropout 5% of the layers
-    )
+    if args.training:
 
 
-    cait_xxs24_224.compile(optimizer, loss_fn)
-    cait_xxs24_224.build((batch_size, 32, 32, 3))
-    #cait_xxs24_224.summary()
+        cait_xxs24_224 = CaiT(
+            image_size = 224,
+            patch_size = 16,
+            num_classes = 100,
+            dim = DIM,
+            depth = 12,             # depth of transformer for patch to patch attention only
+            cls_depth = 2,          # depth of cross attention of CLS tokens to patch
+            heads = 4,
+            mlp_dim = DIM * MLP_RATIO,
+            dropout = 0.0,
+            emb_dropout = 0.0,
+            layer_dropout = 0.05    # randomly dropout 5% of the layers
+        )
 
-    cait_xxs24_224.fit(
-        x=x_train,y= y_train,
-        validation_data=(x_test, y_test),
-        epochs=20,
-        batch_size=batch_size,
-        verbose=1   
-    )
-    cait_xxs24_224.summary()
-    results= cait_xxs24_224.evaluate(x_test, y_test,batch_size=batch_size)
-    #tf.saved_model.save(cait_xxs24_224,'cait_xxs24_32')
-    print(results)
-    
-else:
-    cait_xxs24_224=  tf.saved_model.load('cait_xxs24_32')
-batch_size=1
-def representative_data_gen():
-    for x in x_test:            
-        yield [x[0]]
 
-converter_quant = tf.lite.TFLiteConverter.from_keras_model(cait_xxs24_224) 
+        cait_xxs24_224.compile(optimizer, loss_fn)
+        cait_xxs24_224.build((batch_size, 32, 32, 3))
+        #cait_xxs24_224.summary()
 
-converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
-converter_quant.input_shape=(1,32,32,3)
-converter_quant.representative_dataset = representative_data_gen
-converter_quant.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
-converter_quant.target_spec.supported_types = [tf.int8]
-converter_quant.experimental_new_converter = True
-converter_quant.allow_custom_ops=True
-tflite_model = converter_quant.convert()
-open("cait_xxs24_32.tflite", "wb").write(tflite_model)
+        cait_xxs24_224.fit(
+            x=x_train,y= y_train,
+            validation_data=(x_test, y_test),
+            epochs=20,
+            batch_size=batch_size,
+            verbose=1   
+        )
+        cait_xxs24_224.summary()
+        results= cait_xxs24_224.evaluate(x_test, y_test,batch_size=batch_size)
+        #tf.saved_model.save(cait_xxs24_224,'cait_xxs24_32')
+        print(results)
+        
+    else:
+        cait_xxs24_224=  tf.saved_model.load('cait_xxs24_32')
+    batch_size=1
+    def representative_data_gen():
+        for x in x_test:            
+            yield [x[0]]
+
+    converter_quant = tf.lite.TFLiteConverter.from_keras_model(cait_xxs24_224) 
+
+    converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
+    converter_quant.input_shape=(1,32,32,3)
+    converter_quant.representative_dataset = representative_data_gen
+    converter_quant.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
+    converter_quant.target_spec.supported_types = [tf.int8]
+    converter_quant.experimental_new_converter = True
+    converter_quant.allow_custom_ops=True
+    tflite_model = converter_quant.convert()
+    open("cait_xxs24_32.tflite", "wb").write(tflite_model)
 
 
 
