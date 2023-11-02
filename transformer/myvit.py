@@ -9,8 +9,8 @@ from tensorflow.keras import backend as K
 learning_rate = 0.001
 weight_decay = 0.0001
 batch_size = 256
-num_epochs = 100
-image_size = 72  # We'll resize input images to this size
+num_epochs = 10
+image_size = 32  # We'll resize input images to this size
 patch_size = 6  # Size of the patches to be extract from the input images
 num_patches = (image_size // patch_size) ** 2
 projection_dim = 64
@@ -34,8 +34,37 @@ def igelu(x):
     return 0.5 * x * (1.0 + tf.tanh(0.7978845608028654 * (x + coeff * tf.pow(x, 3))))
     return t2
 
+(x_train, y_train), (x_test, y_test) = datasets.cifar100.load_data()
+data_resize_aug = tf.keras.Sequential(
+            [               
+                nn.Normalization(),
+                nn.Resizing(image_size, image_size),
+                nn.RandomFlip("horizontal"),
+                nn.RandomRotation(factor=0.02),
+                nn.RandomZoom(
+                    height_factor=0.2, width_factor=0.2
+                ),
+            ],
+            name="data_resize_aug",
+        )
 
+data_resize_aug.layers[0].adapt(x_train)
+
+data_resize = tf.keras.Sequential(
+            [               
+                nn.Normalization(),
+                nn.Resizing(image_size, image_size),               
+            ],
+            name="data_resize",
+        )
+data_resize.layers[0].adapt(x_test)
+
+train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+train_dataset = train_dataset.batch(batch_size).map(lambda x, y: (data_resize_aug(x), y))
+test_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+test_dataset = test_dataset.batch(batch_size).map(lambda x, y: (data_resize(x), y))
 def run_experiment(model):
+    
     optimizer = tfa.optimizers.AdamW(
         learning_rate=learning_rate, weight_decay=weight_decay
     )
@@ -58,8 +87,8 @@ def run_experiment(model):
     )
 
     history = model.fit(
-        x=x_train,
-        y=y_train,
+        x=train_dataset,
+        validation_data=test_dataset,
         batch_size=batch_size,
         epochs=num_epochs,
         validation_split=0.1,
@@ -74,21 +103,6 @@ def run_experiment(model):
     return history, model
 
 
-
-data_augmentation = keras.Sequential(
-    [
-        layers.Normalization(),
-        layers.Resizing(image_size, image_size),
-        layers.RandomFlip("horizontal"),
-        layers.RandomRotation(factor=0.02),
-        layers.RandomZoom(
-            height_factor=0.2, width_factor=0.2
-        ),
-    ],
-    name="data_augmentation",
-)
-# Compute the mean and the variance of the training data for normalization.
-data_augmentation.layers[0].adapt(x_train)
 
 def mlp(x, hidden_units, dropout_rate):
     for units in hidden_units:
@@ -129,9 +143,8 @@ class PatchEncoder(layers.Layer):
         return encoded
 
 def create_vit_classifier():
-    inputs = layers.Input(shape=input_shape)
+    augmented = layers.Input(shape=input_shape)
     # Augment data.
-    augmented = data_augmentation(inputs)
     # Create patches.
     patches = Patches(patch_size)(augmented)
     # Encode patches.
