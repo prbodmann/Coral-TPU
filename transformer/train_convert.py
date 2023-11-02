@@ -2,7 +2,7 @@ import argparse
 import tensorflow as tf
 from tensorflow.keras import datasets
 from tensorflow.keras.utils import to_categorical
-from vit import ViT
+from cvt import DeepViT
 import tensorflow_addons as tfa
 import tensorflow.keras.layers as nn
 
@@ -62,10 +62,10 @@ test_dataset = test_dataset.batch(batch_size).map(lambda x, y: (data_resize(x), 
 if args.training:
 
 
-    model =   ViT(
+    model =   DeepViT(
     image_size = image_size,
     patch_size = 4,
-    num_classes = 100,
+    num_classes = 1000,
     dim = 1024,
     depth = 6,
     heads = 16,
