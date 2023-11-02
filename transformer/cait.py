@@ -21,14 +21,7 @@ from einops import rearrange, repeat
 from einops.layers.tensorflow import Rearrange
 from random import randrange
 
-tf.config.experimental_run_functions_eagerly(True)
-DIM=192
-MLP_RATIO=4
-batch_size = 100
-learning_rate = 0.002
-label_smoothing_factor = 0.1
-optimizer = Adam(learning_rate=learning_rate)
-loss_fn = CategoricalCrossentropy(label_smoothing=label_smoothing_factor)
+
 
 @tf.function
 def igelu(x):
@@ -219,6 +212,14 @@ class CaiT(Model):
 
 
 if __name__ == '__main__':
+    tf.config.experimental_run_functions_eagerly(True)
+    DIM=192
+    MLP_RATIO=4
+    batch_size = 100
+    learning_rate = 0.002
+    label_smoothing_factor = 0.1
+    optimizer = Adam(learning_rate=learning_rate)
+    loss_fn = CategoricalCrossentropy(label_smoothing=label_smoothing_factor)
     import argparse
     parser = argparse.ArgumentParser(description='Process some integers.')
     parser.add_argument('--training', action = 'store_const', dest = 'training',
