@@ -151,7 +151,7 @@ def create_vit_classifier():
     # Create patches.
     patches = Sequential([
             Rearrange('b (h p1) (w p2) c -> b (h w) (p1 p2 c)', p1=patch_size, p2=patch_size)
-        ], name='patch_embedding')
+        ], name='patch_embedding')(augmented)
     #patches = Patches(patch_size)(augmented)
     # Encode patches.
     encoded_patches = PatchEncoder(num_patches, projection_dim)(patches)
