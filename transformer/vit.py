@@ -43,7 +43,7 @@ class Patches(layers.Layer):
     def call(self, images):
         batch_size = tf.shape(images)[0]
         
-        patches =  tf.keras.layers.Reshape([image.shape[1]*image.shape[2],  self.patch_size* self.patch_size*3])(images) #self.patches_layer(images)
+        patches =  tf.keras.layers.Reshape([images.shape[1]*images.shape[2],  self.patch_size* self.patch_size*3])(images) #self.patches_layer(images)
         patch_dims = patches.shape[-1]
         patches = tf.reshape(patches, [batch_size, -1, patch_dims])
         return patches
