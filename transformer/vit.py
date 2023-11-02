@@ -74,10 +74,11 @@ class Patches(layers.Layer):
             rates=[1, 1, 1, 1],
             padding="VALID",
         )
+        print(patches.shape)
         patch_dims = patches.shape[-1]
         print(patch_dims)
         patches = tf.reshape(patches, [batch_size, -1, patch_dims])
-        print(patches)
+        print(patches.shape)
         return patches
 
 class PatchEncoder(layers.Layer):
