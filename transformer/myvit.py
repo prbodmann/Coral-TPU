@@ -5,6 +5,7 @@ from tensorflow.keras import layers
 import tensorflow_addons as tfa
 from tensorflow.keras import backend as K
 from tensorflow.keras import datasets
+import tensorflow.keras.layers as nn
 
 learning_rate = 0.001
 weight_decay = 0.0001
