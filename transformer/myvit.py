@@ -8,7 +8,7 @@ from tensorflow.keras import datasets
 import tensorflow.keras.layers as nn
 from einops.layers.tensorflow import Rearrange
 from tensorflow.keras import Sequential
-from opt_head import OptimizedMultiHeadAttention
+
 
 learning_rate = 0.001
 weight_decay = 0.0001
@@ -193,7 +193,7 @@ history, model = run_experiment(vit_classifier)
 batch_size=1
 #print([tf.expand_dims(tf.dtypes.cast(x_train[0], tf.float32),0)])
 def representative_data_gen():
-    data = tf.data.Dataset.from_tensor_slices(x_train).batch(1).take(100)
+    data = train_dataset.take(100)
     for input_value in data:
         yield [input_value]
 
