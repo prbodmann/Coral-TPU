@@ -4,6 +4,26 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 
+@tf.function
+def igelu(x):
+    coeff = tf.cast(0.044715, x.dtype)
+    return 0.5 * x * (1.0 + tf.tanh(0.7978845608028654 * (x + coeff * tf.pow(x, 3))))
+
+class CreatePatches( tf.keras.layers.Layer ):
+
+  def __init__( self , patch_size ):
+    super( CreatePatches , self ).__init__()
+    self.patch_size = patch_size
+
+  def call(self, inputs ):
+    patches = []
+    # For square images only ( as inputs.shape[ 1 ] = inputs.shape[ 2 ] )
+    input_image_size = inputs.shape[ 1 ]
+    for i in range( 0 , input_image_size , self.patch_size ):
+        for j in range( 0 , input_image_size , self.patch_size ):
+            patches.append( inputs[ : , i : i + self.patch_size , j : j + self.patch_size , : ] )
+    return patches
+
 
 
 def mlp(x: tf.Tensor, hidden_units: List[int], dropout_rate: float) -> tf.Tensor:
@@ -30,16 +50,10 @@ class Patches(layers.Layer):
     def __init__(self, patch_size):
         super(Patches, self).__init__()
         self.patch_size = patch_size
-
+        self.patches_layer = CreatePatches(patch_size = patch_size)
     def call(self, images):
         batch_size = tf.shape(images)[0]
-        patches = tf.image.extract_patches(
-            images=images,
-            sizes=[1, self.patch_size, self.patch_size, 1],
-            strides=[1, self.patch_size, self.patch_size, 1],
-            rates=[1, 1, 1, 1],
-            padding="VALID",
-        )
+        patches = self.patches_layer(images)
         patch_dims = patches.shape[-1]
         patches = tf.reshape(patches, [batch_size, -1, patch_dims])
         return patches
