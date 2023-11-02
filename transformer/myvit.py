@@ -195,7 +195,7 @@ batch_size=1
 def representative_data_gen():
     data = train_dataset.take(100)
     for input_value in data:
-        yield [input_value]
+        yield [input_value[0]]
 
 converter_quant = tf.lite.TFLiteConverter.from_keras_model(model) 
 converter_quant.input_shape=(1,image_size,image_size,3)
