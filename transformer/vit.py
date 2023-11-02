@@ -22,6 +22,7 @@ class CreatePatches( tf.keras.layers.Layer ):
     for i in range( 0 , input_image_size , self.patch_size ):
         for j in range( 0 , input_image_size , self.patch_size ):
             patches.append( inputs[ : , i : i + self.patch_size , j : j + self.patch_size , : ] )
+    
     return tf.stack(patches,axis=-1)
 
 
@@ -57,11 +58,11 @@ class Patches2(layers.Layer):
         patches = self.patches_layer(images)
         print(patches.shape)
         patch_dims = self.num_patches * 3
-        patches = tf.reshape(patches, [batch_size, -1, patch_dims])
+        patches = tf.reshape(patches, [batch_size, self.patch_size*self.patch_size, patch_dims])
         return patches
 
 class Patches(layers.Layer):
-    def __init__(self, patch_size):
+    def __init__(self, patch_size,num_patches):
         super().__init__()
         self.patch_size = patch_size
 
@@ -77,7 +78,7 @@ class Patches(layers.Layer):
         print(patches.shape)
         patch_dims = patches.shape[-1]
         print(patch_dims)
-        patches = tf.reshape(patches, [batch_size, -1, patch_dims])
+        patches = tf.reshape(patches, [batch_size, self.patch_size*self.patch_size, patch_dims])
         print(patches.shape)
         return patches
 
@@ -119,7 +120,7 @@ def create_vit_classifier(input_shape,
     augmented = inputs
     
     # Create patches.
-    patches = Patches2(patch_size,num_patches)(augmented)
+    patches = Patches(patch_size,num_patches)(augmented)
     
     # Encode patches.
     encoded_patches = PatchEncoder(num_patches, projection_dim)(patches)
