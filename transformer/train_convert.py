@@ -55,8 +55,8 @@ test_dataset = test_dataset.batch(batch_size).map(lambda x, y: (data_resize(x), 
 
 # convert from integers to floats
 
-train_dataset = train_dataset.astype('float32')
-test_dataset = test_dataset.astype('float32')
+#train_dataset = train_dataset.astype('float32')
+#test_dataset = test_dataset.astype('float32')
 #x_train = x_train / 255.0
 #x_test = x_test / 255.0
 if args.training:
