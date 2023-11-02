@@ -42,7 +42,7 @@ def mlp(x: tf.Tensor, hidden_units: List[int], dropout_rate: float) -> tf.Tensor
         x = layers.Dropout(dropout_rate)(x)
     return x
 
-class Patches(layers.Layer):
+class Patches2(layers.Layer):
     """Create a a set of image patches from input. The patches all have
     a size of patch_size * patch_size.
     """
@@ -50,16 +50,35 @@ class Patches(layers.Layer):
     def __init__(self, patch_size,num_patches):
         super(Patches, self).__init__()
         self.patch_size = patch_size
-        self.num_patches = num_patches
         self.patches_layer = CreatePatches(patch_size = patch_size)
+        self.num_patches = num_patches
     def call(self, images):
         batch_size = tf.shape(images)[0]
         patches = self.patches_layer(images)
-        #print(patches)
-        #patch_dims = [self.num_patches,self.patch_size,self.patch_size]
-        patches = tf.reshape(patches, [batch_size, -1, self.patch_size*self.patch_size])
+        print(patches)
+        patch_dims = [self.num_patches,patch_size,patch_size]
+        patches = tf.reshape(patches, [batch_size, -1, patch_dims])
         return patches
 
+class Patches(layers.Layer):
+    def __init__(self, patch_size):
+        super().__init__()
+        self.patch_size = patch_size
+
+    def call(self, images):
+        batch_size = tf.shape(images)[0]
+        patches = tf.image.extract_patches(
+            images=images,
+            sizes=[1, self.patch_size, self.patch_size, 1],
+            strides=[1, self.patch_size, self.patch_size, 1],
+            rates=[1, 1, 1, 1],
+            padding="VALID",
+        )
+        patch_dims = patches.shape[-1]
+        print(patch_dims)
+        patches = tf.reshape(patches, [batch_size, -1, patch_dims])
+        print(patches)
+        return patches
 
 class PatchEncoder(layers.Layer):
     """The `PatchEncoder` layer will linearly transform a patch by projecting it into a
@@ -99,7 +118,7 @@ def create_vit_classifier(input_shape,
     augmented = inputs
     
     # Create patches.
-    patches = Patches(patch_size,num_patches)(augmented)
+    patches = Patches(patch_size)(augmented)
     
     # Encode patches.
     encoded_patches = PatchEncoder(num_patches, projection_dim)(patches)
