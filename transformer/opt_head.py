@@ -8,7 +8,7 @@ import tensorflow.keras as tf_keras
 
 _CHR_IDX = string.ascii_lowercase
 
-
+@tf.function
 def _build_attention_equation(
     rank: int, attn_axes: Tuple[int, ...]) -> Tuple[str, str, int]:
   """Builds einsum equations for the attention computation.
