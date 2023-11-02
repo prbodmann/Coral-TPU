@@ -2,7 +2,7 @@ import argparse
 import tensorflow as tf
 from tensorflow.keras import datasets
 from tensorflow.keras.utils import to_categorical
-from nest import NesT
+from mobilevit import MobileViT
 import tensorflow_addons as tfa
 import tensorflow.keras.layers as nn
 
@@ -62,14 +62,11 @@ test_dataset = test_dataset.batch(batch_size).map(lambda x, y: (data_resize(x), 
 if args.training:
 
 
-    model = NesT(
-    image_size = image_size,
-    patch_size = 4,
-    dim = 96,
-    heads = 3,
-    num_hierarchies = 3,        # number of hierarchies
-    block_repeats = (2, 2, 8),  # the number of transformer blocks at each heirarchy, starting from the bottom
-    num_classes = 100
+    model = MobileViT(
+    image_size=(image_size, image_size),
+    dims=[96, 120, 144],
+    channels=[16, 32, 48, 48, 64, 64, 80, 80, 96, 96, 384],
+    num_classes=1000
 )
 
     optimizer = tfa.optimizers.AdamW(
@@ -124,7 +121,10 @@ converter_quant = tf.lite.TFLiteConverter.from_keras_model(model)
 converter_quant.input_shape=(1,image_size,image_size,3)
 converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
 converter_quant.representative_dataset = representative_data_gen
-converter_quant.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8,tf.lite.OpsSet.SELECT_TF_OPS]
+converter_quant.target_spec.supported_ops = [
+  tf.lite.OpsSet.TFLITE_BUILTINS, # enable TensorFlow Lite ops.
+  tf.lite.OpsSet.SELECT_TF_OPS # enable TensorFlow ops.
+]
 converter_quant.target_spec.supported_types = [tf.int8]
 converter_quant.inference_input_type = tf.float32 # changed from tf.uint8
 converter_quant.inference_output_type = tf.float32 # changed from tf.uint8
