@@ -62,15 +62,14 @@ test_dataset = test_dataset.batch(batch_size).map(lambda x, y: (data_resize(x), 
 if args.training:
 
 
-    model = LeViT(
+    model = NesT(
     image_size = image_size,
-    num_classes = 100,
-    stages = 3,             # number of stages
-    dim = (256, 384, 512),  # dimensions at each stage
-    depth = 4,              # transformer of depth 4 at each stage
-    heads = (4, 6, 8),      # heads at each stage
-    mlp_mult = 2,
-    dropout = 0.1
+    patch_size = 4,
+    dim = 96,
+    heads = 3,
+    num_hierarchies = 3,        # number of hierarchies
+    block_repeats = (2, 2, 8),  # the number of transformer blocks at each heirarchy, starting from the bottom
+    num_classes = 100
 )
 
     optimizer = tfa.optimizers.AdamW(
@@ -135,4 +134,4 @@ converter_quant.allow_custom_ops=True
 print('what')
 tflite_model = converter_quant.convert()
 print("finished converting")
-open("cvt.tflite", "wb").write(tflite_model)
+open("wip_model.tflite", "wb").write(tflite_model)
