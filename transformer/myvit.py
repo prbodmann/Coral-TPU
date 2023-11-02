@@ -177,7 +177,7 @@ def create_vit_classifier():
     # Classify outputs.
     logits = layers.Dense(num_classes)(features)
     # Create the Keras model.
-    model = keras.Model(inputs=inputs, outputs=logits)
+    model = keras.Model(inputs=augmented, outputs=logits)
     return model
 
 
