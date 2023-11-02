@@ -12,7 +12,9 @@ batch_size = 256
 num_epochs = 2
 image_size = 64  # We'll resize input images to this size
 
-
+optimizer = tfa.optimizers.AdamW(
+    learning_rate=learning_rate, weight_decay=weight_decay
+)
 
 parser = argparse.ArgumentParser(description='Process some integers.')
 parser.add_argument('--training', action = 'store_const', dest = 'training',
