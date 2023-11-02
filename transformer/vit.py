@@ -11,10 +11,10 @@ def igelu(x):
 
 class CreatePatches( tf.keras.layers.Layer ):
 
-  def __init__( self , patch_size ):
+  def __init__( self , patch_size,num_patches ):
     super( CreatePatches , self ).__init__()
     self.patch_size = patch_size
-
+    self.num_patches = num_patches
   def call(self, inputs ):
     patches = []
     # For square images only ( as inputs.shape[ 1 ] = inputs.shape[ 2 ] )
@@ -23,7 +23,7 @@ class CreatePatches( tf.keras.layers.Layer ):
         for j in range( 0 , input_image_size , self.patch_size ):
             patches.append( inputs[ : , i : i + self.patch_size , j : j + self.patch_size , : ] )
     
-    return tf.stack(patches,axis=-1)
+    return  tf.reshape(tf.stack(patches,axis=-1),[batch_size, self.patch_size,self.patch_size, num_patches])
 
 
 
@@ -51,7 +51,7 @@ class Patches2(layers.Layer):
     def __init__(self, patch_size,num_patches):
         super(Patches2, self).__init__()
         self.patch_size = patch_size
-        self.patches_layer = CreatePatches(patch_size = patch_size)
+        self.patches_layer = CreatePatches(patch_size = patch_size, num_patches = num_patches)
         self.num_patches = num_patches
     def call(self, images):
         batch_size = tf.shape(images)[0]
@@ -120,7 +120,7 @@ def create_vit_classifier(input_shape,
     augmented = inputs
     
     # Create patches.
-    patches = Patches(patch_size,num_patches)(augmented)
+    patches = Patches2(patch_size,num_patches)(augmented)
     
     # Encode patches.
     encoded_patches = PatchEncoder(num_patches, projection_dim)(patches)
