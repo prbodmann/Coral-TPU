@@ -54,6 +54,7 @@ class Patches(layers.Layer):
     def call(self, images):
         batch_size = tf.shape(images)[0]
         patches = self.patches_layer(images)
+        print(patches)
         patch_dims = patches.shape[-1]
         patches = tf.reshape(patches, [batch_size, -1, patch_dims])
         return patches
