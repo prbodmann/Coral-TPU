@@ -47,15 +47,16 @@ class Patches(layers.Layer):
     a size of patch_size * patch_size.
     """
 
-    def __init__(self, patch_size):
+    def __init__(self, patch_size,num_patches):
         super(Patches, self).__init__()
         self.patch_size = patch_size
+        self.num_patches = num_patches
         self.patches_layer = CreatePatches(patch_size = patch_size)
     def call(self, images):
         batch_size = tf.shape(images)[0]
         patches = self.patches_layer(images)
-        print(patches)
-        patch_dims = patches.shape[-1]
+        #print(patches)
+        patch_dims = [self.num_patches,patch_size,patch_size]
         patches = tf.reshape(patches, [batch_size, -1, patch_dims])
         return patches
 
@@ -98,7 +99,7 @@ def create_vit_classifier(input_shape,
     augmented = inputs
     
     # Create patches.
-    patches = Patches(patch_size)(augmented)
+    patches = Patches(patch_size,num_patches)(augmented)
     
     # Encode patches.
     encoded_patches = PatchEncoder(num_patches, projection_dim)(patches)
