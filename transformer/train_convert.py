@@ -2,7 +2,7 @@ import argparse
 import tensorflow as tf
 from tensorflow.keras import datasets
 from tensorflow.keras.utils import to_categorical
-from cvt import DeepViT
+from levit import LeViT
 import tensorflow_addons as tfa
 import tensorflow.keras.layers as nn
 
@@ -62,18 +62,16 @@ test_dataset = test_dataset.batch(batch_size).map(lambda x, y: (data_resize(x), 
 if args.training:
 
 
-    model =   DeepViT(
+    model = LeViT(
     image_size = image_size,
-    patch_size = 4,
-    num_classes = 1000,
-    dim = 1024,
-    depth = 6,
-    heads = 16,
-    mlp_dim = 2048,
-    dropout = 0.1,
-    emb_dropout = 0.1
+    num_classes = 100,
+    stages = 3,             # number of stages
+    dim = (256, 384, 512),  # dimensions at each stage
+    depth = 4,              # transformer of depth 4 at each stage
+    heads = (4, 6, 8),      # heads at each stage
+    mlp_mult = 2,
+    dropout = 0.1
 )
-
 
     optimizer = tfa.optimizers.AdamW(
         learning_rate=learning_rate, weight_decay=weight_decay
