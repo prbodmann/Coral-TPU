@@ -7,6 +7,7 @@ from tensorflow.keras import backend as K
 from tensorflow.keras import datasets
 import tensorflow.keras.layers as nn
 from einops.layers.tensorflow import Rearrange
+from tensorflow.keras import Sequential
 
 learning_rate = 0.001
 weight_decay = 0.0001
