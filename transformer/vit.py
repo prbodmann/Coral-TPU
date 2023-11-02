@@ -119,7 +119,7 @@ def create_vit_classifier(input_shape,
     augmented = inputs
     
     # Create patches.
-    patches = Patches(patch_size)(augmented)
+    patches = Patches2(patch_size,num_patches)(augmented)
     
     # Encode patches.
     encoded_patches = PatchEncoder(num_patches, projection_dim)(patches)
