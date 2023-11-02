@@ -70,7 +70,7 @@ if args.training:
                                            patch_size=8,
                                            num_patches=0.2,
                                            projection_dim=256,
-                                           dropout=config["dropout"],
+                                           dropout=0.2,
                                            n_transformer_layers=3,
                                            num_heads=8,
                                            transformer_units=[
