@@ -23,7 +23,7 @@ class CreatePatches( tf.keras.layers.Layer ):
         for j in range( 0 , input_image_size , self.patch_size ):
             patches.append( inputs[ : , i : i + self.patch_size , j : j + self.patch_size , : ] )
     
-    return  tf.stack(patches,axis=-1)
+    return  tf.stack(patches,axis=-2)
 
 
 
