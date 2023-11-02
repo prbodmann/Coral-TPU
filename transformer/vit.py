@@ -3,7 +3,14 @@ from typing import List
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
+from tensorflow import einsum
+from einops import rearrange, repeat
+from einops.layers.tensorflow import Rearrange
 
+@tf.function
+def igelu(x):
+    coeff = tf.cast(0.044715, x.dtype)
+    return 0.5 * x * (1.0 + tf.tanh(0.7978845608028654 * (x + coeff * tf.pow(x, 3))))
 
 def mlp(x: tf.Tensor, hidden_units: List[int], dropout_rate: float) -> tf.Tensor:
     """Multi-Layer Perceptron
@@ -17,7 +24,7 @@ def mlp(x: tf.Tensor, hidden_units: List[int], dropout_rate: float) -> tf.Tensor
         tf.Tensor: Output
     """
     for units in hidden_units:
-        x = layers.Dense(units, activation=tf.nn.gelu)(x)
+        x = layers.Dense(units, activation=igelu)(x)
         x = layers.Dropout(dropout_rate)(x)
     return x
 
@@ -29,16 +36,13 @@ class Patches(layers.Layer):
     def __init__(self, patch_size):
         super(Patches, self).__init__()
         self.patch_size = patch_size
+        patches_layer = tf.keras.Sequential([
+            Rearrange('b (h p1) (w p2) c -> b (h w) (p1 p2 c)', p1=patch_size, p2=patch_size)
+        ], name='patch_embedding')
 
     def call(self, images):
         batch_size = tf.shape(images)[0]
-        patches = tf.image.extract_patches(
-            images=images,
-            sizes=[1, self.patch_size, self.patch_size, 1],
-            strides=[1, self.patch_size, self.patch_size, 1],
-            rates=[1, 1, 1, 1],
-            padding="VALID",
-        )
+        patches =patches_layer(images)
         patch_dims = patches.shape[-1]
         patches = tf.reshape(patches, [batch_size, -1, patch_dims])
         return patches
