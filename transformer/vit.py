@@ -36,13 +36,14 @@ class Patches(layers.Layer):
     def __init__(self, patch_size):
         super(Patches, self).__init__()
         self.patch_size = patch_size
-        self.patches_layer = tf.keras.Sequential([
-            Rearrange('b (h p1) (w p2) c -> b (h w) (p1 p2 c)', p1=patch_size, p2=patch_size)
-        ], name='patch_embedding')
+        #self.patches_layer = tf.keras.Sequential([
+        #    Rearrange('b (h p1) (w p2) c -> b (h w) (p1 p2 c)', p1=patch_size, p2=patch_size)
+        #], name='patch_embedding')
 
     def call(self, images):
         batch_size = tf.shape(images)[0]
-        patches = self.patches_layer(images)
+        
+        patches =  tf.keras.layers.Reshape([image.shape[1]*image.shape[2],  self.patch_size* self.patch_size*3])(images) #self.patches_layer(images)
         patch_dims = patches.shape[-1]
         patches = tf.reshape(patches, [batch_size, -1, patch_dims])
         return patches
