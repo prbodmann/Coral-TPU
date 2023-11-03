@@ -23,8 +23,8 @@ args = parser.parse_args()
 
 
 (x_train, y_train), (x_test, y_test) = datasets.cifar100.load_data()
-y_train = to_categorical(y_train)
-y_test = to_categorical(y_test)
+#y_train = to_categorical(y_train)
+#y_test = to_categorical(y_test)
 
 data_resize_aug = tf.keras.Sequential(
             [               
@@ -83,7 +83,7 @@ if args.training:
         learning_rate=learning_rate, weight_decay=weight_decay
     )
    
-    model.compile(
+   ''' model.compile(
         optimizer=optimizer,
         loss=tf.keras.losses.CategoricalCrossentropy(),
         metrics=[
@@ -99,7 +99,7 @@ if args.training:
             tf.keras.metrics.SparseCategoricalAccuracy(name="accuracy"),
             tf.keras.metrics.SparseTopKCategoricalAccuracy(5, name="top-5-accuracy"),
         ],
-    )'''
+    )
 
     checkpoint_filepath = "/tmp/checkpoint"
     checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
