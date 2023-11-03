@@ -10,8 +10,7 @@ import tensorflow_addons as tfa
 import tensorflow.keras.layers as nn
 
 def igelu(x):
-    coeff = tf.cast(0.044715, x.dtype)
-    return 0.5 * x * (1.0 + tf.tanh(0.7978845608028654 * (x + coeff * tf.pow(x, 3))))
+    return 0.5 * x * (1.0 + tf.tanh(0.7978845608028654 * (x + 0.044715 * tf.pow(x, 3))))
 
 get_custom_objects().update({'igelu': Activation(igelu)})
 
