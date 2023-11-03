@@ -25,6 +25,12 @@ class CreatePatches( tf.keras.layers.Layer ):
     
     return  tf.stack(patches,axis=-1)
 
+class GELU(keras.layers.Layer):
+    def __init__(self):
+        super(GELU, self).__init__()
+
+    def call(self, x, training=True):
+        return igelu(x)
 
 
 def mlp(x: tf.Tensor, hidden_units: List[int], dropout_rate: float) -> tf.Tensor:
@@ -39,7 +45,8 @@ def mlp(x: tf.Tensor, hidden_units: List[int], dropout_rate: float) -> tf.Tensor
         tf.Tensor: Output
     """
     for units in hidden_units:
-        x = layers.Dense(units, activation=igelu)(x)
+        x = layers.Dense(units)(x)
+        x = GELU(x)
         x = layers.Dropout(dropout_rate)(x)
     return x
 
