@@ -10,7 +10,7 @@ import tensorflow_addons as tfa
 import tensorflow.keras.layers as nn
 
 #0.04553992412
-
+pi=3.141592653589793
 #0.5 * x * (1 + tf.tanh(tf.sqrt(2 / pi) * (x + 0.044715 * tf.pow(x,3))))
 def igelu(x):
     return 0.5 * x * (1 + tf.tanh(tf.sqrt(2 / pi) * (x + 0.044715 * tf.pow(x,3))))
