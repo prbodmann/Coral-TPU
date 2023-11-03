@@ -82,7 +82,7 @@ if args.training:
         learning_rate=learning_rate, weight_decay=weight_decay
     )'''
     optimizer=tf.keras.optimizers.Adam(
-        learning_rate=learning_rate, weight_decay=weight_decay
+        learning_rate=learning_rate, weight_decay='lr'
     )   
     model.compile(
         optimizer=optimizer,
