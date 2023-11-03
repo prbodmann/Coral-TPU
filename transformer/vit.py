@@ -32,7 +32,7 @@ class GELU(keras.layers.Layer):
     def call(self, x, training=True):
         return igelu(x)
 
-
+gelu_layer = GELU()
 def mlp(x: tf.Tensor, hidden_units: List[int], dropout_rate: float) -> tf.Tensor:
     """Multi-Layer Perceptron
 
@@ -46,7 +46,7 @@ def mlp(x: tf.Tensor, hidden_units: List[int], dropout_rate: float) -> tf.Tensor
     """
     for units in hidden_units:
         x = layers.Dense(units)(x)
-        x = GELU(x)
+        x = gelu_layer(x)
         x = layers.Dropout(dropout_rate)(x)
     return x
 
