@@ -23,6 +23,9 @@ args = parser.parse_args()
 
 
 (x_train, y_train), (x_test, y_test) = datasets.cifar100.load_data()
+y_train = to_categorical(y_train)
+y_test = to_categorical(y_test)
+
 data_resize_aug = tf.keras.Sequential(
             [               
                 nn.Normalization(),
@@ -52,8 +55,6 @@ train_dataset = train_dataset.batch(batch_size).map(lambda x, y: (data_resize_au
 test_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
 test_dataset = test_dataset.batch(batch_size).map(lambda x, y: (data_resize(x), y))
 # one hot encode target values
-y_train = to_categorical(y_train)
-y_test = to_categorical(y_test)
 
 # convert from integers to floats
 
