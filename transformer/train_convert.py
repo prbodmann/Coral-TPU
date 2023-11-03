@@ -83,7 +83,7 @@ if args.training:
         learning_rate=learning_rate, weight_decay=weight_decay
     )
    
-   '''
+    '''
     model.compile(
         optimizer=optimizer,
         loss=tf.keras.losses.CategoricalCrossentropy(),
