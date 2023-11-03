@@ -78,9 +78,9 @@ if args.training:
                                                                 256,
                                                             ],
                                            mlp_head_units=[256])
-    ''''optimizer = tfa.optimizers.AdamW(
+    '''optimizer = tfa.optimizers.AdamW(
         learning_rate=learning_rate, weight_decay=weight_decay
-    )''''
+    )'''
     optimizer=tf.keras.optimizers.Adam(
         learning_rate=learning_rate, weight_decay=weight_decay
     )   
