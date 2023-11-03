@@ -4,7 +4,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 
-@tf.function
+
 def igelu(x):
     coeff = tf.cast(0.044715, x.dtype)
     return 0.5 * x * (1.0 + tf.tanh(0.7978845608028654 * (x + coeff * tf.pow(x, 3))))
@@ -32,7 +32,6 @@ class GELU(keras.layers.Layer):
     def call(self, x, training=True):
         return igelu(x)
 
-gelu_layer = GELU()
 def mlp(x: tf.Tensor, hidden_units: List[int], dropout_rate: float) -> tf.Tensor:
     """Multi-Layer Perceptron
 
@@ -46,7 +45,7 @@ def mlp(x: tf.Tensor, hidden_units: List[int], dropout_rate: float) -> tf.Tensor
     """
     for units in hidden_units:
         x = layers.Dense(units)(x)
-        x = gelu_layer(x)
+        x = igelu(x)
         x = layers.Dropout(dropout_rate)(x)
     return x
 
