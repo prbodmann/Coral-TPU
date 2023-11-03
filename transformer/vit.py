@@ -31,9 +31,7 @@ class CreatePatches( tf.keras.layers.Layer ):
     
     return  tf.stack(patches,axis=-2)
 
-lol = tf.keras.activations.gelu(
-    x, approximate=True
-)
+
 def mlp(x: tf.Tensor, hidden_units: List[int], dropout_rate: float) -> tf.Tensor:
     """Multi-Layer Perceptron
 
@@ -46,7 +44,8 @@ def mlp(x: tf.Tensor, hidden_units: List[int], dropout_rate: float) -> tf.Tensor
         tf.Tensor: Output
     """
     for units in hidden_units:
-        x = layers.Dense(units,activation=lol)(x)
+        x = layers.Dense(units)(x)
+        x = tf.keras.activations.gelu(x, approximate=True)
         x = layers.Dropout(dropout_rate)(x)
     return x
 
