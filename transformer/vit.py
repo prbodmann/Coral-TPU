@@ -9,8 +9,12 @@ from tensorflow.keras import activations
 import tensorflow_addons as tfa
 import tensorflow.keras.layers as nn
 
+#0.04553992412
+
+#0.5 * x * (1 + tf.tanh(tf.sqrt(2 / pi) * (x + 0.044715 * tf.pow(x,3))))
 def igelu(x):
-    return 0.5 * x * (1.0 + tf.tanh(0.7978845608028654 * (x + 0.04553992412 * tf.pow(x, 3))))
+    return 0.5 * x * (1 + tf.tanh(tf.sqrt(2 / pi) * (x + 0.044715 * tf.pow(x,3))))
+    #return 0.5 * x * (1.0 + tf.tanh(0.7978845608028653 * (x + 0.04553992412 * tf.pow(x, 3))))
 
 get_custom_objects().update({'igelu': Activation(igelu)})
 
