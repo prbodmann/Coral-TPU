@@ -52,8 +52,8 @@ train_dataset = train_dataset.batch(batch_size).map(lambda x, y: (data_resize_au
 test_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
 test_dataset = test_dataset.batch(batch_size).map(lambda x, y: (data_resize(x), y))
 # one hot encode target values
-#y_train = to_categorical(y_train)
-#y_test = to_categorical(y_test)
+y_train = to_categorical(y_train)
+y_test = to_categorical(y_test)
 
 # convert from integers to floats
 
@@ -78,10 +78,18 @@ if args.training:
                                                                 256,
                                                             ],
                                            mlp_head_units=[256])
-    optimizer = tfa.optimizers.AdamW(
+    optimizer = tfa.optimizers.Adam(
         learning_rate=learning_rate, weight_decay=weight_decay
     )
-
+    model.compile(
+        optimizer=optimizer,
+        loss=tf.keras.losses.CategoricalCrossentropy(),
+        metrics=[
+            tf.keras.metrics.CategoricalAccuracy(name="accuracy"),
+            tf.keras.metrics.TopKCategoricalAccuracy(5, name="top-5-accuracy"),
+        ],
+    )
+    '''
     model.compile(
         optimizer=optimizer,
         loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
@@ -89,7 +97,7 @@ if args.training:
             tf.keras.metrics.SparseCategoricalAccuracy(name="accuracy"),
             tf.keras.metrics.SparseTopKCategoricalAccuracy(5, name="top-5-accuracy"),
         ],
-    )
+    )'''
 
     checkpoint_filepath = "/tmp/checkpoint"
     checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
