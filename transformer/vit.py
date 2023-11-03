@@ -42,7 +42,7 @@ def mlp(x: tf.Tensor, hidden_units: List[int], dropout_rate: float) -> tf.Tensor
     """
     for units in hidden_units:
         x = layers.Dense(units)(x)
-        x = Activation(igelu, name='igelu')(x)
+        x = Activation(igelu)(x)
         x = layers.Dropout(dropout_rate)(x)
     return x
 
