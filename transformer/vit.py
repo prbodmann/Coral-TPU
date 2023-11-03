@@ -5,6 +5,7 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from keras.utils.generic_utils import get_custom_objects
 from keras.layers import Activation
+from tensorflow.keras import activations
 
 def igelu(x):
     coeff = tf.cast(0.044715, x.dtype)
@@ -42,7 +43,7 @@ def mlp(x: tf.Tensor, hidden_units: List[int], dropout_rate: float) -> tf.Tensor
     """
     for units in hidden_units:
         x = layers.Dense(units)(x)
-        x = Activation(igelu)(x)
+        x = Activation(activations.relu)(x)
         x = layers.Dropout(dropout_rate)(x)
     return x
 
