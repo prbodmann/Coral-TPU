@@ -3,11 +3,14 @@ from typing import List
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
-
+from keras.utils.generic_utils import get_custom_objects
+from keras.layers import Activation
 
 def igelu(x):
     coeff = tf.cast(0.044715, x.dtype)
     return 0.5 * x * (1.0 + tf.tanh(0.7978845608028654 * (x + coeff * tf.pow(x, 3))))
+
+get_custom_objects().update({'igelu': Activation(igelu)})
 
 class CreatePatches( tf.keras.layers.Layer ):
 
@@ -44,8 +47,7 @@ def mlp(x: tf.Tensor, hidden_units: List[int], dropout_rate: float) -> tf.Tensor
         tf.Tensor: Output
     """
     for units in hidden_units:
-        x = layers.Dense(units)(x)
-        x = igelu(x)
+        x = layers.Dense(units, activation=igelu)(x)
         x = layers.Dropout(dropout_rate)(x)
     return x
 
@@ -63,7 +65,7 @@ class Patches2(layers.Layer):
         batch_size = tf.shape(images)[0]
         patches = self.patches_layer(images)
         patches = tf.reshape(patches,[batch_size,self.patch_size,self.patch_size,self.num_patches*3])
-        print(patches.shape)
+        #print(patches.shape)
         patch_dims = self.num_patches * 3
         patches = tf.reshape(patches, [batch_size, self.patch_size*self.patch_size, patch_dims])
         return patches
