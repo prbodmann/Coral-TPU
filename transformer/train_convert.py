@@ -5,6 +5,7 @@ from tensorflow.keras.utils import to_categorical
 from vit import create_vit_classifier
 import tensorflow_addons as tfa
 import tensorflow.keras.layers as nn
+from tensorflow.keras.models import Model
 import numpy as np
 learning_rate = 0.001
 weight_decay = 0.0001
@@ -140,7 +141,9 @@ test_dataset = test_dataset.batch(1).map(lambda x, y: (data_resize(x), y))
 
 newInput = Input(batch_shape=(1,image_size,image_size,3))
 newOutputs = model(newInput)
-model = Model(newInput,newOutputs)
+newModel = Model(newInput,newOutputs)
+newModel.set_weights(model.get_weights())
+model = newModel
 X = np.random.rand(1, image_size, image_size, 3)
 y_pred = model.predict(X)
 print(y_pred)
