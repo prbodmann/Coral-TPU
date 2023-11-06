@@ -52,10 +52,7 @@ data_resize = tf.keras.Sequential(
         )
 data_resize.layers[0].adapt(x_test)
 
-train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
-train_dataset = train_dataset.batch(batch_size).map(lambda x, y: (data_resize_aug(x), y))
-test_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
-test_dataset = test_dataset.batch(batch_size).map(lambda x, y: (data_resize(x), y))
+
 # one hot encode target values
 
 # convert from integers to floats
@@ -65,7 +62,10 @@ test_dataset = test_dataset.batch(batch_size).map(lambda x, y: (data_resize(x), 
 #x_train = x_train / 255.0
 #x_test = x_test / 255.0
 if args.training:
-
+    train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+    train_dataset = train_dataset.batch(batch_size).map(lambda x, y: (data_resize_aug(x), y))
+    test_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+    test_dataset = test_dataset.batch(batch_size).map(lambda x, y: (data_resize(x), y))
 
     model =  create_vit_classifier(input_shape=[image_size, image_size, 3],
                                            num_classes=100,
@@ -130,12 +130,24 @@ if args.training:
     print(results)
     
 else:
+    batch_size=1
+    train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+    train_dataset = train_dataset.batch(batch_size).map(lambda x, y: (data_resize_aug(x), y))
+    test_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+    test_dataset = test_dataset.batch(batch_size).map(lambda x, y: (data_resize(x), y))
     model=  tf.keras.models.load_model('wip_model')
+    model.fit(
+        x=train_dataset,
+        validation_data=test_dataset,
+        epochs=1,
+        batch_size=1,
+        verbose=1   
+    )
     img = tf.random.normal(shape=[1, image_size, image_size, 3])
     preds = model(img)
     print(preds)
 
-batch_size=1
+
 #print([tf.expand_dims(tf.dtypes.cast(x_train[0], tf.float32),0)])
 def representative_data_gen():
     data = test_dataset.take(100)
