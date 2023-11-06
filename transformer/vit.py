@@ -9,7 +9,7 @@ from tensorflow.keras import activations
 import tensorflow_addons as tfa
 import tensorflow.keras.layers as nn
 from tensorflow.keras import Sequential
-
+from opt_head import OptimizedMultiHeadAttention
 #0.04553992412
 pi=3.141592653589793
 
@@ -162,7 +162,7 @@ def create_vit_classifier(input_shape,
     return model
 
 
-def create_vit_classifier(input_shape,
+'''def create_vit_classifier(input_shape,
                           num_classes: int,
                           image_size: int,
                           patch_size: int,
@@ -217,3 +217,4 @@ def create_vit_classifier(input_shape,
     model = keras.Model(inputs=inputs, outputs=logits)
     
     return model
+'''
