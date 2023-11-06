@@ -41,7 +41,7 @@ class CreatePatches( tf.keras.layers.Layer ):
     return  tf.stack(patches,axis=-2)
 
 
-def mlp( tf.keras.layers.Layer ):
+class mlp( tf.keras.layers.Layer ):
     """Multi-Layer Perceptron
 
     Args:
