@@ -136,7 +136,7 @@ else:
     test_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
     test_dataset = test_dataset.batch(1).map(lambda x, y: (data_resize(x), y))
     model=  tf.keras.models.load_model('wip_model')
-    model.layers[0]._batch_input_shape tf.keras.Input(shape=[image_size,image_size,3],batch_size=1)
+    model.layers[0]._batch_input_shape = tf.keras.Input(shape=[image_size,image_size,3],batch_size=1)
     X = np.random.rand(1, image_size, image_size, 3)
     y_pred = new_model.predict(X)
     print(y_pred)
