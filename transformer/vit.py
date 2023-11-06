@@ -4,7 +4,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 from keras.utils.generic_utils import get_custom_objects
-from keras.layers import Activation
+from tensorflow.keras.layers import Activation
 from tensorflow.keras import activations
 import tensorflow_addons as tfa
 import tensorflow.keras.layers as nn
