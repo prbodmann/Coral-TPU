@@ -131,7 +131,7 @@ if args.training:
     
 else:
     batch_size=1
-    train_dataset = tf.data.Dataset.from_tensor_slices((x_train[1000], y_train[1000]))
+    train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
     train_dataset = train_dataset.batch(batch_size).map(lambda x, y: (data_resize_aug(x), y))
     test_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
     test_dataset = test_dataset.batch(batch_size).map(lambda x, y: (data_resize(x), y))
@@ -167,7 +167,7 @@ converter_quant.inference_input_type = tf.float32 # changed from tf.uint8
 converter_quant.inference_output_type = tf.float32 # changed from tf.uint8
 converter_quant.experimental_new_converter = True
 converter_quant.allow_custom_ops=True
-converter._experimental_new_quantizer = True
+converter_quant._experimental_new_quantizer = True
 print('what')
 tflite_model = converter_quant.convert()
 print("finished converting")
