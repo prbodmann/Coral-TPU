@@ -15,7 +15,7 @@ pi=3.141592653589793
 
 #0.5 * x * (1 + tf.tanh(tf.sqrt(2 / pi) * (x + 0.044715 * tf.pow(x,3))))
 def igelu(x):
-
+    x = tf.cast(x,tf.float32)
     return 0.5 * x * (1 + tf.math.erf(x / tf.sqrt(2)))
     #return 0.5 * x * (1.0 + tf.tanh(0.7978845608028653 * (x + 0.04553992412 * tf.pow(x,3))))
     #return 0.5 * x * (1.0 + tf.tanh(0.7978845608028653 * (x + 0.04553992412 * tf.pow(x, 3))))
