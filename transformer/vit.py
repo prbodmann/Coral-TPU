@@ -58,7 +58,7 @@ class Mlp( tf.keras.layers.Layer ):
         
         self.net=[]
         for units in hidden_units:
-            self.net.append(layers.Dense(units, activation=tf.nn.gelu))
+            self.net.append(layers.Dense(units, activation=igelu))
             self.net.append(layers.Dropout(dropout_rate))
         self.net = Sequential(self.net)
     def call(self, x, training=True):
