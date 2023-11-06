@@ -132,7 +132,8 @@ if args.training:
 else:
     model=  tf.keras.models.load_model('wip_model')
     img = tf.random.normal(shape=[1, image_size, image_size, 3])
-    preds = model(img) 
+    preds = model(img)
+    print(preds)
 
 batch_size=1
 #print([tf.expand_dims(tf.dtypes.cast(x_train[0], tf.float32),0)])
