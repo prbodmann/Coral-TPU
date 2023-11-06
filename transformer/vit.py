@@ -12,7 +12,8 @@ from tensorflow.keras import Sequential
 from opt_head import OptimizedMultiHeadAttention
 #0.04553992412
 pi=3.141592653589793
-
+a = -0.2888
+b = -1.769
 def L(x):
     return tf.tanh(1000*x)*(a*(tf.math.minimum(x*tf.tanh(1000*x),-b)+b)**2+1)   
 
