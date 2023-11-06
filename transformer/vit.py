@@ -115,7 +115,7 @@ def create_vit_classifier(input_shape,
                           n_transformer_layers: int,
                           num_heads: int,
                           transformer_units: List[int],
-                          Mlp_head_units: List[int],
+                          mlp_head_units: List[int],
                           normalization: bool=False):
     inputs = layers.Input(shape=input_shape)
     
