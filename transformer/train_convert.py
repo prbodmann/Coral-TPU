@@ -8,7 +8,7 @@ import tensorflow.keras.layers as nn
 
 learning_rate = 0.001
 weight_decay = 0.0001
-batch_size = 1
+batch_size = 512
 num_epochs = 10
 image_size = 64  # We'll resize input images to this size
 
@@ -167,7 +167,7 @@ converter_quant.inference_input_type = tf.float32 # changed from tf.uint8
 converter_quant.inference_output_type = tf.float32 # changed from tf.uint8
 converter_quant.experimental_new_converter = True
 converter_quant.allow_custom_ops=True
-converter_quant._experimental_new_quantizer = True
+converter_quant._experimental_new_quantizer = False
 print('what')
 tflite_model = converter_quant.convert()
 print("finished converting")
