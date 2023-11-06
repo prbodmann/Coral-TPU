@@ -12,26 +12,6 @@ from tensorflow.keras import Sequential
 from opt_head import OptimizedMultiHeadAttention
 #0.04553992412
 pi=3.141592653589793
-a = -0.2888
-b = -1.769
-
-
-def sgn(x):
-    return tf.tanh(1000*x)
-
-def my_abs(x):
-    return x*sgn(x)
-
-def L(x):
-    return sgn(x)*(a*(tf.math.minimum(my_abs(x),-b)+b)**2+1)   
-
-
-
-
-def igelu(x):
-    return 0.5 * x * (1 + L(x/tf.math.sqrt(2.0)))
-    
-
 
 #0.5 * x * (1 + tf.tanh(tf.sqrt(2 / pi) * (x + 0.044715 * tf.pow(x,3))))
 def other_gelu(x):
