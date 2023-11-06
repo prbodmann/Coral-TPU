@@ -8,7 +8,7 @@ import tensorflow.keras.layers as nn
 
 learning_rate = 0.001
 weight_decay = 0.0001
-batch_size = 256
+batch_size = 1
 num_epochs = 10
 image_size = 64  # We'll resize input images to this size
 
@@ -132,9 +132,9 @@ if args.training:
 else:
     batch_size=1
     train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
-    train_dataset = train_dataset.batch(batch_size).map(lambda x, y: (data_resize_aug(x), y))
+    train_dataset = train_dataset.batch(1).map(lambda x, y: (data_resize_aug(x), y))
     test_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
-    test_dataset = test_dataset.batch(batch_size).map(lambda x, y: (data_resize(x), y))
+    test_dataset = test_dataset.batch(1).map(lambda x, y: (data_resize(x), y))
     model=  tf.keras.models.load_model('wip_model')
     model.fit(
         x=train_dataset,
