@@ -41,7 +41,7 @@ class CreatePatches( tf.keras.layers.Layer ):
     return  tf.stack(patches,axis=-2)
 
 
-class mlp( tf.keras.layers.Layer ):
+class Mlp( tf.keras.layers.Layer ):
     """Multi-Layer Perceptron
 
     Args:
@@ -54,7 +54,7 @@ class mlp( tf.keras.layers.Layer ):
     
     """
     def __init__( self , hidden_units,dropout_rate ):
-        super( CreatePatches , self ).__init__()
+        super( Mlp , self ).__init__()
         
         self.net=[]
         for units in hidden_units:
@@ -115,7 +115,7 @@ def create_vit_classifier(input_shape,
                           n_transformer_layers: int,
                           num_heads: int,
                           transformer_units: List[int],
-                          mlp_head_units: List[int],
+                          Mlp_head_units: List[int],
                           normalization: bool=False):
     inputs = layers.Input(shape=input_shape)
     
@@ -140,8 +140,8 @@ def create_vit_classifier(input_shape,
         x2 = layers.Add()([attention_output, encoded_patches])
         # Layer normalization 2.
         x3 = layers.LayerNormalization(epsilon=1e-6)(x2)
-        # MLP.
-        x3 = mlp( hidden_units=transformer_units, dropout_rate=0.1)(x3)
+        # Mlp.
+        x3 = Mlp( hidden_units=transformer_units, dropout_rate=0.1)(x3)
         # Skip connection 2.
         encoded_patches = layers.Add()([x3, x2])
 
@@ -150,8 +150,8 @@ def create_vit_classifier(input_shape,
     representation = layers.Flatten()(representation)
     representation = layers.Dropout(dropout)(representation)
     
-    # Add MLP.
-    features = mlp(representation, hidden_units=mlp_head_units, dropout_rate=dropout)
+    # Add Mlp.
+    features = Mlp( hidden_units=Mlp_head_units, dropout_rate=dropout)(representation)
     
     # Classify outputs.
     logits = layers.Dense(num_classes)(features)
@@ -172,7 +172,7 @@ def create_vit_classifier(input_shape,
                           n_transformer_layers: int,
                           num_heads: int,
                           transformer_units: List[int],
-                          mlp_head_units: List[int],
+                          Mlp_head_units: List[int],
                           normalization: bool=False):
     inputs = layers.Input(shape=input_shape)
     
@@ -197,8 +197,8 @@ def create_vit_classifier(input_shape,
         x2 = layers.Add()([attention_output, encoded_patches])
         # Layer normalization 2.
         x3 = layers.LayerNormalization(epsilon=1e-6)(x2)
-        # MLP.
-        x3 = mlp(x3, hidden_units=transformer_units, dropout_rate=0.1)
+        # Mlp.
+        x3 = Mlp(x3, hidden_units=transformer_units, dropout_rate=0.1)
         # Skip connection 2.
         encoded_patches = layers.Add()([x3, x2])
 
@@ -207,8 +207,8 @@ def create_vit_classifier(input_shape,
     representation = layers.Flatten()(representation)
     representation = layers.Dropout(dropout)(representation)
     
-    # Add MLP.
-    features = mlp(representation, hidden_units=mlp_head_units, dropout_rate=dropout)
+    # Add Mlp.
+    features = Mlp(representation, hidden_units=Mlp_head_units, dropout_rate=dropout)
     
     # Classify outputs.
     logits = layers.Dense(num_classes)(features)
