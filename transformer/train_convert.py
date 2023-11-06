@@ -23,6 +23,8 @@ args = parser.parse_args()
 
 
 (x_train, y_train), (x_test, y_test) = datasets.cifar100.load_data()
+x_train = tf.cast(x_train,tf.float32)
+x_test = tf.cast(x_test,tf.float32)
 #y_train = to_categorical(y_train)
 #y_test = to_categorical(y_test)
 
