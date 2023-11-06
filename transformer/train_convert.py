@@ -131,13 +131,16 @@ if args.training:
     
 else:
     model=  tf.keras.models.load_model('wip_model')
+
 batch_size=1
 train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
 train_dataset = train_dataset.batch(1).map(lambda x, y: (data_resize_aug(x), y))
 test_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
 test_dataset = test_dataset.batch(1).map(lambda x, y: (data_resize(x), y))
 
-model.layers[0]._batch_input_shape = tf.keras.Input(shape=[image_size,image_size,3],batch_size=1)
+newInput = Input(batch_shape=(1,image_size,image_size,3))
+newOutputs = model(newInput)
+model = Model(newInput,newOutputs)
 X = np.random.rand(1, image_size, image_size, 3)
 y_pred = model.predict(X)
 print(y_pred)
