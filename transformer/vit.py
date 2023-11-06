@@ -151,7 +151,7 @@ def create_vit_classifier(input_shape,
     representation = layers.Dropout(dropout)(representation)
     
     # Add Mlp.
-    features = Mlp( hidden_units=Mlp_head_units, dropout_rate=dropout)(representation)
+    features = Mlp( hidden_units=mlp_head_units, dropout_rate=dropout)(representation)
     
     # Classify outputs.
     logits = layers.Dense(num_classes)(features)
