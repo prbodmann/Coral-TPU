@@ -167,7 +167,7 @@ converter_quant.inference_input_type = tf.float32 # changed from tf.uint8
 converter_quant.inference_output_type = tf.float32 # changed from tf.uint8
 converter_quant.experimental_new_converter = True
 converter_quant.allow_custom_ops=True
-
+converter._experimental_new_quantizer = True
 print('what')
 tflite_model = converter_quant.convert()
 print("finished converting")
