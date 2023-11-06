@@ -14,16 +14,27 @@ from opt_head import OptimizedMultiHeadAttention
 pi=3.141592653589793
 a = -0.2888
 b = -1.769
-def L(x):
-    return tf.tanh(1000*x)*(a*(tf.math.minimum(x*tf.tanh(1000*x),-b)+b)**2+1)   
 
-def other_gelu(x):
+
+def sgn(x):
+    return tf.tanh(1000*x)
+
+def my_abs(x):
+    return x*sgn(x)
+
+def L(x):
+    return sgn(x)*(a*(tf.math.minimum(my_abs(x),-b)+b)**2+1)   
+
+
+
+
+def igelu(x):
     return 0.5 * x * (1 + L(x/tf.math.sqrt(2.0)))
     
 
 
 #0.5 * x * (1 + tf.tanh(tf.sqrt(2 / pi) * (x + 0.044715 * tf.pow(x,3))))
-def igelu(x):
+def other_gelu(x):
 
     #return 0.5 * x * (1 + tf.math.erf(x / tf.sqrt(2.0)))
     return 0.5 * x * (1 + tf.tanh(tf.sqrt(2.0 / pi) * (x + 0.044715 * tf.pow(x,3))))
