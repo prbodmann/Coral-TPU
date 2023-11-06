@@ -17,7 +17,7 @@ def L(x):
     return tf.tanh(1000*x)*(a*(tf.math.minimum(x*tf.tanh(1000*x),-b)+b)**2+1)   
 
 def other_gelu(x):
-    return 0.5 * x * (1 + L(x/sqrt(2.0)))
+    return 0.5 * x * (1 + L(x/tf.math.sqrt(2.0)))
     
 
 
