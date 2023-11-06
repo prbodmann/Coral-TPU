@@ -13,6 +13,13 @@ from opt_head import OptimizedMultiHeadAttention
 #0.04553992412
 pi=3.141592653589793
 
+def L(x):
+    return tf.tanh(1000*x)*(a*(tf.math.minimum(x*tf.tanh(1000*x),-b)+b)**2+1)   
+
+def other_gelu(x):
+    return 0.5 * x * (1 + L(x/sqrt(2.0)))
+    
+
 
 #0.5 * x * (1 + tf.tanh(tf.sqrt(2 / pi) * (x + 0.044715 * tf.pow(x,3))))
 def igelu(x):
@@ -58,7 +65,7 @@ class Mlp( tf.keras.layers.Layer ):
         
         self.net=[]
         for units in hidden_units:
-            self.net.append(layers.Dense(units, activation=igelu))
+            self.net.append(layers.Dense(units, activation=other_gelu))
             self.net.append(layers.Dropout(dropout_rate))
         self.net = Sequential(self.net)
     def call(self, x, training=True):

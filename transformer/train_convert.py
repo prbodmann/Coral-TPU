@@ -8,7 +8,7 @@ import tensorflow.keras.layers as nn
 import numpy as np
 learning_rate = 0.001
 weight_decay = 0.0001
-batch_size = 512
+batch_size = 256
 num_epochs = 10
 image_size = 64  # We'll resize input images to this size
 
