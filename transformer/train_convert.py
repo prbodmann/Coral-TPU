@@ -70,7 +70,7 @@ if args.training:
     test_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
     test_dataset = test_dataset.batch(batch_size).map(lambda x, y: (data_resize(x), y))
     model = create_mobilevit(num_classes=100)
-'''
+    '''
     model =  create_vit_classifier(input_shape=[image_size, image_size, 3],
                                            num_classes=100,
                                            image_size=image_size,
