@@ -102,9 +102,9 @@ class CreatePatches( tf.keras.layers.Layer ):
     
     for i in range( 0 , self.input_image_size , self.patch_size ):
         for j in range( 0 , self.input_image_size , self.patch_size ):
-            patches.append( inputs[ : , i : i + self.patch_size , j : j + self.patch_size , : ] )
-    
-    return  tf.stack(patches,axis=-2)
+            tf.concat(patches, inputs[ : , i : i + self.patch_size , j : j + self.patch_size , : ] )
+    print(patches.shape)
+    return  patches
 
 
 class Mlp( tf.keras.layers.Layer ):
