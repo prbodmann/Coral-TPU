@@ -4,7 +4,7 @@ from tensorflow.keras import Model
 from tensorflow.keras.layers import Layer
 from tensorflow.keras import Sequential
 import tensorflow.keras.layers as nn
-
+from tensorflow.keras.src.applications import imagenet_utils
 patch_size = 8
 
 def conv_block(x, filters=16, kernel_size=3, strides=2):
