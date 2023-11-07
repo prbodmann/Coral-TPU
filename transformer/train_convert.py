@@ -73,13 +73,13 @@ if args.training:
                                            image_size=image_size,
                                            patch_size=patch_size,
                                            num_patches=(image_size // patch_size) ** 2,
-                                           projection_dim=256,
+                                           projection_dim=128,
                                            dropout=0.2,
                                            n_transformer_layers=3,
                                            num_heads=4,
                                            transformer_units=[
-                                                                512,
-                                                                256,
+                                                                128,
+                                                                128,
                                                             ],
                                            mlp_head_units=[256])
     optimizer = tfa.optimizers.AdamW(
