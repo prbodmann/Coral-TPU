@@ -33,7 +33,7 @@ def inverted_residual_block(x, expanded_channels, output_channels, strides=1):
     if tf.math.equal(x.shape[-1], output_channels) and strides == 1:
         return layers.Add()([m, x])
     return m
-d
+
 class Mlp( tf.keras.layers.Layer ):
     """Multi-Layer Perceptron
 
