@@ -160,15 +160,15 @@ model.summary()
 
 #print([tf.expand_dims(tf.dtypes.cast(x_train[0], tf.float32),0)])
 def representative_data_gen():
-    for input_value in tf.data.Dataset.from_tensor_slices(x_train).batch(1).take(1000):
-        yield [tf.cast(input_value,tf.float32)]
+    for input_value in train_dataset.take(1000):
+        yield [input_value[0]]
 
 converter_quant = tf.lite.TFLiteConverter.from_keras_model(model) 
 converter_quant.input_shape=(1,image_size,image_size,3)
 converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
 converter_quant.representative_dataset = representative_data_gen
 converter_quant.target_spec.supported_ops = [
-  tf.lite.OpsSet.TFLITE_BUILTINS, # enable TensorFlow Lite ops.
+  tf.lite.OpsSet.tf.lite.OpsSet.TFLITE_BUILTINS_INT8, # enable TensorFlow Lite ops.
   tf.lite.OpsSet.SELECT_TF_OPS # enable TensorFlow ops.
 ]
 converter_quant.target_spec.supported_types = [tf.int8]
