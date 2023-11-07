@@ -7,7 +7,7 @@ import tensorflow.keras.layers as nn
 from tensorflow.keras.applications import imagenet_utils
 from tensorflow.keras import backend
 from tensorflow import keras
-
+from mha import multiAttentionHead
 patch_size = 4
 
 def conv_block(x, filters=16, kernel_size=3, strides=2):
@@ -91,8 +91,8 @@ def transformer_block(x, transformer_layers, projection_dim, num_heads=2):
         # Layer normalization 1.
         x1 = layers.LayerNormalization(epsilon=1e-6)(x)
         # Create a multi-head attention layer.
-        attention_output = layers.MultiHeadAttention(
-            num_heads=num_heads, key_dim=projection_dim, dropout=0.1
+        attention_output = multiAttentionHead(
+            num_heads=num_heads, k_dim=projection_dim
         )(x1, x1)
         # Skip connection 1.
         x2 = layers.Add()([attention_output, x])
