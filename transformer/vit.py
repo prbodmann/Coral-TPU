@@ -102,7 +102,7 @@ class CreatePatches( tf.keras.layers.Layer ):
     
     for i in range( 0 , self.input_image_size , self.patch_size ):
         for j in range( 0 , self.input_image_size , self.patch_size ):
-            tf.concat(patches, inputs[ : , i : i + self.patch_size , j : j + self.patch_size , : ],axis=-2 )
+            tf.concat([patches, inputs[ : , i : i + self.patch_size , j : j + self.patch_size] , : ],axis=-2 )
     print(patches.shape)
     return  patches
 
