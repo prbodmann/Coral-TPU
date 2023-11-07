@@ -147,7 +147,7 @@ train_dataset = train_dataset.batch(1).map(lambda x, y: (data_resize_aug(x), y))
 test_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
 test_dataset = test_dataset.batch(1).map(lambda x, y: (data_resize(x), y))
 
-newInput = nn.Input(batch_shape=(1,image_size,image_size,3))
+newInput = nn.Input(batch_shape=(1,image_size,image_size,3),dtype=tf.float32)
 newOutputs = model(newInput)
 newModel = Model(newInput,newOutputs)
 newModel.set_weights(model.get_weights())
