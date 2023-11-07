@@ -102,11 +102,9 @@ class CreatePatches( tf.keras.layers.Layer ):
     
     for i in range( 0 , self.input_image_size , self.patch_size ):
         for j in range( 0 , self.input_image_size , self.patch_size ):
-            temp_patch =  inputs[ : , i : i + self.patch_size , j : j + self.patch_size , : ]
-            print(temp_patch.shape)
-            tf.concat([patches,temp_patch],axis=-2 )
-    print(patches.shape)
-    return  patches
+            patches.append( inputs[ : , i : i + self.patch_size , j : j + self.patch_size , : ] )
+    
+    return  tf.stack(patches,axis=-2)
 
 
 class Mlp( tf.keras.layers.Layer ):
@@ -145,9 +143,9 @@ class Patches2(layers.Layer):
     def call(self, images):
         #batch_size = tf.shape(images)[0]
         patches = self.patches_layer(images)
-        patches = tf.keras.layers.Reshape([self.patch_size,self.patch_size,self.num_patches*3])(patches)#tf.reshape(patches,[batch_size,self.patch_size,self.patch_size,self.num_patches*3])
+        patches = tf.keras.layers.Reshape([self.patch_size*self.patch_size,self.num_patches*3])(patches)#tf.reshape(patches,[batch_size,self.patch_size,self.patch_size,self.num_patches*3])
         #print(patches.shape)
-        patches = tf.keras.layers.Reshape([ self.patch_size*self.patch_size, self.num_patches*3])(patches)
+        #patches = tf.keras.layers.Reshape([ self.patch_size*self.patch_size, self.num_patches*3])(patches)
         #patch_dims = self.num_patches * 3
         #patches = tf.reshape(patches, [batch_size, self.patch_size*self.patch_size, patch_dims])
         return patches
