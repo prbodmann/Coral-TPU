@@ -85,7 +85,7 @@ if args.training:
                                                                 projection_dim,
                                                             ],
                                            mlp_head_units=[256])
-'''
+    '''
     optimizer = tfa.optimizers.AdamW(
         learning_rate=learning_rate, weight_decay=weight_decay
     )
