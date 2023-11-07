@@ -21,6 +21,8 @@ def other_gelu(x):
     #return 0.5 * x * (1.0 + tf.tanh(0.7978845608028653 * (x + 0.04553992412 * tf.pow(x, 3))))
 
 get_custom_objects().update({'other_gelu': Activation(other_gelu)})
+
+#https://gist.github.com/ekreutz/160070126d5e2261a939c4ddf6afb642
 class DotProductAttention(keras.layers.Layer):
     def __init__(self, use_scale=True, **kwargs):
         super(DotProductAttention, self).__init__(**kwargs)
