@@ -147,7 +147,7 @@ train_dataset = train_dataset.batch(1).map(lambda x, y: (data_resize_aug(x), y))
 test_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
 test_dataset = test_dataset.batch(1).map(lambda x, y: (data_resize(x), y))
 
-newInput = nn.Input(batch_shape=(1,image_size,image_size,3),dtype=tf.float32)
+newInput = nn.Input(batch_shape=(1,image_size,image_size,3))
 newOutputs = model(newInput)
 newModel = Model(newInput,newOutputs)
 newModel.set_weights(model.get_weights())
@@ -173,8 +173,8 @@ converter_quant.target_spec.supported_ops = [
   tf.lite.OpsSet.SELECT_TF_OPS # enable TensorFlow ops.
 ]
 converter_quant.target_spec.supported_types = [tf.uint8]
-converter_quant.inference_input_type = tf.float32 # changed from tf.uint8
-converter_quant.inference_output_type = tf.float32 # changed from tf.uint8
+converter_quant.inference_input_type = tf.uint8 # changed from tf.uint8
+converter_quant.inference_output_type = tf.uint8 # changed from tf.uint8
 converter_quant.experimental_new_converter = True
 converter_quant.allow_custom_ops=True
 converter_quant._experimental_new_quantizer = True
