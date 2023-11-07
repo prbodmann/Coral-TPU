@@ -7,7 +7,7 @@ import tensorflow.keras.layers as nn
 from tensorflow.keras.applications import imagenet_utils
 from tensorflow.keras import backend
 
-patch_size = 8
+patch_size = 4
 
 def conv_block(x, filters=16, kernel_size=3, strides=2):
     conv_layer = layers.Conv2D(
@@ -176,7 +176,7 @@ def create_mobilevit(num_classes=5,image_size=32,expansion_factor = 2,):
     x = inverted_residual_block(
         x, expanded_channels=80 * expansion_factor, output_channels=80, strides=2
     )
-    x = mobilevit_block(x, num_blocks=4, projection_dim=96)
+    x = mobilevit_block(x, num_blocks=3, projection_dim=96)
     x = conv_block(x, filters=320, kernel_size=1, strides=1)
 
     # Classification head.
