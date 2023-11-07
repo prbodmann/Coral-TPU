@@ -6,6 +6,7 @@ from tensorflow.keras import Sequential
 import tensorflow.keras.layers as nn
 from tensorflow.keras.applications import imagenet_utils
 from tensorflow.keras import backend
+from tensorflow import keras
 
 patch_size = 4
 
