@@ -111,7 +111,7 @@ def mobilevit_block(x, num_blocks, projection_dim, strides=1):
 
     return local_global_features
 
-def create_mobilevit(num_classes=5):
+def create_mobilevit(num_classes=5,image_size=32):
     inputs = keras.Input((image_size, image_size, 3))
     
 

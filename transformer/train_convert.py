@@ -3,6 +3,7 @@ import tensorflow as tf
 from tensorflow.keras import datasets
 from tensorflow.keras.utils import to_categorical
 from vit import create_vit_classifier
+from mobilevit import create_mobilevit
 import tensorflow_addons as tfa
 import tensorflow.keras.layers as nn
 from tensorflow.keras.models import Model
@@ -69,7 +70,7 @@ if args.training:
     train_dataset = train_dataset.batch(batch_size).map(lambda x, y: (data_resize_aug(x), y))
     test_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
     test_dataset = test_dataset.batch(batch_size).map(lambda x, y: (data_resize(x), y))
-    model = create_mobilevit(num_classes=100)
+    model = create_mobilevit(num_classes=100,image_size=image_size)
     '''
     model =  create_vit_classifier(input_shape=[image_size, image_size, 3],
                                            num_classes=100,
