@@ -200,8 +200,7 @@ def create_vit_classifier(input_shape,
         x1 = layers.LayerNormalization(epsilon=1e-6)(encoded_patches)
         # Create a multi-head attention layer.
         attention_output = MultiHeadAttention(
-            num_heads=num_heads, d_model=projection_dim, dropout_rate=0.1
-        )([x1,x1,x1])
+            h=num_heads)([x1,x1,x1])
         # Skip connection 1.
         x2 = layers.Add()([attention_output, encoded_patches])
         # Layer normalization 2.
