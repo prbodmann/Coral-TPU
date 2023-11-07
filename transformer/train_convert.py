@@ -72,7 +72,8 @@ if args.training:
     train_dataset = train_dataset.batch(batch_size).map(lambda x, y: (data_resize_aug(x), y))
     test_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
     test_dataset = test_dataset.batch(batch_size).map(lambda x, y: (data_resize(x), y))
-   
+    print(train_dataset)
+    print(test_dataset)
     
     model =  create_vit_classifier(input_shape=[image_size, image_size, 3],
                                            num_classes=100,
