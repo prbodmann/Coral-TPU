@@ -55,25 +55,25 @@ class MultiHeadAttention(keras.layers.Layer):
 
         self.layersQ = []
         for _ in range(self.h):
-            layer = Dense(units, activation=None, use_bias=False)
+            layer =  layers.Dense(units, activation=None, use_bias=False)
             layer.build(query_shape)
             self.layersQ.append(layer)
 
         self.layersK = []
         for _ in range(self.h):
-            layer = Dense(units, activation=None, use_bias=False)
+            layer =  layers.Dense(units, activation=None, use_bias=False)
             layer.build(key_shape)
             self.layersK.append(layer)
 
         self.layersV = []
         for _ in range(self.h):
-            layer = Dense(units, activation=None, use_bias=False)
+            layer =  layers.Dense(units, activation=None, use_bias=False)
             layer.build(value_shape)
             self.layersV.append(layer)
 
         self.attention = DotProductAttention(True)
 
-        self.out = Dense(d_model, activation=None, use_bias=False)
+        self.out =  layers.Dense(d_model, activation=None, use_bias=False)
         self.out.build((query_shape[0], query_shape[1], self.h * units))
 
     def call(self, input):
