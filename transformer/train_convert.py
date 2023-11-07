@@ -134,7 +134,7 @@ if args.training:
     results= model.evaluate(test_dataset,batch_size=batch_size)
     
     img = tf.random.normal(shape=[1, image_size, image_size, 3])
-    preds = model(img) # (1, 1000)
+    preds = model(img) 
     model.save('wip_model')
     print(results)
     
@@ -172,7 +172,7 @@ converter_quant.target_spec.supported_ops = [
   tf.lite.OpsSet.TFLITE_BUILTINS, # enable TensorFlow Lite ops.
   tf.lite.OpsSet.SELECT_TF_OPS # enable TensorFlow ops.
 ]
-converter_quant.target_spec.supported_types = [tf.int8]
+converter_quant.target_spec.supported_types = [tf.uint8]
 converter_quant.inference_input_type = tf.float32 # changed from tf.uint8
 converter_quant.inference_output_type = tf.float32 # changed from tf.uint8
 converter_quant.experimental_new_converter = True
