@@ -12,7 +12,7 @@ weight_decay = 0.0001
 batch_size = 256
 num_epochs = 10
 image_size = 64  # We'll resize input images to this size
-
+patch_size = 8
 optimizer = tfa.optimizers.AdamW(
     learning_rate=learning_rate, weight_decay=weight_decay
 )
@@ -71,7 +71,7 @@ if args.training:
     model =  create_vit_classifier(input_shape=[image_size, image_size, 3],
                                            num_classes=100,
                                            image_size=image_size,
-                                           patch_size=16,
+                                           patch_size=patch_size,
                                            num_patches=(image_size // patch_size) ** 2,
                                            projection_dim=256,
                                            dropout=0.2,
@@ -152,7 +152,7 @@ model.summary()
 
 #print([tf.expand_dims(tf.dtypes.cast(x_train[0], tf.float32),0)])
 def representative_data_gen():
-    data = test_dataset.take(100)
+    data = test_dataset.take(1000)
     for input_value in data:
         yield [input_value[0]]
 
