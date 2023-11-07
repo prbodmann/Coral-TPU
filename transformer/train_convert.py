@@ -70,8 +70,8 @@ if args.training:
     train_dataset = train_dataset.batch(batch_size).map(lambda x, y: (data_resize_aug(x), y))
     test_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
     test_dataset = test_dataset.batch(batch_size).map(lambda x, y: (data_resize(x), y))
-    model = create_mobilevit(num_classes=100,image_size=image_size)
-    '''
+   
+    
     model =  create_vit_classifier(input_shape=[image_size, image_size, 3],
                                            num_classes=100,
                                            image_size=image_size,
@@ -86,7 +86,7 @@ if args.training:
                                                                 projection_dim,
                                                             ],
                                            mlp_head_units=[256])
-    '''
+    
     optimizer = tfa.optimizers.AdamW(
         learning_rate=learning_rate, weight_decay=weight_decay
     )
