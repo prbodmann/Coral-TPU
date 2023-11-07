@@ -5,6 +5,8 @@ from tensorflow.keras.layers import Layer
 from tensorflow.keras import Sequential
 import tensorflow.keras.layers as nn
 
+patch_size = 8
+
 def conv_block(x, filters=16, kernel_size=3, strides=2):
     conv_layer = layers.Conv2D(
         filters, kernel_size, strides=strides, activation=tf.nn.swish, padding="same"
@@ -112,7 +114,7 @@ def mobilevit_block(x, num_blocks, projection_dim, strides=1):
 
     return local_global_features
 
-def create_mobilevit(num_classes=5,image_size=32):
+def create_mobilevit(num_classes=5,image_size=32,expansion_factor = 2,):
     inputs = tf.keras.Input((image_size, image_size, 3))
     
 
