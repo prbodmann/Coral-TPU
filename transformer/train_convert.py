@@ -168,7 +168,7 @@ converter_quant.input_shape=(1,image_size,image_size,3)
 converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
 converter_quant.representative_dataset = representative_data_gen
 converter_quant.target_spec.supported_ops = [
-  tf.lite.OpsSet.TFLITE_BUILTINS, # enable TensorFlow Lite ops.
+  tf.lite.OpsSet.TFLITE_BUILTINS_INT8, # enable TensorFlow Lite ops.
   tf.lite.OpsSet.SELECT_TF_OPS # enable TensorFlow ops.
 ]
 converter_quant.target_spec.supported_types = [tf.int8]
