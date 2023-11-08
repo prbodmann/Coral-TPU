@@ -14,7 +14,8 @@ batch_size = 256
 num_epochs = 10
 image_size = 64  # We'll resize input images to this size
 patch_size = 8
-projection_dim=128
+DIM=192
+MLP_RATIO=4
 
 optimizer = tfa.optimizers.AdamW(
     learning_rate=learning_rate, weight_decay=weight_decay
@@ -77,21 +78,21 @@ if args.training:
     test_dataset = test_dataset.batch(batch_size).map(lambda x, y: (data_resize(x), y))
     print(train_dataset)
     print(test_dataset)
-    model =  create_mobilevit(num_classes=100,image_size=image_size,expansion_factor = 2)
-    ''' model =  create_vit_classifier(input_shape=[image_size, image_size, 3],
-                                           num_classes=100,
-                                           image_size=image_size,
-                                           patch_size=patch_size,
-                                           num_patches=(image_size // patch_size) ** 2,
-                                           projection_dim=projection_dim,
-                                           dropout=0.2,
-                                           n_transformer_layers=3,
-                                           num_heads=4,
-                                           transformer_units=[
-                                                                projection_dim*2,
-                                                                projection_dim,
-                                                            ],
-                                           mlp_head_units=[256])'''
+    model =  cait_xxs24_224 = CaiT(
+            image_size = image_size,
+            patch_size = patch_size,
+            num_classes = 100,
+            dim = DIM,
+            depth = 12,             # depth of transformer for patch to patch attention only
+            cls_depth = 2,          # depth of cross attention of CLS tokens to patch
+            heads = 4,
+            mlp_dim = DIM * MLP_RATIO,
+            dropout = 0.0,
+            emb_dropout = 0.0,
+            layer_dropout = 0.05    # randomly dropout 5% of the layers
+        )
+
+  
     
     optimizer = tfa.optimizers.AdamW(
         learning_rate=learning_rate, weight_decay=weight_decay

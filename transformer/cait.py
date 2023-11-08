@@ -20,7 +20,7 @@ from tensorflow.keras.utils import to_categorical
 from einops import rearrange, repeat
 from einops.layers.tensorflow import Rearrange
 from random import randrange
-
+from vit import CreatePatches, MultiHeadAttention, Mlp
 
 
 @tf.function
@@ -153,8 +153,8 @@ class Transformer(Layer):
 
         for ind in range(depth):
             self.layers.append([
-                LayerScale(dim, PreNorm(Attention(dim, heads=heads, dim_head=dim_head, dropout=dropout)), depth=ind+1),
-                LayerScale(dim, PreNorm(MLP(dim, mlp_dim, dropout=dropout)), depth=ind+1)
+                LayerScale(dim, PreNorm(MultiHeadAttention(h=heads)), depth=ind+1),
+                LayerScale(dim, PreNorm(Mlp(mlp_dim, dropout)), depth=ind+1)
             ])
 
     def call(self, x, context=None, training=True):
@@ -174,10 +174,7 @@ class CaiT(Model):
         assert image_size % patch_size == 0, 'Image dimensions must be divisible by the patch size.'
         num_patches = (image_size // patch_size) ** 2
 
-        self.patch_embedding = Sequential([
-            Rearrange('b (h p1) (w p2) c -> b (h w) (p1 p2 c)', p1=patch_size, p2=patch_size),
-            Dense(units=dim)
-        ], name='patch_embedding')
+        self.patch_embedding =CreatePatches(patch_size=patch_size,num_patches=num_patches,image_size)
         self.patch_embedding.compile(optimizer, loss_fn)
 
         self.pos_embedding = tf.Variable(initial_value=tf.random.normal([1, num_patches, dim]))
