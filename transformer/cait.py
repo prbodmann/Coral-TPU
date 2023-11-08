@@ -690,7 +690,7 @@ def get_config(
     sd_prob: float = 0.0,
     global_pool: str = "token",
     pre_logits: bool = False,
-    num_classes: int = 1000,
+    num_classes: int = 100,
 ) -> typing.Dict:
     """Default configuration for CaiT models (cait_xxs24_224).
 
