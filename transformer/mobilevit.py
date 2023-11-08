@@ -182,6 +182,7 @@ def create_mobilevit(num_classes=5,image_size=32,expansion_factor = 2):
 
     # Classification head.
     x = layers.AvgPool2D()(x)
+    print(x.shape)
     outputs = layers.Dense(num_classes,activation='softmax')(x)
 
     return keras.Model(inputs, outputs)
