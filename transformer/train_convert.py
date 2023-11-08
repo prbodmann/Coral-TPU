@@ -2,12 +2,12 @@ import argparse
 import tensorflow as tf
 from tensorflow.keras import datasets
 from tensorflow.keras.utils import to_categorical
-from vit import create_vit_classifier
-from mobilevit import create_mobilevit
 import tensorflow_addons as tfa
 import tensorflow.keras.layers as nn
 from tensorflow.keras.models import Model
 import numpy as np
+from cait import Cait
+
 learning_rate = 0.001
 weight_decay = 0.0001
 batch_size = 256
