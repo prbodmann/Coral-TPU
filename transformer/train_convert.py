@@ -6,7 +6,7 @@ import tensorflow_addons as tfa
 import tensorflow.keras.layers as nn
 from tensorflow.keras.models import Model
 import numpy as np
-from cait import CaiT
+from cait import CaiT,get_config
 
 learning_rate = 0.001
 weight_decay = 0.0001
@@ -78,19 +78,8 @@ if args.training:
     test_dataset = test_dataset.batch(batch_size).map(lambda x, y: (data_resize(x), y))
     print(train_dataset)
     print(test_dataset)
-    model =  cait_xxs24_224 = CaiT(
-            image_size = image_size,
-            patch_size = patch_size,
-            num_classes = 100,
-            dim = DIM,
-            depth = 12,             # depth of transformer for patch to patch attention only
-            cls_depth = 2,          # depth of cross attention of CLS tokens to patch
-            heads = 4,
-            mlp_dim = DIM * MLP_RATIO,
-            dropout = 0.0,
-            emb_dropout = 0.0,
-            layer_dropout = 0.05    # randomly dropout 5% of the layers
-        )
+   config = get_config()
+  model = CaiT(**config)
 
   
     
