@@ -6,42 +6,71 @@ from tensorflow.python.keras.layers import einsum_dense
 #einsumdense use Lambda layer which are non trainable so using base_layer instead of keras.layers.Layer 
 from tensorflow.python.keras.engine.base_layer import Layer
 
-class multiAttentionHead(Layer):
-    def __init__(self, num_heads=10, k_dim=64, use_bias=False, **kwargs):
-        self.k_dim = self.q_dim = self.v_dim = k_dim
-        self.num_heads = num_heads
-        self.use_bias = use_bias
-        super(multiAttentionHead,self).__init__(**kwargs)
-    
+#https://gist.github.com/ekreutz/160070126d5e2261a939c4ddf6afb642
+class DotProductAttention(keras.layers.Layer):
+    def __init__(self, use_scale=True, **kwargs):
+        super(DotProductAttention, self).__init__(**kwargs)
+        self.use_scale = use_scale
+
     def build(self, input_shape):
-        self.f_dim = input_shape[-1]
-        #[B,token,feature_dim]*[feature_dim,num_heads,v_dim/q_dim/k_dim]->[B,token,num_heads,q_dim/k_dim/v_dim]
-        if self.use_bias:
-            self.query_dense = einsum_dense.EinsumDense('abc,cde->abde', output_shape=[None, self.num_heads, self.q_dim], bias_axes='de')
-            self.key_dense = einsum_dense.EinsumDense('abc,cde->abde', output_shape=[None, self.num_heads, self.k_dim], bias_axes='de')
-            self.value_dense = einsum_dense.EinsumDense('abc,cde->abde', output_shape=[None, self.num_heads, self.v_dim], bias_axes='de')
-            #[B,token,num_heads,v_dim]*[num_heads,v_dim,feature_dim]->[B,token,feature_dim]
-            self.Wo = einsum_dense.EinsumDense('abcd,cde->abe', output_shape=[None, self.f_dim], bias_axes='e')
+        query_shape = input_shape[0]
+        if self.use_scale:
+            dim_k = tf.cast(query_shape[-1], tf.float32)
+            self.scale = 1 / tf.sqrt(dim_k)
         else:
-            self.query_dense = einsum_dense.EinsumDense('abc,cde->abde', output_shape=[None, self.num_heads, self.q_dim])
-            self.key_dense = einsum_dense.EinsumDense('abc,cde->abde', output_shape=[None, self.num_heads, self.k_dim])
-            self.value_dense = einsum_dense.EinsumDense('abc,cde->abde', output_shape=[None, self.num_heads, self.v_dim])
-            #[B,token,num_heads,v_dim]*[num_heads,v_dim,feature_dim]->[B,token,feature_dim]
-            self.Wo = einsum_dense.EinsumDense('abcd,cde->abe', output_shape=[None, self.f_dim])
-        super(multiAttentionHead, self).build(input_shape)
-    
-    def call(self, input_vec, attention_mask=None):
-        query = self.query_dense(input_vec)#[B,token,num_heads,q_dim]
-        key = self.key_dense(input_vec)#[B,token,num_heads,k_dim]
-        value = self.value_dense(input_vec)#[B,token,num_heads,v_dim]
-        #[B,token,num_heads,q_dim]*[B,token,num_heads,k_dim]->[B,num_heads,token,token]
-        scaleddotproduct =  special_math_ops.einsum('abcd,aecd->acbe', query, key)
-        scaleddotproduct = tf.math.divide(scaleddotproduct, float(math.sqrt(self.k_dim)))
-        if attention_mask:
-            scaleddotproduct = tf.where(attention_mask, scaleddotproduct, -1e9)
-        softmax = tf.nn.softmax(scaleddotproduct, axis=-1)
-        #[B,num_heads,token,token]*[B,token,num_heads,v_dim]->[B,token,num_heads,v_dim]
-        softmax_value = special_math_ops.einsum('acbe,aecd->abcd', softmax, value)
-        #[B,token,num_heads,v_dim]*[num_heads,v_dim,feature_dim]->[B,token,feature_dim]
-        final = self.Wo(softmax_value)
-        return final
+            self.scale = None
+
+    def call(self, input):
+        query, key, value = input
+        score = tf.matmul(query, key, transpose_b=True)
+        if self.scale is not None:
+            score *= self.scale
+        return tf.matmul(tf.nn.softmax(score), value)
+
+class MultiHeadAttention(keras.layers.Layer):
+    def __init__(self, h=8, **kwargs):
+        super(MultiHeadAttention, self).__init__(**kwargs)
+        self.h = h
+
+    def build(self, input_shape):
+        query_shape, key_shape, value_shape = input_shape
+        d_model = query_shape[-1]
+
+        # Note: units can be anything, but this is what the paper does
+        units = d_model // self.h
+
+        self.layersQ = []
+        for _ in range(self.h):
+            layer =  layers.Dense(units, activation=None, use_bias=False)
+            layer.build(query_shape)
+            self.layersQ.append(layer)
+
+        self.layersK = []
+        for _ in range(self.h):
+            layer =  layers.Dense(units, activation=None, use_bias=False)
+            layer.build(key_shape)
+            self.layersK.append(layer)
+
+        self.layersV = []
+        for _ in range(self.h):
+            layer =  layers.Dense(units, activation=None, use_bias=False)
+            layer.build(value_shape)
+            self.layersV.append(layer)
+
+        self.attention = DotProductAttention(True)
+
+        self.out =  layers.Dense(d_model, activation=None, use_bias=False)
+        self.out.build((query_shape[0], query_shape[1], self.h * units))
+
+    def call(self, input):
+        query, key, value = input
+
+        q = [layer(query) for layer in self.layersQ]
+        k = [layer(key) for layer in self.layersK]
+        v = [layer(value) for layer in self.layersV]
+
+        # Head is in multi-head, just like the paper
+        head = [self.attention([q[i], k[i], v[i]]) for i in range(self.h)]
+
+        out = self.out(tf.concat(head, -1))
+        return out

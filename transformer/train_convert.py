@@ -74,8 +74,8 @@ if args.training:
     test_dataset = test_dataset.batch(batch_size).map(lambda x, y: (data_resize(x), y))
     print(train_dataset)
     print(test_dataset)
-    
-    model =  create_vit_classifier(input_shape=[image_size, image_size, 3],
+    model =  create_mobilevit(num_classes=100,image_size=image_size,expansion_factor = 2)
+   ''' model =  create_vit_classifier(input_shape=[image_size, image_size, 3],
                                            num_classes=100,
                                            image_size=image_size,
                                            patch_size=patch_size,
@@ -88,7 +88,7 @@ if args.training:
                                                                 projection_dim*2,
                                                                 projection_dim,
                                                             ],
-                                           mlp_head_units=[256])
+                                           mlp_head_units=[256])'''
     
     optimizer = tfa.optimizers.AdamW(
         learning_rate=learning_rate, weight_decay=weight_decay

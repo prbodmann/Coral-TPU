@@ -7,10 +7,10 @@ import tensorflow.keras.layers as nn
 from tensorflow.keras.applications import imagenet_utils
 from tensorflow.keras import backend
 from tensorflow import keras
-from mha import multiAttentionHead
+from vit import MultiHeadAttention
 patch_size = 4
 
-def conv_block(x, filters=16, kernel_size=3, strides=2):
+def j(x, filters=16, kernel_size=3, strides=2):
     conv_layer = layers.Conv2D(
         filters, kernel_size, strides=strides, activation=tf.nn.swish, padding="same"
     )
@@ -91,9 +91,9 @@ def transformer_block(x, transformer_layers, projection_dim, num_heads=2):
         # Layer normalization 1.
         x1 = layers.LayerNormalization(epsilon=1e-6)(x)
         # Create a multi-head attention layer.
-        attention_output = multiAttentionHead(
-            num_heads=num_heads, k_dim=projection_dim
-        )(x1, x1)
+        attention_output = MultiHeadAttention(
+            h=num_heads
+        )[x1,x1, x1]
         # Skip connection 1.
         x2 = layers.Add()([attention_output, x])
         # Layer normalization 2.
@@ -140,7 +140,7 @@ def mobilevit_block(x, num_blocks, projection_dim, strides=1):
 
     return local_global_features
 
-def create_mobilevit(num_classes=5,image_size=32,expansion_factor = 2,):
+def create_mobilevit(num_classes=5,image_size=32,expansion_factor = 2):
     inputs = tf.keras.Input((image_size, image_size, 3))
     
 
