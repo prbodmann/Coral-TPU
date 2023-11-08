@@ -154,18 +154,6 @@ class StochasticDepth(layers.Layer):
 
 
 """
-## MLP for the Transformers encoder
-"""
-
-
-def mlp(x, hidden_units, dropout_rate):
-    for units in hidden_units:
-        x = layers.Dense(units, activation=tf.nn.gelu)(x)
-        x = layers.Dropout(dropout_rate)(x)
-    return x
-
-
-"""
 ## Data augmentation
 
 In the [original paper](https://arxiv.org/abs/2104.05704), the authors use
@@ -175,16 +163,7 @@ and flipping.
 """
 
 # Note the rescaling layer. These layers have pre-defined inference behavior.
-data_augmentation = keras.Sequential(
-    [
-        layers.Rescaling(scale=1.0 / 255),
-        layers.RandomCrop(image_size, image_size),
-        layers.RandomFlip("horizontal"),
-    ],
-    name="data_augmentation",
-)
 
-"""
 ## The final CCT model
 
 Another recipe introduced in CCT is attention pooling or sequence pooling. In ViT, only
@@ -205,7 +184,7 @@ def create_cct_model(
     inputs = layers.Input(input_shape)
 
     # Augment data.
-    augmented = data_augmentation(inputs)
+    augmented = inputs
 
     # Encode patches.
     cct_tokenizer = CCTTokenizer()
