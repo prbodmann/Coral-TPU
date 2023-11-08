@@ -23,8 +23,11 @@ optimizer = tfa.optimizers.AdamW(
 parser = argparse.ArgumentParser(description='Process some integers.')
 parser.add_argument('--training', action = 'store_const', dest = 'training',
                            default = False, required = False,const=True)
+parser.add_argument('--model_name', action = 'store', dest = 'model_name',
+                           default = 'wip_model', required = False,const=True)
 args = parser.parse_args()
 
+model_name=args.model_name
 
 (x_train, y_train), (x_test, y_test) = datasets.cifar100.load_data()
 #x_train = tf.cast(x_train,tf.float32)
@@ -135,11 +138,11 @@ if args.training:
     
     img = tf.random.normal(shape=[1, image_size, image_size, 3])
     preds = model(img) 
-    model.save('wip_model')
+    model.save(model_name)
     print(results)
     
 else:
-    model=  tf.keras.models.load_model('wip_model')
+    model=  tf.keras.models.load_model(model_name)
 
 batch_size=1
 train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
@@ -180,4 +183,4 @@ converter_quant._experimental_new_quantizer = True
 print('what')
 tflite_model = converter_quant.convert()
 print("finished converting")
-open("wip_model.tflite", "wb").write(tflite_model)
+open(model_name+".tflite", "wb").write(tflite_model)
