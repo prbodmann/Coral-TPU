@@ -26,7 +26,7 @@ test_tensor=tf.random.uniform(
 result = tf.matmul(test_tensor,test_tensor,transpose_b=True)
 
 temp1= tf.split(test_tensor, b, axis=1)
-
+print(temp1)
 list_tensors = []
 
 for i in temp1:
