@@ -75,7 +75,7 @@ if args.training:
     print(train_dataset)
     print(test_dataset)
     model =  create_mobilevit(num_classes=100,image_size=image_size,expansion_factor = 2)
-   ''' model =  create_vit_classifier(input_shape=[image_size, image_size, 3],
+    ''' model =  create_vit_classifier(input_shape=[image_size, image_size, 3],
                                            num_classes=100,
                                            image_size=image_size,
                                            patch_size=patch_size,
