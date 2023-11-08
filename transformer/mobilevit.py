@@ -10,7 +10,7 @@ from tensorflow import keras
 from vit import MultiHeadAttention
 patch_size = 4
 
-def j(x, filters=16, kernel_size=3, strides=2):
+def conv_block(x, filters=16, kernel_size=3, strides=2):
     conv_layer = layers.Conv2D(
         filters, kernel_size, strides=strides, activation=tf.nn.swish, padding="same"
     )
