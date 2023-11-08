@@ -154,7 +154,7 @@ class Transformer(Layer):
         for ind in range(depth):
             self.layers.append([
                 LayerScale(dim, PreNorm(MultiHeadAttention(h=heads)), depth=ind+1),
-                LayerScale(dim, PreNorm(Mlp(mlp_dim, dropout)), depth=ind+1)
+                LayerScale(dim, PreNorm(Mlp([mlp_dim], dropout)), depth=ind+1)
             ])
 
     def call(self, x, context=None, training=True):
