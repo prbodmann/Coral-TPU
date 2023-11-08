@@ -194,7 +194,7 @@ class CaiT(Model):
 
     def call(self, img, training=True, **kwargs):
         x = self.patch_embedding(img)
-        #x = tf.keras.layers.Reshape([image_size // patch_size])
+        x = tf.keras.layers.Reshape([image_size // patch_size,image_size // patch_size*image_size*3])(x)
         print(x.shape)
         b, n, d = x.shape
         #print(b, n, d)
