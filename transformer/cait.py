@@ -174,7 +174,7 @@ class CaiT(Model):
         assert image_size % patch_size == 0, 'Image dimensions must be divisible by the patch size.'
         num_patches = (image_size // patch_size) ** 2
 
-        self.patch_embedding =CreatePatches(patch_size=patch_size,num_patches=num_patches,image_size)
+        self.patch_embedding =CreatePatches(patch_size=patch_size,num_patches=num_patches,input_image_size=image_size)
         self.patch_embedding.compile(optimizer, loss_fn)
 
         self.pos_embedding = tf.Variable(initial_value=tf.random.normal([1, num_patches, dim]))
