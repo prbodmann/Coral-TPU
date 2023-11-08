@@ -31,9 +31,7 @@ list_tensors = []
 
 for i in temp1:
    x1 = tf.reshape(i,shape=[1,a])
-   x = layers.Conv2D(1, kernel_size = [1,b],
-                      kernel_initializer=x1,
-                      strides=b, padding='valid') (test_tensor)
+   x = tf.conv(test_tensor, filter=x1 padding='valid') (test_tensor)
    list_tensors.append(x)
 
 result2 = tf.concat(list_tensors,axis=-2)
