@@ -188,7 +188,7 @@ class CaiT(Model):
             LayerNormalization(),
             Dense(units=num_classes)
         ], name='mlp_head')
-        self.mlp_head.compile(optimizer, loss_fn)
+
 
     def call(self, img, training=True, **kwargs):
         x = self.patch_embedding(img)
