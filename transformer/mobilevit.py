@@ -41,10 +41,10 @@ class DotProductAttention(keras.layers.Layer):
 
     def call(self, input):
         query, key, value = input
-        score = my_matmul(query, key, transpose_b=True)
+        score =  tf.matmul(query, key, transpose_b=True)
         if self.scale is not None:
             score *= self.scale
-        return my_matmul(tf.nn.softmax(score), value)
+        return  tf.matmul(tf.nn.softmax(score), value)
 
 class MultiHeadAttention(keras.layers.Layer):
     def __init__(self, h=8, **kwargs):
