@@ -229,17 +229,17 @@ def create_vit_classifier(input_shape,
     return model
 
 
-  ''' model =  create_vit_classifier(input_shape=[image_size, image_size, 3],
-                                           num_classes=100,
-                                           image_size=image_size,
-                                           patch_size=patch_size,
-                                           num_patches=(image_size // patch_size) ** 2,
-                                           projection_dim=projection_dim,
-                                           dropout=0.2,
-                                           n_transformer_layers=3,
-                                           num_heads=4,
-                                           transformer_units=[
-                                                                projection_dim*2,
-                                                                projection_dim,
-                                                            ],
-                                           mlp_head_units=[256])'''
+''' model =  create_vit_classifier(input_shape=[image_size, image_size, 3],
+                                       num_classes=100,
+                                       image_size=image_size,
+                                       patch_size=patch_size,
+                                       num_patches=(image_size // patch_size) ** 2,
+                                       projection_dim=projection_dim,
+                                       dropout=0.2,
+                                       n_transformer_layers=3,
+                                       num_heads=4,
+                                       transformer_units=[
+                                                            projection_dim*2,
+                                                            projection_dim,
+                                                        ],
+                                       mlp_head_units=[256])'''
