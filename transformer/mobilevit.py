@@ -12,13 +12,13 @@ patch_size = 4
 b=32
 a=16
 def my_matmu(x,y):
-    temp1= tf.split(y, b, axis=1,transpose_b=False)
+    temp1= tf.split(y, y.shape[2], axis=1,transpose_b=False)
     print(temp1)
     list_tensors = []
 
     for i in temp1:
-        if transpose_b
-        x1 = tf.reshape(i,shape=[1,a])
+        if transpose_b:
+            x1 = tf.reshape(i,shape=[1,y.shape[1]])
         x2 = tf.matmul(i,x)
         #x = tf.nn.conv1d(test_tensor, filters=x1,stride=1, padding='VALID') (test_tensor)
         list_tensors.append(x2)
