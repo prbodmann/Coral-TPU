@@ -678,7 +678,7 @@ a model configuration that will be passed to our `CaiT` class for initialization
 
 def get_config(
     image_size: int = 64,
-    patch_size: int = 8,
+    patch_size: int = 16,
     projection_dim: int = 192,
     sa_ffn_layers: int = 24,
     ca_ffn_layers: int = 2,
