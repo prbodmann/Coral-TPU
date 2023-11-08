@@ -23,7 +23,7 @@ test_tensor=tf.random.uniform(
     seed=None,
     name=None
 )
-result = tf.matmul(test_tensor,test_tensor)
+result = tf.matmul(test_tensor,test_tensor,transpose_b=True)
 
 temp1= tf.split(test_tensor, b, axis=1)
 
