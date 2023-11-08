@@ -655,7 +655,7 @@ class CaiT(keras.Model):
         return (
             (x, sa_ffn_attn, ca_ffn_attn)
             if self.pre_logits
-            else (self.head(x), sa_ffn_attn, ca_ffn_attn)
+            else (self.head(x))
         )
 
 
