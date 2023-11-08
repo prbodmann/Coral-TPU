@@ -6,7 +6,7 @@ import tensorflow_addons as tfa
 import tensorflow.keras.layers as nn
 from tensorflow.keras.models import Model
 import numpy as np
-from cct import
+from cct import create_cct_model
 
 learning_rate = 0.001
 weight_decay = 0.0001
