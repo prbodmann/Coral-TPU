@@ -180,6 +180,7 @@ def create_cct_model(
     num_heads=2,
     projection_dim=128,
     transformer_units=[128,128],
+    num_classes=100
 ):
     inputs = layers.Input(input_shape)
 

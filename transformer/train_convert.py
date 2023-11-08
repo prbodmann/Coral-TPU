@@ -8,6 +8,7 @@ from tensorflow.keras.models import Model
 import numpy as np
 from cct import create_cct_model
 
+num_classes=100
 learning_rate = 0.001
 weight_decay = 0.0001
 batch_size = 256
@@ -86,6 +87,7 @@ if args.training:
     num_heads=num_heads,
     projection_dim=projection_dim,
     transformer_units=transformer_units,
+    num_classes=num_classes
 )
 
   
