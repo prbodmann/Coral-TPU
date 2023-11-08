@@ -30,9 +30,10 @@ print(temp1)
 list_tensors = []
 
 for i in temp1:
-   x1 = tf.reshape(i,shape=[1,a])
-   x = tf.nn.conv1d(test_tensor, filters=x1,stride=1, padding='VALID') (test_tensor)
-   list_tensors.append(x)
+    x1 = tf.reshape(i,shape=[1,a])
+    x = tf.matmul(i,x1)
+    #x = tf.nn.conv1d(test_tensor, filters=x1,stride=1, padding='VALID') (test_tensor)
+    list_tensors.append(x)
 
 result2 = tf.concat(list_tensors,axis=-2)
 
