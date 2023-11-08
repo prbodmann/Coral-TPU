@@ -11,7 +11,7 @@ from tensorflow import keras
 patch_size = 4
 b=32
 a=16
-def my_matmu(x,y):
+def my_matmul(x,y):
     temp1= tf.split(y, y.shape[2], axis=1,transpose_b=False)
     print(temp1)
     list_tensors = []
