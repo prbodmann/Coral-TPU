@@ -12,7 +12,7 @@ num_classes=100
 learning_rate = 0.001
 weight_decay = 0.0001
 batch_size = 256
-num_epochs = 10
+num_epochs = 100
 image_size = 64  # We'll resize input images to this size
 patch_size = 8
 projection_dim = 128
@@ -76,6 +76,7 @@ data_resize.layers[0].adapt(x_test)
 #test_dataset = test_dataset.astype('float32')
 #x_train = x_train / 255.0
 #x_test = x_test / 255.0
+results = 0
 if args.training:
     train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
     train_dataset = train_dataset.batch(batch_size).map(lambda x, y: (data_resize_aug(x), y))
@@ -156,7 +157,7 @@ newModel.set_weights(model.get_weights())
 model = newModel
 X = np.random.rand(1, image_size, image_size, 3)
 y_pred = model.predict(X)
-print(y_pred)
+
 model.summary()
 
 
@@ -180,6 +181,8 @@ converter_quant.experimental_new_converter = True
 converter_quant.allow_custom_ops=True
 converter_quant._experimental_new_quantizer = True
 print('what')
+
 tflite_model = converter_quant.convert()
 print("finished converting")
+print(results)
 open(model_name+".tflite", "wb").write(tflite_model)
