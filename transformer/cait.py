@@ -192,6 +192,7 @@ class CaiT(Model):
 
     def call(self, img, training=True, **kwargs):
         x = self.patch_embedding(img)
+        print(x.shape)
         b, n, d = x.shape
         #print(b, n, d)
 
