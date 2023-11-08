@@ -30,6 +30,7 @@ temp1= tf.split(test_tensor, b, axis=0)
 list_tensors = []
 
 for i in temp1:
+    tf.reshape(x,shape=[1,b])
    x = layers.Conv2D(1, kernel_size = [1,b],
                       kernel_initializer=i,
                       strides=b, padding='valid') (test_tensor)
