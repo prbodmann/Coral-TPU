@@ -234,7 +234,7 @@ def create_cct_model(
     weighted_representation = tf.squeeze(weighted_representation, -2)
 
     # Classify outputs.
-    logits = layers.Dense(num_classes)(weighted_representation)
+    logits = layers.Dense(num_classes,activation='softmax')(weighted_representation)
     # Create the Keras model.
     model = keras.Model(inputs=inputs, outputs=logits)
     return model
