@@ -175,11 +175,11 @@ this example, we do classification).
 
 
 def create_cct_model(
-    image_size=image_size,
-    input_shape=input_shape,
-    num_heads=num_heads,
-    projection_dim=projection_dim,
-    transformer_units=transformer_units,
+    image_size=64,
+    input_shape=[64,64,3],
+    num_heads=2,
+    projection_dim=128,
+    transformer_units=[128,128],
 ):
     inputs = layers.Input(input_shape)
 
