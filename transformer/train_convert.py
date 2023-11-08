@@ -6,7 +6,7 @@ import tensorflow_addons as tfa
 import tensorflow.keras.layers as nn
 from tensorflow.keras.models import Model
 import numpy as np
-from cait import CaiT,get_config
+from cct import
 
 learning_rate = 0.001
 weight_decay = 0.0001
@@ -14,9 +14,13 @@ batch_size = 256
 num_epochs = 10
 image_size = 64  # We'll resize input images to this size
 patch_size = 8
-DIM=192
-MLP_RATIO=4
+projection_dim = 128
+num_heads = 2
 
+transformer_units = [
+    projection_dim,
+    projection_dim,
+]
 optimizer = tfa.optimizers.AdamW(
     learning_rate=learning_rate, weight_decay=weight_decay
 )
@@ -76,9 +80,13 @@ if args.training:
     train_dataset = train_dataset.batch(batch_size).map(lambda x, y: (data_resize_aug(x), y))
     test_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
     test_dataset = test_dataset.batch(batch_size).map(lambda x, y: (data_resize(x), y))
-    
-    config = get_config()
-    model = CaiT(**config)
+
+    model = cct_model = create_cct_model(image_size=image_size,
+    input_shape=[image_size,image_size,3],
+    num_heads=num_heads,
+    projection_dim=projection_dim,
+    transformer_units=transformer_units,
+)
 
   
     
