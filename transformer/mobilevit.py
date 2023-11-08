@@ -9,6 +9,21 @@ from tensorflow.keras import backend
 from tensorflow import keras
 
 patch_size = 4
+b=32
+a=16
+def my_matmu(x,y):
+    temp1= tf.split(y, b, axis=1,transpose_b=False)
+    print(temp1)
+    list_tensors = []
+
+    for i in temp1:
+        if transpose_b
+        x1 = tf.reshape(i,shape=[1,a])
+        x2 = tf.matmul(i,x)
+        #x = tf.nn.conv1d(test_tensor, filters=x1,stride=1, padding='VALID') (test_tensor)
+        list_tensors.append(x2)
+    return tf.concat(list_tensors,axis=-2)
+   
 
 #https://gist.github.com/ekreutz/160070126d5e2261a939c4ddf6afb642
 class DotProductAttention(keras.layers.Layer):
@@ -26,10 +41,10 @@ class DotProductAttention(keras.layers.Layer):
 
     def call(self, input):
         query, key, value = input
-        score = tf.matmul(query, key, transpose_b=True)
+        score = my_matmul(query, key, transpose_b=True)
         if self.scale is not None:
             score *= self.scale
-        return tf.matmul(tf.nn.softmax(score), value)
+        return my_matmul(tf.nn.softmax(score), value)
 
 class MultiHeadAttention(keras.layers.Layer):
     def __init__(self, h=8, **kwargs):
