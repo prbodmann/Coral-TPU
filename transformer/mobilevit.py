@@ -181,7 +181,8 @@ def create_mobilevit(num_classes=5,image_size=32,expansion_factor = 2):
     x = conv_block(x, filters=320, kernel_size=1, strides=1)
 
     # Classification head.
-    x = layers.GlobalAvgPool2D()(x)
+    x = layers.AvgPool2D()(x)
+    x = layers.Flatten()(x)
     print(x.shape)
     outputs = layers.Dense(num_classes,activation='softmax')(x)
 

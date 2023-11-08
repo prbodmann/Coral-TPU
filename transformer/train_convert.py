@@ -11,7 +11,7 @@ import numpy as np
 learning_rate = 0.001
 weight_decay = 0.0001
 batch_size = 256
-num_epochs = 100
+num_epochs = 10
 image_size = 64  # We'll resize input images to this size
 patch_size = 8
 projection_dim=128
