@@ -93,7 +93,7 @@ def transformer_block(x, transformer_layers, projection_dim, num_heads=2):
         # Create a multi-head attention layer.
         attention_output = MultiHeadAttention(
             h=num_heads
-        )[x1,x1, x1]
+        )([x1,x1, x1])
         # Skip connection 1.
         x2 = layers.Add()([attention_output, x])
         # Layer normalization 2.
