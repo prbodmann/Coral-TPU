@@ -174,6 +174,8 @@ class CaiT(Model):
         assert image_size % patch_size == 0, 'Image dimensions must be divisible by the patch size.'
         num_patches = (image_size // patch_size) ** 2
 
+        self.image_size=image_size
+        self.patch_size=patch_size
         self.patch_embedding =CreatePatches(patch_size=patch_size,num_patches=num_patches,input_image_size=image_size)
 
 
@@ -192,7 +194,7 @@ class CaiT(Model):
 
     def call(self, img, training=True, **kwargs):
         x = self.patch_embedding(img)
-        x = tf.concat(x,axis=-2)
+        #x = tf.keras.layers.Reshape([image_size // patch_size])
         print(x.shape)
         b, n, d = x.shape
         #print(b, n, d)
@@ -241,7 +243,7 @@ if __name__ == '__main__':
 
 
         cait_xxs24_224 = CaiT(
-            image_size = 224,
+            image_size = image_size,
             patch_size = 16,
             num_classes = 100,
             dim = DIM,
