@@ -160,7 +160,7 @@ In the [original paper](https://arxiv.org/abs/2104.05704), the authors use
 [AutoAugment](https://arxiv.org/abs/1805.09501) to induce stronger regularization. For
 this example, we will be using the standard geometric augmentations like random cropping
 and flipping.
-"""
+
 
 # Note the rescaling layer. These layers have pre-defined inference behavior.
 
