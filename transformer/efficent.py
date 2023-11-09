@@ -326,7 +326,7 @@ EfficientFormer_width = {
 
 
 
-def efficientformer_l1_custom(num_classes, eff_width=EfficientFormer_width['l0'], use_distillation=True,
+def efficientformer_l1_custom(num_classes, eff_width=EfficientFormer_width['l1'], use_distillation=True,
                               image_height=224, image_width=224, channels=3):
     return EfficientFormer(num_classes=num_classes, distillation=use_distillation, height=image_height, width=image_width,
                            eff_width=width, channels=channels)
