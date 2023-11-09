@@ -295,7 +295,7 @@ def EfficientFormer(num_classes=1000, distillation=True, height=224, width=224, 
     x = MetaBlock4D(x, out_channels=eff_width[3], hidden_channels=eff_width[3] * 4)
     x = MetaBlock4D(x, out_channels=eff_width[3], hidden_channels=eff_width[3] * 4)
 
-    x = reshape(x, x.shape[1], x.shape[2], 448)
+    x = reshape(x, x.shape[1], x.shape[2], eff_width[3])
 
     x = MetaBlock3D(x, out_channels=eff_width[3], hidden_channels=eff_width[3] * 4)
 
