@@ -6,13 +6,13 @@ import tensorflow_addons as tfa
 import tensorflow.keras.layers as nn
 from tensorflow.keras.models import Model
 import numpy as np
-from effcient import EfficientFormer_width,EfficientFormer
+from effcent import EfficientFormer_width,EfficientFormer
 
 num_classes=100
 learning_rate = 0.001
 weight_decay = 0.0001
 batch_size = 256
-num_epochs = 100
+num_epochs = 10
 image_size = 64  # We'll resize input images to this size
 patch_size = 8
 projection_dim = 128
