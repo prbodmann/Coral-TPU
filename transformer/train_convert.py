@@ -6,7 +6,7 @@ import tensorflow_addons as tfa
 import tensorflow.keras.layers as nn
 from tensorflow.keras.models import Model
 import numpy as np
-from effcent import EfficientFormer_width,EfficientFormer
+from efficent import EfficientFormer_width,EfficientFormer
 
 num_classes=100
 learning_rate = 0.001
