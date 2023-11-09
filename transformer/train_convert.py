@@ -160,7 +160,7 @@ model.summary()
 #print([tf.expand_dims(tf.dtypes.cast(x_train[0], tf.float32),0)])
 def representative_data_gen():
     for input_value in train_dataset.take(1000):
-        yield [input_value[0]]
+        yield [tf.dtypes.cast(input_value[0],tf.float32)]
 
 converter_quant = tf.lite.TFLiteConverter.from_keras_model(model) 
 converter_quant.input_shape=(1,image_size,image_size,3)
