@@ -6,7 +6,7 @@ import tensorflow_addons as tfa
 import tensorflow.keras.layers as nn
 from tensorflow.keras.models import Model
 import numpy as np
-from cct import create_cct_model
+from effcient import EfficientFormer_width,EfficientFormer
 
 num_classes=100
 learning_rate = 0.001
@@ -76,6 +76,7 @@ data_resize.layers[0].adapt(x_test)
 #test_dataset = test_dataset.astype('float32')
 #x_train = x_train / 255.0
 #x_test = x_test / 255.0
+
 results = 0
 if args.training:
     train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
@@ -83,13 +84,8 @@ if args.training:
     test_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
     test_dataset = test_dataset.batch(batch_size).map(lambda x, y: (data_resize(x), y))
 
-    model = cct_model = create_cct_model(image_size=image_size,
-    input_shape=[image_size,image_size,3],
-    num_heads=num_heads,
-    projection_dim=projection_dim,
-    transformer_units=transformer_units,
-    num_classes=num_classes
-)
+    model = EfficientFormer(num_classes=num_classes, distillation=True, height=image_size, width=image_size,
+                           eff_width=EfficientFormer_width['l0'], channels=3)
 
   
     

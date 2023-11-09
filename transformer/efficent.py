@@ -9,9 +9,7 @@ from tensorflow import keras
 import os
 import tensorflow_datasets as tfds
 from keras.utils import CustomObjectScope
-from opt_head import OptimizedMultiHeadAttention
-
-os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
+from vit import MultiHeadAttention, other_gelu
 
 class multiheadattention(layers.Layer):
     """
@@ -81,14 +79,14 @@ class multiheadattention(layers.Layer):
         )
 
         # Pass from softmax for last dim
-        attn = layers.Softmax()(attn)
+        attn = self.softmax(attn)
         x = attn @ v
         x = tf.transpose(x, (0, 2, 1, 3))
         x = self.reshape(x)
         x = self.proj(x)
         return x
 
-'''class scale_layer(layers.Layer):
+class scale_layer(layers.Layer):
     """
     Learnable scale layer that learn how much the output is affected from the previous state of the descriptor
     :param layer_scale_init_value: Initial number of the scale layer
@@ -98,23 +96,19 @@ class multiheadattention(layers.Layer):
         super(scale_layer, self).__init__()
         self.layer_scale_init_value = layer_scale_init_value
         self.dim = dim
-        self.layer_dim = self.layer_scale_init_value * tf.ones((dim))        
-        #self.layer_scale = tf.Variable(self.layer_scale_init_value * tf.ones((dim)), dtype=tf.float32)
-        #self.layer_scale = tf.expand_dims(self.layer_scale, axis=0)
-        #self.layer_scale = tf.expand_dims(self.layer_scale, axis=0)
-        temp=(self.layer_scale_init_value * tf.ones((dim)))       
-        self.layer_scale = tf.reshape(temp,[1,1,dim])
-       
+        self.layer_dim = self.layer_scale_init_value * tf.ones((dim))
+        self.layer_scale = tf.Variable(self.layer_scale_init_value * tf.ones((dim)), dtype=tf.float32)
+
     def call(self, inputs):
         """
 
         :param inputs: Input vector (batch, height, width, channels)
         :return: Scaled input vector
         """
-
-        x = self.layer_scale * inputs
+        layer = tf.expand_dims(self.layer_scale, axis=0)
+        layer = tf.expand_dims(layer, axis=0)
+        x = layer * inputs
         return x
-'''
 
 
 def PatchEmbed(x, out_channels, kernel_size=(3, 3), strides=(2, 2), padding='same'):
@@ -145,8 +139,8 @@ def MLP(x, out_channels, hidden_channels, kernel_size=(1, 1), strides=(1, 1),
     :param droupout_p: Dropout probability
     :return: Vector 2 Conv2D after Conv2D
     """
-    x = layers.Conv2D(hidden_channels, kernel_size=kernel_size, strides=strides, padding=padding)(x)
-    x = layers.ReLU()(x)
+    x = layers.Conv2D(hidden_channels, kernel_size=kernel_size, strides=strides, padding=padding,activation=other_gelu)(x)
+    #x = tfa.layers.GELU()(x)
     x = layers.Conv2D(out_channels, kernel_size=kernel_size, strides=strides, padding=padding)(x)
     x = layers.Dropout(rate=droupout_p)(x)
     x = layers.BatchNormalization(epsilon=1e-05, momentum=0.1)(x)
@@ -162,7 +156,7 @@ def AttentionMLP(x, out_channels, hidden_channels, drop_rate=0.0):
     :param drop_rate: Dropout probability
     :return: The output of the Attention block after the MHSA
     """
-    x = layers.Dense(hidden_channels, activation='relu')(x)
+    x = layers.Dense(hidden_channels, activation=other_gelu)(x)
     x = layers.Dropout(rate=drop_rate)(x)
     x = layers.Dense(out_channels)(x)
     x = layers.Dropout(rate=drop_rate)(x)
@@ -182,21 +176,11 @@ def MetaBlock4D(x, out_channels, hidden_channels, stride=(1, 1), padding='same',
     :return: Output vector of the Meta Block, channels are the same number as input channels
     """
     x1 = layers.AvgPool2D(pool_size=pool_size, strides=stride, padding=padding)(x)
-   
-    #x1 = scale_layer(layer_scale_init_value=layer_scale_init_value, dim=out_channels)(x1)
-    temp=(layer_scale_init_value * tf.ones((out_channels))) 
-    temp=tf.reshape(temp,[1,1,out_channels])
-    x1 = temp * x1 
-    #x = x + x1
-    x = tf.keras.layers.Add()([x, x1])
-
+    x1 = scale_layer(layer_scale_init_value=layer_scale_init_value, dim=out_channels)(x1)
+    x = x + x1
     x2 = MLP(x, out_channels=out_channels, hidden_channels=hidden_channels)
-    #x2 = scale_layer(layer_scale_init_value=layer_scale_init_value, dim=out_channels)(x2)
-    temp=(layer_scale_init_value * tf.ones((out_channels))) 
-    temp=tf.reshape(temp,[1,1,out_channels])
-    x2 = temp * x1
-    #x = x + x2
-    x = tf.keras.layers.Add()([x, x2])
+    x2 = scale_layer(layer_scale_init_value=layer_scale_init_value, dim=out_channels)(x2)
+    x = x + x2
     return x
 
 def Embedding(x, out_channels, kernel_size=(3, 3), strides=(2, 2), padding='same'):
@@ -213,9 +197,8 @@ def Embedding(x, out_channels, kernel_size=(3, 3), strides=(2, 2), padding='same
     x = layers.BatchNormalization(epsilon=1e-05, momentum=0.1)(x)
     return x
 
-def MetaBlock3D(x, out_channels, hidden_channels, num_heads=4, mlp_ratio=4., drop=0, drop_path=0,
+def MetaBlock3D(x, out_channels, hidden_channels, num_heads=8, mlp_ratio=4., drop=0, drop_path=0,
                  use_layer_scale=True, layer_scale_init_value=1e-5):
-   
     """
     Meta Block 3D, inverted residual block, Attention as token mixer
     :param x: Input vector (Batch, sequence, channels)
@@ -230,19 +213,13 @@ def MetaBlock3D(x, out_channels, hidden_channels, num_heads=4, mlp_ratio=4., dro
     :return: Vector after the Meta Block 3D
     """
     x1 = layers.LayerNormalization(epsilon=1e-05)(x)
-    #x1 = layers.MultiHeadAttention(num_heads=num_heads, key_dim=32, value_dim=128)(x1, x1)
-   
-    x1 = OptimizedMultiHeadAttention(num_heads=num_heads, key_dim=32, value_dim=128)(x1, x1) # This is the custom multihead attention
-    #x1 = scale_layer(layer_scale_init_value=layer_scale_init_value, dim=out_channels)(x1)
-    temp=(layer_scale_init_value * tf.ones((out_channels))) 
-    temp=tf.reshape(temp,[1,1,out_channels])
-    x1 = temp * x1 
+    x1 = MultiHeadAttention(h=num_heads)([x1, x1,x1])
+    #x1 = multiheadattention(dim=out_channels)(x1) # This is the custom multihead attention
+    x1 = scale_layer(layer_scale_init_value=layer_scale_init_value, dim=out_channels)(x1)
     x = layers.Add()([x, x1])
     x2 = layers.LayerNormalization(epsilon=1e-05)(x)
     x2 = AttentionMLP(x2, out_channels=out_channels, hidden_channels=hidden_channels, drop_rate=drop)
-    temp=(layer_scale_init_value * tf.ones((out_channels))) 
-    temp=tf.reshape(temp,[1,1,out_channels])
-    x2 = temp * x1 #scale_layer(layer_scale_init_value=layer_scale_init_value, dim=out_channels)(x1)
+    x2 = scale_layer(layer_scale_init_value=layer_scale_init_value, dim=out_channels)(x1)
     x = layers.Add()([x, x2])
     return x
 
@@ -259,8 +236,7 @@ def head(x, num_classes, distillation=True):
     if distillation:
         x_dist = layers.Dense(num_classes)(x)
         x_head = layers.Dense(num_classes)(x)
-        x = tf.keras.layers.Add()([x_head, x_dist])/2
-        #x = (x_head + x_dist) / 2
+        x = (x_head + x_dist) / 2
         return x
     else:
         x = layers.Dense(num_classes)(tf.math.reduce_mean(x, 1))
@@ -277,7 +253,7 @@ def reshape(x, height, width, channels):
 
 
 
-def EfficientFormer(inputs,num_classes=1000, distillation=True, height=224, width=224, eff_width=[48, 96, 224, 448],
+def EfficientFormer(num_classes=1000, distillation=True, height=224, width=224, eff_width=[48, 96, 224, 448],
                     channels=3):
     """
 
@@ -289,8 +265,8 @@ def EfficientFormer(inputs,num_classes=1000, distillation=True, height=224, widt
     :param channels: Number of input channels
     :return: The model of the EfficientFormer-L0 TODO: Implement the code for all the models
     """
-    
-    #x = tf.ensure_shape(inputs,[1,height,width,3])
+    inputs = keras.Input((height, width, channels))
+
     x = PatchEmbed(inputs, out_channels=eff_width[0] / 2)
     x = PatchEmbed(x, out_channels=eff_width[0])
 
@@ -319,40 +295,42 @@ def EfficientFormer(inputs,num_classes=1000, distillation=True, height=224, widt
     x = MetaBlock4D(x, out_channels=eff_width[3], hidden_channels=eff_width[3] * 4)
     x = MetaBlock4D(x, out_channels=eff_width[3], hidden_channels=eff_width[3] * 4)
 
-    #x = reshape(x, x.shape[1], x.shape[2], 448)
-    x = tf.reshape(x,[-1,7*7, eff_width[3]])
+    x = reshape(x, x.shape[1], x.shape[2], 448)
+
     x = MetaBlock3D(x, out_channels=eff_width[3], hidden_channels=eff_width[3] * 4)
 
-    #outputs = head(x, num_classes=num_classes, distillation=distillation)
-    x = layers.LayerNormalization(epsilon=1e-05)(x)
-    if distillation:
-        print(x.shape, x)
-        x_dist = layers.Dense(num_classes)(tf.math.reduce_mean(x, 1))
-        x_head = layers.Dense(num_classes)(tf.math.reduce_mean(x, 1))
-        x = (x_head + x_dist) / 2
-        outputs = x
-    else:
-        x = layers.Dense(num_classes)(tf.math.reduce_mean(x, 1))
-        outputs = x
-    #print(outputs.shape, outputs)
-    outputs = layers.Dense(5, activation='softmax')(outputs)
+    outputs = head(x, num_classes=num_classes, distillation=distillation)
+    # x = layers.LayerNormalization(epsilon=1e-05)(x)
+    # if distillation:
+    #     print(x.shape, x)
+    #     x_dist = layers.Dense(num_classes)(tf.math.reduce_mean(x, 1))
+    #     x_head = layers.Dense(num_classes)(tf.math.reduce_mean(x, 1))
+    #     x = (x_head + x_dist) / 2
+    #     outputs = x
+    # else:
+    #     x = layers.Dense(num_classes)(tf.math.reduce_mean(x, 1))
+    #     outputs = x
+    # print(outputs.shape, outputs)
+    outputs = layers.Dense(num_classes, activation='softmax')(outputs)
 
     return keras.Model(inputs, outputs)
 
 
 
 EfficientFormer_width = {
-    'l0': [24, 48, 112, 224],
     'l1': [48, 96, 224, 448],
     'l3': [64, 128, 320, 512],
     'l7': [96, 192, 384, 768],
 }
 
+
+
+
 def efficientformer_l1_custom(num_classes, eff_width=EfficientFormer_width['l0'], use_distillation=True,
                               image_height=224, image_width=224, channels=3):
     return EfficientFormer(num_classes=num_classes, distillation=use_distillation, height=image_height, width=image_width,
                            eff_width=width, channels=channels)
-
+'''
 image_size=224
 batch_size = 32
 network_size = 'l7'
@@ -450,4 +428,4 @@ model.summary()
 model.save("efficent")
 model.save_weights('myModel.h5')
 exit()
-
+'''
