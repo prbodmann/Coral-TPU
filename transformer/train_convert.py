@@ -85,7 +85,7 @@ if args.training:
     test_dataset = test_dataset.batch(batch_size).map(lambda x, y: (data_resize(x), y))
 
     model = EfficientFormer(num_classes=num_classes, distillation=True, height=image_size, width=image_size,
-                           eff_width=EfficientFormer_width['l3'], channels=3)
+                           eff_width=EfficientFormer_width['l7'], channels=3)
 
   
     
