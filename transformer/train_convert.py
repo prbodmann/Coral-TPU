@@ -29,7 +29,7 @@ optimizer = tfa.optimizers.AdamW(
 parser = argparse.ArgumentParser()
 print('wtf')
 parser.add_argument('--model_name', dest = 'model_name',action = 'store',
-                           default = 'wip_model', required = False,const=True)
+                           default = 'wip_model', required = False)
 parser.add_argument('--training', action = 'store_const', dest = 'training',
                            default = False, required = False,const=True)
 
