@@ -691,7 +691,7 @@ class ShiftViTModel(keras.Model):
         for stage in self.stages:
             x = stage(x, training=False)
         lol = x.shape
-        x = nn.AvgPool2D(pool_size=(lol[-2],lol[-3]),padding='valid')(x)
+        x = layers.AvgPool2D(pool_size=(lol[-2],lol[-3]),padding='valid')(x)
         logits = self.classifier(x)
         return logits
 
