@@ -171,7 +171,7 @@ class LeViT(Model):
                 fmap_size = ceil(fmap_size / 2)
 
         self.pool = Sequential([
-            nn.AvgPool2D(pool_size=[])
+            nn.AvgPool2D()
         ])
 
 
