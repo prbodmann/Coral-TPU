@@ -7,7 +7,7 @@ import tensorflow.keras.layers as nn
 from tensorflow.keras.utils import to_categorical
 from tensorflow import einsum
 from einops import rearrange
-
+from vit import 
 from math import ceil
 
 batch_size = 100
@@ -27,11 +27,6 @@ def cast_tuple(val, l = 3):
 def always(val):
     return lambda *args, **kwargs: val
 
-def gelu(x, approximate=False):
-    
-    coeff = tf.cast(0.044715, x.dtype)
-    return 0.5 * x * (1.0 + tf.tanh(0.7978845608028654 * (x + coeff * tf.pow(x, 3))))
-   
 
 class HardSwish(Layer):
     def __init__(self):
@@ -47,7 +42,7 @@ class GELU(Layer):
         self.approximate = approximate
 
     def call(self, x, training=True):
-        return gelu(x, self.approximate)
+        return other_gelu(x)
 
 class MLP(Layer):
     def __init__(self, dim, mult, dropout=0.0):
@@ -75,24 +70,7 @@ class Attention(Layer):
         self.heads = heads
         self.scale = dim_key ** -0.5
 
-        self.to_q = Sequential([
-            nn.Conv2D(filters=inner_dim_key, kernel_size=1, strides=(2 if downsample else 1), use_bias=False),
-            nn.BatchNormalization(momentum=0.9, epsilon=1e-05),
-        ])
-
-        self.to_k = Sequential([
-            nn.Conv2D(filters=inner_dim_key, kernel_size=1, strides=1, use_bias=False),
-            nn.BatchNormalization(momentum=0.9, epsilon=1e-05),
-        ])
-
-        self.to_v = Sequential([
-            nn.Conv2D(filters=inner_dim_value, kernel_size=1, strides=1, use_bias=False),
-            nn.BatchNormalization(momentum=0.9, epsilon=1e-05),
-        ])
-
-        self.attend = nn.Softmax()
-
-        out_batch_norm = nn.BatchNormalization(momentum=0.9, epsilon=1e-05, gamma_initializer='zeros')
+        self.mha=MultiHeadAttention(h=heads)
 
         self.to_out = Sequential([
             GELU(),
@@ -122,22 +100,7 @@ class Attention(Layer):
 
     def call(self, x, training=True):
         b, height, width, n = x.shape
-        q = self.to_q(x)
-
-        h = self.heads
-        y = q.shape[1] # height
-
-        qkv = (q, self.to_k(x), self.to_v(x))
-        q, k, v = map(lambda t: rearrange(t, 'b ... (h d) -> b h (...) d', h=h), qkv)
-
-        # i,j = height*width
-        dots = einsum('b h i d, b h j d -> b h i j', q, k) * self.scale
-        dots = self.apply_pos_bias(dots)
-
-        attn = self.attend(dots)
-
-        x = einsum('b h i j, b h j d -> b h i d', attn, v)
-        x = rearrange(x, 'b h (x y) d -> b x y (h d)', h=h, y=y)
+        self.mha([x,x,x])
         x = self.to_out(x, training=training)
 
         return x
@@ -208,7 +171,7 @@ class LeViT(Model):
                 fmap_size = ceil(fmap_size / 2)
 
         self.pool = Sequential([
-            nn.GlobalAvgPool2D()
+            nn.AvgPool2D()
         ])
 
         self.distill_head = nn.Dense(units=num_distill_classes) if exists(num_distill_classes) else always(None)
