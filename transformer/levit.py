@@ -71,7 +71,7 @@ class Attention(Layer):
         self.scale = dim_key ** -0.5
 
         self.mha=MultiHeadAttention(h=heads)
-
+        out_batch_norm = nn.BatchNormalization(momentum=0.9, epsilon=1e-05, gamma_initializer='zeros')
         self.to_out = Sequential([
             GELU(),
             nn.Conv2D(filters=dim_out, kernel_size=1, strides=1),
