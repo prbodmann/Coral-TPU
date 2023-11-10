@@ -29,8 +29,8 @@ optimizer = tfa.optimizers.AdamW(
 parser = argparse.ArgumentParser(description='Process some integers.')
 parser.add_argument('--training', action = 'store_const', dest = 'training',
                            default = False, required = False,const=True)
-parser.add_argument('--model_name', action = 'store', dest = 'model_name',
-                           default = 'wip_model', required = False,  nargs='?')
+parser.add_argument('--model_name', dest = 'model_name',
+                           default = 'wip_model', required = False)
 args = parser.parse_args()
 
 model_name=args.model_name
