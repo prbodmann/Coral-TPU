@@ -171,7 +171,7 @@ class LeViT(Model):
                 fmap_size = ceil(fmap_size / 2)
 
         self.pool = Sequential([
-            nn.AvgPool2D()
+            nn.AvgPool2D(pool_size=[])
         ])
 
 
@@ -183,7 +183,8 @@ class LeViT(Model):
 
         x = self.backbone(x)
         print(x.shape)
-        x = self.pool(x)
+        lol = x.shape
+        x = nn.AvgPool2D(pool_size=[lol[-2],lol[-3],padding='valid'])
         out = self.mlp_head(x)
 
 
