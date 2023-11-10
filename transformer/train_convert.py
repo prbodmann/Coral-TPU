@@ -25,7 +25,7 @@ transformer_units = [
 optimizer = tfa.optimizers.AdamW(
     learning_rate=learning_rate, weight_decay=weight_decay
 )
-
+ 
 parser = argparse.ArgumentParser(description='Process some integers.')
 parser.add_argument('--training', action = 'store_const', dest = 'training',
                            default = False, required = False,const=True)
