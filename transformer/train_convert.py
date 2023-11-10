@@ -6,7 +6,7 @@ import tensorflow_addons as tfa
 import tensorflow.keras.layers as nn
 from tensorflow.keras.models import Model
 import numpy as np
-from efficent import EfficientFormer_width,EfficientFormer
+from levit import LeViT
 
 num_classes=100
 learning_rate = 0.001
@@ -84,8 +84,16 @@ if args.training:
     test_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
     test_dataset = test_dataset.batch(batch_size).map(lambda x, y: (data_resize(x), y))
 
-    model = EfficientFormer(num_classes=num_classes, distillation=True, height=image_size, width=image_size,
-                           eff_width=EfficientFormer_width['l7'], channels=3)
+    model = LeViT(
+    image_size = image_size,
+    num_classes = 100,
+    stages = 3,             # number of stages
+    dim = (256, 384, 512),  # dimensions at each stage
+    depth = 4,              # transformer of depth 4 at each stage
+    heads = (4, 6, 8),      # heads at each stage
+    mlp_mult = 2,
+    dropout = 0.1
+)
 
   
     
