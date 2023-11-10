@@ -196,7 +196,7 @@ class LeViT(Model):
         return Model(inputs=[x], outputs=self.call(x))
 
 
-
+'''
 
 parser = argparse.ArgumentParser(description='Process some integers.')
 parser.add_argument('--training', action = 'store_const', dest = 'training',
@@ -272,3 +272,4 @@ print('what')
 tflite_model = converter_quant.convert()
 print("finished converting")
 open("cvt.tflite", "wb").write(tflite_model)
+'''
