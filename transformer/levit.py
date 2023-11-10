@@ -182,7 +182,7 @@ class LeViT(Model):
         x = self.conv_embedding(img)
 
         x = self.backbone(x)
-
+        print(x.shape)
         x = self.pool(x)
         out = self.mlp_head(x)
 
