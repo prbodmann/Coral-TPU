@@ -129,7 +129,7 @@ if args.training:
         save_best_only=True,
         save_weights_only=True,
     )
-    #model.build((batch_size, 224, 224, 3))
+    
     #model.summary()
 
     model.fit(
@@ -139,6 +139,7 @@ if args.training:
         batch_size=batch_size,
         verbose=1   
     )
+    model.build((batch_size, image_size, image_size, 3))
     model.summary()
     results= model.evaluate(test_dataset,batch_size=batch_size)
     
