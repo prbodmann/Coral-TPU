@@ -97,7 +97,7 @@ if args.training:
         shift_pixel=1,
         mlp_expand_ratio=2,
     )
-    scheduled_lrs = get_warmup()
+    scheduled_lrs = get_warmup(len(x_train),batch_size,num_epochs)
     
     optimizer = tfa.optimizers.AdamW(
         learning_rate=scheduled_lrs, weight_decay=weight_decay

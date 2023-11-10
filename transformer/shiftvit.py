@@ -807,7 +807,12 @@ class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):
         }
         return config
 
-def get_warmup():
+def get_warmup(len_xtrain,batch_size,epochs):
+    total_steps = int((len_xtrain / batch_size) * epochs)
+
+    # Calculate the number of steps for warmup.
+    warmup_epoch_percentage = 0.15
+    warmup_steps = int(total_steps * warmup_epoch_percentage)
     return  WarmUpCosine(
         lr_start=1e-5,
         lr_max=1e-3,
