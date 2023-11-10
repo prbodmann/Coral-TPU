@@ -119,24 +119,14 @@ The augmentation pipeline consists of:
 
 _Note_: The image data augmentation layers do not apply
 data transformations at inference time. This means that
-when these layers are called with `training=False` they
+when these layers are called with `training=False` theyfig.
 behave differently. Refer to the
 [documentation](https://keras.io/api/layers/preprocessing_layers/image_augmentation/)
 for more details.
 """
 
 
-def get_augmentation_model():
-    """Build the data augmentation model."""
-    data_augmentation = keras.Sequential(
-        [
-            layers.Resizing(config.input_shape[0] + 20, config.input_shape[0] + 20),
-            layers.RandomCrop(config.image_size, config.image_size),
-            layers.RandomFlip("horizontal"),
-            layers.Rescaling(1 / 255.0),
-        ]
-    )
-    return data_augmentation
+
 
 
 """
@@ -592,6 +582,7 @@ class ShiftViTModel(keras.Model):
         num_div=12,
         shift_pixel=1,
         mlp_expand_ratio=2,
+        num_classes=100
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -624,7 +615,7 @@ class ShiftViTModel(keras.Model):
             )
         self.global_avg_pool = layers.GlobalAveragePooling2D()
 
-        self.classifier = layers.Dense(config.num_classes,activation='softmax')
+        self.classifier = layers.Dense(num_classes,activation='softmax')
 
     def get_config(self):
         config = super().get_config()
