@@ -582,7 +582,7 @@ class ShiftViTModel(keras.Model):
         num_div=12,
         shift_pixel=1,
         mlp_expand_ratio=2,
-        num_classes=100
+        num_classes=100,
         **kwargs,
     ):
         super().__init__(**kwargs)
