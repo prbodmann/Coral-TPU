@@ -47,6 +47,7 @@ import tensorflow_addons as tfa
 import pathlib
 import glob
 import os
+from vit import other_gelu
 # Setting seed for reproducibiltiy
 SEED = 42
 keras.utils.set_random_seed(SEED)
@@ -104,32 +105,7 @@ class Config(object):
     tf_ds_batch_size = 20
 
 
-config = Config()
 
-"""
-## Load the CIFAR-10 dataset
-
-We use the CIFAR-10 dataset for our experiments.
-"""
-
-(x_train, y_train), (x_test, y_test) = keras.datasets.cifar10.load_data()
-(x_train, y_train), (x_val, y_val) = (
-    (x_train[:40000], y_train[:40000]),
-    (x_train[40000:], y_train[40000:]),
-)
-print(f"Training samples: {len(x_train)}")
-print(f"Validation samples: {len(x_val)}")
-print(f"Testing samples: {len(x_test)}")
-
-AUTO = tf.data.AUTOTUNE
-train_ds = tf.data.Dataset.from_tensor_slices((x_train, y_train))
-train_ds = train_ds.shuffle(config.buffer_size).batch(config.batch_size).prefetch(AUTO)
-
-val_ds = tf.data.Dataset.from_tensor_slices((x_val, y_val))
-val_ds = val_ds.batch(config.batch_size).prefetch(AUTO)
-
-test_ds = tf.data.Dataset.from_tensor_slices((x_test, y_test))
-test_ds = test_ds.batch(config.batch_size).prefetch(AUTO)
 
 """
 ## Data Augmentation
@@ -240,7 +216,7 @@ class MLP(layers.Layer):
             [
                 layers.Dense(
                     units=initial_filters,
-                    activation=tf.nn.gelu,
+                    activation=other_gelu,
                 ),
                 layers.Dropout(rate=self.mlp_dropout_rate),
                 layers.Dense(units=input_channels),
@@ -607,7 +583,6 @@ class ShiftViTModel(keras.Model):
 
     def __init__(
         self,
-        data_augmentation,
         projected_dim,
         patch_size,
         num_shift_blocks_per_stages,
@@ -620,7 +595,7 @@ class ShiftViTModel(keras.Model):
         **kwargs,
     ):
         super().__init__(**kwargs)
-        self.data_augmentation = data_augmentation
+       
         self.patch_projection = layers.Conv2D(
             filters=projected_dim,
             kernel_size=patch_size,
@@ -649,7 +624,7 @@ class ShiftViTModel(keras.Model):
             )
         self.global_avg_pool = layers.GlobalAveragePooling2D()
 
-        self.classifier = layers.Dense(config.num_classes)
+        self.classifier = layers.Dense(config.num_classes,activation='softmax')
 
     def get_config(self):
         config = super().get_config()
@@ -668,7 +643,7 @@ class ShiftViTModel(keras.Model):
         (images, labels) = data
 
         # Augment the images
-        augmented_images = self.data_augmentation(images, training=training)
+        augmented_images = images
 
         # Create patches and project the pathces.
         projected_patches = self.patch_projection(augmented_images)
@@ -694,7 +669,6 @@ class ShiftViTModel(keras.Model):
 
         # Apply gradients.
         train_vars = [
-            self.data_augmentation.trainable_variables,
             self.patch_projection.trainable_variables,
             self.global_avg_pool.trainable_variables,
             self.classifier.trainable_variables,
@@ -721,11 +695,12 @@ class ShiftViTModel(keras.Model):
         return {m.name: m.result() for m in self.metrics}
 
     def call(self, images):
-        augmented_images = self.data_augmentation(images)
+        augmented_images =images
         x = self.patch_projection(augmented_images)
         for stage in self.stages:
             x = stage(x, training=False)
-        x = self.global_avg_pool(x)
+        lol = x.shape
+        x = nn.AvgPool2D(pool_size=(lol[-2],lol[-3]),padding='valid')(x)
         logits = self.classifier(x)
         return logits
 
@@ -733,7 +708,7 @@ class ShiftViTModel(keras.Model):
 """
 ## Instantiate the model
 """
-
+'''
 model = ShiftViTModel(
     data_augmentation=get_augmentation_model(),
     projected_dim=config.projected_dim,
@@ -746,7 +721,7 @@ model = ShiftViTModel(
     shift_pixel=config.shift_pixel,
     mlp_expand_ratio=config.mlp_expand_ratio,
 )
-
+'''
 """
 ## Learning rate schedule
 
@@ -841,7 +816,13 @@ class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):
         }
         return config
 
-
+def get_warmup():
+    return scheduled_lrs = WarmUpCosine(
+        lr_start=1e-5,
+        lr_max=1e-3,
+        warmup_steps=warmup_steps,
+        total_steps=total_steps,
+        )
 """
 ## Compile and train the model
 """
@@ -859,12 +840,7 @@ warmup_epoch_percentage = 0.15
 warmup_steps = int(total_steps * warmup_epoch_percentage)
 
 # Initialize the warmupcosine schedule.
-scheduled_lrs = WarmUpCosine(
-    lr_start=1e-5,
-    lr_max=1e-3,
-    warmup_steps=warmup_steps,
-    total_steps=total_steps,
-)
+
 
 # Get the optimizer.
 optimizer = tfa.optimizers.AdamW(
@@ -946,39 +922,4 @@ unzip -q inference_set.zip
 """
 # Custom objects are not included when the model is saved.
 # At loading time, these objects need to be passed for reconstruction of the model
-saved_model = tf.keras.models.load_model(
-    "ShiftViT",
-    custom_objects={"WarmUpCosine": WarmUpCosine, "AdamW": tfa.optimizers.AdamW},
-)
 
-"""
-## Conclusion
-
-The most impactful contribution of the paper is not the novel architecture, but
-the idea that hierarchical ViTs trained with no attention can perform quite well. This
-opens up the question of how essential attention is to the performance of ViTs.
-
-For curious minds, we would suggest reading the
-[ConvNexT](https://arxiv.org/abs/2201.03545) paper which attends more to the training
-paradigms and architectural details of ViTs rather than providing a novel architecture
-based on attention.
-
-Acknowledgements:
-
-- We would like to thank [PyImageSearch](https://pyimagesearch.com) for providing us with
-resources that helped in the completion of this project.
-- We would like to thank [JarvisLabs.ai](https://jarvislabs.ai/) for providing with the
-GPU credits.
-- We would like to thank [Manim Community](https://www.manim.community/) for the manim
-library.
-- A personal note of thanks to [Puja Roychowdhury](https://twitter.com/pleb_talks) for
-helping us with the Learning Rate Schedule.
-"""
-
-"""
-**Example available on HuggingFace**
-
-| Trained Model | Demo |
-| :--: | :--: |
-| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-ShiftViT-brightgreen)](https://huggingface.co/keras-io/shiftvit) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Space-ShiftViT-brightgreen)](https://huggingface.co/spaces/keras-io/shiftvit) |
-"""

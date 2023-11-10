@@ -6,7 +6,7 @@ import tensorflow_addons as tfa
 import tensorflow.keras.layers as nn
 from tensorflow.keras.models import Model
 import numpy as np
-from levit import LeViT
+from shiftvit import ShiftViTModel
 
 num_classes=100
 learning_rate = 0.001
@@ -86,21 +86,21 @@ if args.training:
     test_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
     test_dataset = test_dataset.batch(batch_size).map(lambda x, y: (data_resize(x), y))
 
-    model = LeViT(
-    image_size = image_size,
-    num_classes = 100,
-    stages = 3,             # number of stages
-    dim = (256, 384, 512),  # dimensions at each stage
-    depth = 4,              # transformer of depth 4 at each stage
-    heads = (4, 6, 8),      # heads at each stage
-    mlp_mult = 2,
-    dropout = 0.1
-)
-
-  
+    model = ShiftViTModel(
+        projected_dim=96,
+        patch_size=4,
+        num_shift_blocks_per_stages=[2, 4, 8, 2],
+        epsilon=1e-5,
+        mlp_dropout_rate= 0.2,
+        stochastic_depth_rate=0.2,
+        num_div=12,
+        shift_pixel=1,
+        mlp_expand_ratio=2,
+    )
+scheduled_lrs = get_warmup()
     
     optimizer = tfa.optimizers.AdamW(
-        learning_rate=learning_rate, weight_decay=weight_decay
+        learning_rate=scheduled_lrs, weight_decay=weight_decay
     )
    
     
