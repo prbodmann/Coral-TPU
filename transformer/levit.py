@@ -7,7 +7,7 @@ import tensorflow.keras.layers as nn
 from tensorflow.keras.utils import to_categorical
 from tensorflow import einsum
 from einops import rearrange
-from vit import MultiHeadAttention
+from vit import MultiHeadAttention, other_gelu
 from math import ceil
 
 batch_size = 100
