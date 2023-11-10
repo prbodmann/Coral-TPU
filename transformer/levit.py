@@ -186,6 +186,7 @@ class LeViT(Model):
         lol = x.shape
         print(lol)
         x = nn.AvgPool2D(pool_size=(lol[-2],lol[-3]),padding='valid')(x)
+        x = nn.Flatten()(x)
         out = self.mlp_head(x)
 
 
