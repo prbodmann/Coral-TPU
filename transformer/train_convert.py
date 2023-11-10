@@ -26,7 +26,7 @@ optimizer = tfa.optimizers.AdamW(
     learning_rate=learning_rate, weight_decay=weight_decay
 )
  
-parser = argparse.ArgumentParser(description='Process some integers.')
+parser = argparse.ArgumentParser()
 parser.add_argument('--training', action = 'store_const', dest = 'training',
                            default = False, required = False,const=True)
 parser.add_argument('--model_name', dest = 'model_name',
