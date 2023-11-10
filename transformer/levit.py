@@ -70,8 +70,25 @@ class Attention(Layer):
         self.heads = heads
         self.scale = dim_key ** -0.5
 
-        self.mha=MultiHeadAttention(h=heads)
+        self.to_q = Sequential([
+            nn.Conv2D(filters=inner_dim_key, kernel_size=1, strides=(2 if downsample else 1), use_bias=False),
+            nn.BatchNormalization(momentum=0.9, epsilon=1e-05),
+        ])
+
+        self.to_k = Sequential([
+            nn.Conv2D(filters=inner_dim_key, kernel_size=1, strides=1, use_bias=False),
+            nn.BatchNormalization(momentum=0.9, epsilon=1e-05),
+        ])
+
+        self.to_v = Sequential([
+            nn.Conv2D(filters=inner_dim_value, kernel_size=1, strides=1, use_bias=False),
+            nn.BatchNormalization(momentum=0.9, epsilon=1e-05),
+        ])
+
+        self.attend = nn.Softmax()
+
         out_batch_norm = nn.BatchNormalization(momentum=0.9, epsilon=1e-05, gamma_initializer='zeros')
+
         self.to_out = Sequential([
             GELU(),
             nn.Conv2D(filters=dim_out, kernel_size=1, strides=1),
@@ -100,11 +117,25 @@ class Attention(Layer):
 
     def call(self, x, training=True):
         b, height, width, n = x.shape
-        self.mha([x,x,x],training=training)
+        q = self.to_q(x)
+
+        h = self.heads
+        y = q.shape[1] # height
+
+        qkv = (q, self.to_k(x), self.to_v(x))
+        q, k, v = map(lambda t: rearrange(t, 'b ... (h d) -> b h (...) d', h=h), qkv)
+
+        # i,j = height*width
+        dots = einsum('b h i d, b h j d -> b h i j', q, k) * self.scale
+        dots = self.apply_pos_bias(dots)
+
+        attn = self.attend(dots)
+
+        x = einsum('b h i j, b h j d -> b h i d', attn, v)
+        x = rearrange(x, 'b h (x y) d -> b x y (h d)', h=h, y=y)
         x = self.to_out(x, training=training)
 
         return x
-
 class Transformer(Layer):
     def __init__(self, dim, fmap_size, depth, heads, dim_key, dim_value, mlp_mult=2, dropout=0.0, dim_out=None, downsample=False):
         super(Transformer, self).__init__()
