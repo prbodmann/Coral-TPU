@@ -174,8 +174,8 @@ class LeViT(Model):
             nn.AvgPool2D()
         ])
 
-        self.distill_head = nn.Dense(units=num_distill_classes) if exists(num_distill_classes) else always(None)
-        self.mlp_head = nn.Dense(units=num_classes)
+
+        self.mlp_head = nn.Dense(units=num_classes,activation='softmax')
 
 
     def call(self, img, training=True, **kwargs):
@@ -185,10 +185,7 @@ class LeViT(Model):
 
         x = self.pool(x)
         out = self.mlp_head(x)
-        distill = self.distill_head(x)
 
-        if exists(distill):
-            return out, distill
 
         return out
     def model(self):
