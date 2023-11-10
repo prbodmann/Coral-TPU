@@ -100,7 +100,7 @@ class Attention(Layer):
 
     def call(self, x, training=True):
         b, height, width, n = x.shape
-        self.mha([x,x,x])
+        self.mha([x,x,x],training=training)
         x = self.to_out(x, training=training)
 
         return x
