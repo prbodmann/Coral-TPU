@@ -455,7 +455,7 @@ def build_model(image_size,patch_size,embed_dim,num_heads,window_size,mlp_size,q
     )(x)
     x = PatchMerging((num_patch, num_patch), embed_dim=embed_dim)(x)
     print(x.shape)
-    x = layers.AveragePooling1D()(x)
+    x = layers.AveragePooling1D(pool_size=256)(x)
     print(x.shape)
     output = layers.Dense(num_classes, activation="softmax")(x)
 
