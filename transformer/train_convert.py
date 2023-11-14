@@ -6,7 +6,7 @@ import tensorflow_addons as tfa
 import tensorflow.keras.layers as nn
 from tensorflow.keras.models import Model
 import numpy as np
-from shiftvit import ShiftViTModel, get_warmup
+from swin import build_model
 
 num_classes=100
 learning_rate = 0.001
@@ -86,17 +86,7 @@ if args.training:
     test_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
     test_dataset = test_dataset.batch(batch_size).map(lambda x, y: (data_resize(x), y))
 
-    model = ShiftViTModel(
-        projected_dim=96,
-        patch_size=4,
-        num_shift_blocks_per_stages=[2, 4, 8, 2],
-        epsilon=1e-5,
-        mlp_dropout_rate= 0.2,
-        stochastic_depth_rate=0.2,
-        num_div=12,
-        shift_pixel=1,
-        mlp_expand_ratio=2,
-    )
+    model =build_model(image_size,patch_size=2,embed_dim=64,num_heads=8,window_size=2,mlp_size=256,qkv_bias=True,dropout_rate=0.03)
     scheduled_lrs = get_warmup(len(x_train),batch_size,num_epochs)
     
     optimizer = tfa.optimizers.AdamW(
