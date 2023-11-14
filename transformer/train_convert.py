@@ -136,7 +136,7 @@ if args.training:
     img = tf.random.normal(shape=[1, image_size, image_size, 3])
     preds = model(img) 
     print(model_name)
-    model.save(model_name)
+    #model.save(model_name)
     print(results)
     
 else:
