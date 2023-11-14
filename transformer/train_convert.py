@@ -86,7 +86,7 @@ if args.training:
     test_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
     test_dataset = test_dataset.batch(batch_size).map(lambda x, y: (data_resize(x), y))
 
-    model =build_model(image_size,patch_size=2,embed_dim=64,num_heads=8,window_size=2,mlp_size=256,qkv_bias=True,dropout_rate=0.03)
+    model =build_model(image_size,patch_size=2,embed_dim=64,num_heads=8,window_size=2,mlp_size=256,qkv_bias=True,dropout_rate=0.03,num_classes=100)
     scheduled_lrs = get_warmup(len(x_train),batch_size,num_epochs)
     
     optimizer = tfa.optimizers.AdamW(

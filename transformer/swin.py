@@ -426,7 +426,7 @@ class PatchMerging(tf.keras.layers.Layer):
 
 We put together the Swin Transformer model.
 """
-def build_model(image_size,patch_size,embed_dim,num_heads,window_size,mlp_size,qkv_bias,dropout_rate):
+def build_model(image_size,patch_size,embed_dim,num_heads,window_size,mlp_size,qkv_bias,dropout_rate,num_classes):
     num_patch = image_size // patch_size
 
     input = layers.Input([image_size,image_size,3])
