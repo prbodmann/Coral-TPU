@@ -37,7 +37,7 @@ import tensorflow as tf
 import tensorflow_addons as tfa
 from tensorflow import keras
 from tensorflow.keras import layers
-
+from vit import other_gelu
 """
 ## Prepare the data
 
@@ -108,7 +108,7 @@ class DropPath(layers.Layer):
     def __init__(self, drop_prob=None, **kwargs):
         super().__init__(**kwargs)
         self.drop_prob = drop_prob
-
+        self.add_weight(name='name')
     def call(self, x):
         input_shape = tf.shape(x)
         batch_size = input_shape[0]
@@ -144,7 +144,7 @@ class WindowAttention(layers.Layer):
         self.qkv = layers.Dense(dim * 3, use_bias=qkv_bias)
         self.dropout = layers.Dropout(dropout_rate)
         self.proj = layers.Dense(dim)
-
+        self.add_weight(name='name')
     def build(self, input_shape):
         num_window_elements = (2 * self.window_size[0] - 1) * (
             2 * self.window_size[1] - 1
@@ -248,7 +248,7 @@ class SwinTransformer(layers.Layer):
         **kwargs,
     ):
         super().__init__(**kwargs)
-
+        self.add_weight(name='name')
         self.dim = dim  # number of input dimensions
         self.num_patch = num_patch  # number of embedded patches
         self.num_heads = num_heads  # number of attention heads
@@ -270,7 +270,7 @@ class SwinTransformer(layers.Layer):
         self.mlp = keras.Sequential(
             [
                 layers.Dense(mlp_size),
-                layers.Activation(keras.activations.gelu),
+                layers.Activation(other_gelu),
                 layers.Dropout(dropout_rate),
                 layers.Dense(dim),
                 layers.Dropout(dropout_rate),
@@ -315,7 +315,7 @@ class SwinTransformer(layers.Layer):
             attn_mask = tf.where(attn_mask != 0, -100.0, attn_mask)
             attn_mask = tf.where(attn_mask == 0, 0.0, attn_mask)
             self.attn_mask = tf.Variable(initial_value=attn_mask, trainable=False)
-
+            
     def call(self, x):
         height, width = self.num_patch
         _, num_patches_before, channels = x.shape
@@ -374,7 +374,7 @@ class PatchExtract(layers.Layer):
         super().__init__(**kwargs)
         self.patch_size_x = patch_size[0]
         self.patch_size_y = patch_size[0]
-
+        self.add_weight(name='name')
     def call(self, images):
         batch_size = tf.shape(images)[0]
         patches = tf.image.extract_patches(
@@ -407,7 +407,7 @@ class PatchMerging(tf.keras.layers.Layer):
         self.num_patch = num_patch
         self.embed_dim = embed_dim
         self.linear_trans = layers.Dense(2 * embed_dim, use_bias=False)
-
+        self.add_weight(name='name')
     def call(self, x):
         height, width = self.num_patch
         _, _, C = x.get_shape().as_list()
