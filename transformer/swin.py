@@ -369,24 +369,23 @@ images on top of which we will later use the Swin Transformer class we built.
 """
 
 
-class PatchExtract(layers.Layer):
-    def __init__(self, patch_size, **kwargs):
-        super().__init__(**kwargs)
-        self.patch_size_x = patch_size[0]
-        self.patch_size_y = patch_size[0]
-        self.add_weight(name='name')
-    def call(self, images):
-        batch_size = tf.shape(images)[0]
-        patches = tf.image.extract_patches(
-            images=images,
-            sizes=(1, self.patch_size_x, self.patch_size_y, 1),
-            strides=(1, self.patch_size_x, self.patch_size_y, 1),
-            rates=(1, 1, 1, 1),
-            padding="VALID",
-        )
-        patch_dim = patches.shape[-1]
-        patch_num = patches.shape[1]
-        return tf.reshape(patches, (batch_size, patch_num * patch_num, patch_dim))
+class CreatePatches(layers.Layer ):
+
+  def __init__( self , patch_size,num_patches,input_image_size ):
+    super( CreatePatches , self ).__init__()
+    self.patch_size = patch_size
+    self.num_patches = num_patches
+    self.input_image_size = input_image_size
+  def call(self, inputs ):
+    patches = []
+    # For square images only ( as inputs.shape[ 1 ] = inputs.shape[ 2 ] )
+    
+    for i in range( 0 , self.input_image_size , self.patch_size ):
+        for j in range( 0 , self.input_image_size , self.patch_size ):
+            patches.append( inputs[ : , i : i + self.patch_size , j : j + self.patch_size , : ] )
+    
+    return  tf.concat(patches,axis=-2)
+
 
 
 class PatchEmbedding(layers.Layer):
@@ -431,7 +430,7 @@ def build_model(image_size,patch_size,embed_dim,num_heads,window_size,mlp_size,q
 
     input = layers.Input([image_size,image_size,3])
 
-    x = PatchExtract([patch_size,patch_size])(input)
+    x = CreatePatches(patch_size,(num_patch) ** 2,image_size)(input)
     x = PatchEmbedding(num_patch * num_patch, embed_dim)(x)
     x = SwinTransformer(
         dim=embed_dim,
