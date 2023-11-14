@@ -90,7 +90,7 @@ if args.training:
     scheduled_lrs = get_warmup(len(x_train),batch_size,num_epochs)
     
     optimizer = tfa.optimizers.AdamW(
-        learning_rate=scheduled_lrs, weight_decay=weight_decay
+        learning_rate=learning_rate, weight_decay=weight_decay
     )
    
     
