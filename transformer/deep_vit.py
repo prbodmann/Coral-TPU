@@ -95,7 +95,7 @@ class DeepViT(Model):
             nn.Dense(units=dim)
         ], name='patch_embedding')
 
-        self.encoded_patches = PatchEncoder(num_patches ** 2, dim)
+        self.encoded_patches = PatchEncoder(num_patches , dim)
         self.dropout = nn.Dropout(rate=emb_dropout)
 
         self.transformer = Transformer(dim, depth, heads, dim_head, mlp_dim, dropout)

@@ -90,10 +90,10 @@ if args.training:
     image_size = image_size,
     patch_size = 16,
     num_classes = num_classes,
-    dim = 512,
+    dim = 128,
     depth = 6,
     heads = 8,
-    mlp_dim = 1024,
+    mlp_dim = 512,
     dropout = 0.1,
     emb_dropout = 0.1
 )
