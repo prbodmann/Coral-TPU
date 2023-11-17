@@ -25,7 +25,45 @@ import tensorflow.keras.layers as nn
 
 from einops import rearrange, repeat
 from einops.layers.tensorflow import Rearrange
-from vit import MultiHeadAttention, other_gelu, Patches2
+from vit import MultiHeadAttention, other_gelu
+
+class CreatePatches( tf.keras.layers.Layer ):
+
+  def __init__( self , patch_size,num_patches,input_image_size ):
+    super( CreatePatches , self ).__init__()
+    self.patch_size = patch_size
+    self.num_patches = num_patches
+    self.input_image_size = input_image_size
+  def call(self, inputs ):
+    patches = []
+    # For square images only ( as inputs.shape[ 1 ] = inputs.shape[ 2 ] )
+    
+    for i in range( 0 , self.input_image_size , self.patch_size ):
+        for j in range( 0 , self.input_image_size , self.patch_size ):
+            patches.append( inputs[ : , i : i + self.patch_size , j : j + self.patch_size , : ] )
+    
+    return  tf.concat(patches,axis=-1)
+
+class Patches2(layers.Layer):
+    """Create a a set of image patches from input. The patches all have
+    a size of patch_size * patch_size.
+    """
+
+    def __init__(self, patch_size,num_patches,input_image_size):
+        super(Patches2, self).__init__()
+        self.patch_size = patch_size
+        self.patches_layer = CreatePatches(patch_size = patch_size, num_patches = num_patches,input_image_size=input_image_size)
+        self.num_patches = num_patches
+    def call(self, images):
+        #batch_size = tf.shape(images)[0]
+        patches = self.patches_layer(images)
+        patches = tf.keras.layers.Reshape([self.patch_size*self.patch_size,self.num_patches*3])(patches)#tf.reshape(patches,[batch_size,self.patch_size,self.patch_size,self.num_patches*3])
+        #print(patches.shape)
+        #patches = tf.keras.layers.Reshape([ self.patch_size*self.patch_size, self.num_patches*3])(patches)
+        #patch_dims = self.num_patches * 3
+        #patches = tf.reshape(patches, [batch_size, self.patch_size*self.patch_size, patch_dims])
+        return patches
+
 class PreNorm(Layer):
     def __init__(self, fn):
         super(PreNorm, self).__init__()
