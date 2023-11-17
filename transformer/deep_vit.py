@@ -73,7 +73,8 @@ class MultiHeadAttention(keras.layers.Layer):
         # Head is in multi-head, just like the paper
         head = [self.attention([q[i], k[i], v[i]]) for i in range(self.h)]
 
-        out = self.out(tf.co
+        out = self.out(tf.concat(head, -1))
+        return out
 
 
 class CreatePatches( tf.keras.layers.Layer ):
