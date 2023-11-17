@@ -88,7 +88,7 @@ if args.training:
 
     model = DeepViT(
     image_size = image_size,
-    patch_size = 16,
+    patch_size = 8,
     num_classes = num_classes,
     dim = 128,
     depth = 6,
