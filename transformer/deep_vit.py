@@ -25,7 +25,56 @@ import tensorflow.keras.layers as nn
 
 from einops import rearrange, repeat
 from einops.layers.tensorflow import Rearrange
-from vit import MultiHeadAttention, other_gelu, PatchEncoder
+from vit import other_gelu, PatchEncoder
+
+class MultiHeadAttention(keras.layers.Layer):
+    def __init__(self, h=8, **kwargs):
+        super(MultiHeadAttention, self).__init__(**kwargs)
+        self.h = h
+
+    def build(self, input_shape):
+        query_shape, key_shape, value_shape = input_shape
+        print(query_shape)
+        d_model = query_shape
+
+        # Note: units can be anything, but this is what the paper does
+        units = d_model // self.h
+
+        self.layersQ = []
+        for _ in range(self.h):
+            layer =  layers.Dense(units, activation=None, use_bias=False)
+            layer.build(query_shape)
+            self.layersQ.append(layer)
+
+        self.layersK = []
+        for _ in range(self.h):
+            layer =  layers.Dense(units, activation=None, use_bias=False)
+            layer.build(key_shape)
+            self.layersK.append(layer)
+
+        self.layersV = []
+        for _ in range(self.h):
+            layer =  layers.Dense(units, activation=None, use_bias=False)
+            layer.build(value_shape)
+            self.layersV.append(layer)
+
+        self.attention = DotProductAttention(True)
+
+        self.out =  layers.Dense(d_model, activation=None, use_bias=False)
+        self.out.build((query_shape[0], query_shape[1], self.h * units))
+
+    def call(self, input):
+        query, key, value = input
+
+        q = [layer(query) for layer in self.layersQ]
+        k = [layer(key) for layer in self.layersK]
+        v = [layer(value) for layer in self.layersV]
+
+        # Head is in multi-head, just like the paper
+        head = [self.attention([q[i], k[i], v[i]]) for i in range(self.h)]
+
+        out = self.out(tf.co
+
 
 class CreatePatches( tf.keras.layers.Layer ):
 
