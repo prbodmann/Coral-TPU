@@ -113,7 +113,7 @@ if args.training:
             tf.keras.metrics.TopKCategoricalAccuracy(5, name="top-5-accuracy"),
         ],
     )
-    model.build([image_size_image_size,3])
+    model.build([image_size,image_size,3])
     '''
     model.compile(
         optimizer=optimizer,
