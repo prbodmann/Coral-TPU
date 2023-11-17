@@ -96,7 +96,7 @@ class DeepViT(Model):
         ], name='patch_embedding')
 
         self.pos_embedding = tf.Variable(initial_value=tf.ones([1, num_patches + 1, dim]))
-        self.cls_token = tf.Variable(initial_value=tf.ones([1, 1, dim]))
+        self.cls_token = tf.Variable(initial_value=tf.ones([1, num_patches ** 2, dim]))
         self.dropout = nn.Dropout(rate=emb_dropout)
 
         self.transformer = Transformer(dim, depth, heads, dim_head, mlp_dim, dropout)
