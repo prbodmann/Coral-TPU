@@ -132,7 +132,7 @@ class Mlp( tf.keras.layers.Layer ):
     def call(self, x, training=True):
         return self.net(x, training=training)
 
-class Patches2(layers.Layer):
+class Patches2(nn.Layer):
     """Create a a set of image patches from input. The patches all have
     a size of patch_size * patch_size.
     """
