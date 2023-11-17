@@ -25,7 +25,7 @@ import tensorflow.keras.layers as nn
 
 from einops import rearrange, repeat
 from einops.layers.tensorflow import Rearrange
-from vit import MultiHeadAttention, other_gelu, Patches2
+from vit import MultiHeadAttention, other_gelu, Patches2, PatchEncoder
 
 
 class PreNorm(Layer):
@@ -95,8 +95,7 @@ class DeepViT(Model):
             nn.Dense(units=dim)
         ], name='patch_embedding')
 
-        self.pos_embedding = tf.Variable(initial_value=tf.ones([1, num_patches ** 2, dim]))
-        self.cls_token = tf.Variable(initial_value=tf.ones([1, num_patches ** 2, dim]))
+        self.encoded_patches = PatchEncoder(num_patches, dim)(patches)
         self.dropout = nn.Dropout(rate=emb_dropout)
 
         self.transformer = Transformer(dim, depth, heads, dim_head, mlp_dim, dropout)
@@ -110,12 +109,7 @@ class DeepViT(Model):
 
     def call(self, img, training=True, **kwargs):
         x = self.patch_embedding(img)
-        b, n, d = x.shape
-        print(x.shape)
-        cls_tokens = self.cls_token
-        #cls_tokens = repeat( self.cls_token, '() n d -> b n d', b=b)
-        x = tf.concat([cls_tokens, x], axis=1)
-        x += self.pos_embedding
+        x = self.encoded_patches(x)
         x = self.dropout(x, training=training)
 
         x = self.transformer(x, training=training)
