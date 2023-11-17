@@ -115,7 +115,7 @@ class DeepViT(Model):
         cls_tokens = self.cls_token
         #cls_tokens = repeat( self.cls_token, '() n d -> b n d', b=b)
         x = tf.concat([cls_tokens, x], axis=1)
-        x += self.pos_embedding[:, :(n + 1)]
+        x += self.pos_embedding
         x = self.dropout(x, training=training)
 
         x = self.transformer(x, training=training)
