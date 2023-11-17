@@ -86,7 +86,8 @@ class DeepViT(Model):
         super(DeepViT, self).__init__()
 
         assert image_size % patch_size == 0, 'Image dimensions must be divisible by the patch size.'
-        num_patches = (image_size // patch_size) ** 2
+        num_patches = (image_size // patch_size) ** 24
+        print(num_patches)
         assert pool in {'cls', 'mean'}, 'pool type must be either cls (cls token) or mean (mean pooling)'
 
         self.patch_embedding = Sequential([
