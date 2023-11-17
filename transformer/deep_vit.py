@@ -110,8 +110,9 @@ class DeepViT(Model):
     def call(self, img, training=True, **kwargs):
         x = self.patch_embedding(img)
         b, n, d = x.shape
-
-        cls_tokens = repeat(self.cls_token, '() n d -> b n d', b=b)
+        print(x.shape)
+        cls_tokens = self.cls_token
+        cls_tokens = repeat(, '() n d -> b n d', b=b)
         x = tf.concat([cls_tokens, x], axis=1)
         x += self.pos_embedding[:, :(n + 1)]
         x = self.dropout(x, training=training)
