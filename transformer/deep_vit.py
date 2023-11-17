@@ -36,7 +36,7 @@ class MultiHeadAttention(nn.Layer):
         query_shape, key_shape, value_shape = input_shape
         print(query_shape)
         d_model = query_shape
-
+        print(d_model)
         # Note: units can be anything, but this is what the paper does
         units = d_model // self.h
 
