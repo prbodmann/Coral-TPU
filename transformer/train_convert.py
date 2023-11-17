@@ -113,6 +113,7 @@ if args.training:
             tf.keras.metrics.TopKCategoricalAccuracy(5, name="top-5-accuracy"),
         ],
     )
+    model.build()
     '''
     model.compile(
         optimizer=optimizer,
