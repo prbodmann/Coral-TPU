@@ -44,7 +44,7 @@ class CreatePatches( tf.keras.layers.Layer ):
     
     return  tf.concat(patches,axis=-1)
 
-class Patches2(layers.Layer):
+class Patches2(nn.Layer):
     """Create a a set of image patches from input. The patches all have
     a size of patch_size * patch_size.
     """
