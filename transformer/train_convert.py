@@ -12,7 +12,7 @@ num_classes=100
 learning_rate = 0.001
 weight_decay = 0.0001
 batch_size = 256
-num_epochs = 10
+num_epochs = 2
 image_size = 64  # We'll resize input images to this size
 patch_size = 8
 projection_dim = 128
@@ -136,7 +136,7 @@ if args.training:
     img = tf.random.normal(shape=[1, image_size, image_size, 3])
     preds = model(img) 
     print(model_name)
-    #model.save(model_name)
+    model.save(model_name)
     print(results)
     
 else:
