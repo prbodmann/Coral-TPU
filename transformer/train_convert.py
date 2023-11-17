@@ -87,10 +87,10 @@ if args.training:
     test_dataset = test_dataset.batch(batch_size).map(lambda x, y: (data_resize(x), y))
 
     model = DeepViT(
-    image_size = 256,
-    patch_size = 32,
-    num_classes = 1000,
-    dim = 1024,
+    image_size = image_size,
+    patch_size = 16,
+    num_classes = num_classes,
+    dim = 512,
     depth = 6,
     heads = 8,
     mlp_dim = 1024,
