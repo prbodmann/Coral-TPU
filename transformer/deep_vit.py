@@ -25,7 +25,7 @@ import tensorflow.keras.layers as nn
 
 from einops import rearrange, repeat
 from einops.layers.tensorflow import Rearrange
-from vit import MultiHeadAttention
+from vit import MultiHeadAttention, other_gelu, Patches2
 class PreNorm(Layer):
     def __init__(self, fn):
         super(PreNorm, self).__init__()
@@ -48,8 +48,7 @@ class MLP(Layer):
             return nn.Activation(gelu)
 
         self.net = [
-            nn.Dense(units=hidden_dim),
-            GELU(),
+            nn.Dense(units=hidden_dim,activation=other_gelu),
             nn.Dropout(rate=dropout),
             nn.Dense(units=dim),
             nn.Dropout(rate=dropout)
@@ -59,52 +58,6 @@ class MLP(Layer):
     def call(self, x, training=True):
         return self.net(x, training=training)
 
-class Attention(Layer):
-    def __init__(self, dim, heads=8, dim_head=64, dropout=0.0):
-        super(Attention, self).__init__()
-        inner_dim = dim_head * heads
-
-        self.heads = heads
-        self.scale = dim_head ** -0.5
-
-        self.attend = nn.Softmax()
-        self.to_qkv = nn.Dense(units=inner_dim * 3, use_bias=False)
-
-        self.reattn_weights = tf.Variable(initial_value=tf.ones([heads, heads]))
-
-        self.reattn_norm = [
-            Rearrange('b h i j -> b i j h'),
-            nn.LayerNormalization(),
-            Rearrange('b i j h -> b h i j')
-        ]
-
-        self.to_out = [
-            nn.Dense(units=dim),
-            nn.Dropout(rate=dropout)
-        ]
-
-        self.reattn_norm = Sequential(self.reattn_norm)
-        self.to_out = Sequential(self.to_out)
-
-    def call(self, x, training=True):
-        qkv = self.to_qkv(x)
-        qkv = tf.split(qkv, num_or_size_splits=3, axis=-1)
-        q, k, v = map(lambda t: rearrange(t, 'b n (h d) -> b h n d', h=self.heads), qkv)
-
-        # attention
-        dots = tf.matmul(q, tf.transpose(k, perm=[0, 1, 3, 2])) * self.scale
-        attn = self.attend(dots)
-
-        # re-attention
-        attn = einsum('b h i j, h g -> b g i j', attn, self.reattn_weights)
-        attn = self.reattn_norm(attn)
-
-        # aggregate and out
-        x = tf.matmul(attn, v)
-        x = rearrange(x, 'b h n d -> b n (h d)')
-        x = self.to_out(x, training=training)
-
-        return x
 
 class Transformer(Layer):
     def __init__(self, dim, depth, heads, dim_head, mlp_dim, dropout=0.0):
@@ -135,7 +88,7 @@ class DeepViT(Model):
         assert pool in {'cls', 'mean'}, 'pool type must be either cls (cls token) or mean (mean pooling)'
 
         self.patch_embedding = Sequential([
-            Rearrange('b (h p1) (w p2) c -> b (h w) (p1 p2 c)', p1=patch_size, p2=patch_size),
+            Patches2(patch_size,num_patches,image_size),
             nn.Dense(units=dim)
         ], name='patch_embedding')
 
