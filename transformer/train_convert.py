@@ -6,7 +6,7 @@ import tensorflow_addons as tfa
 import tensorflow.keras.layers as nn
 from tensorflow.keras.models import Model
 import numpy as np
-from swin import build_model
+from deep_vit import DeepViT
 
 num_classes=100
 learning_rate = 0.001
@@ -86,7 +86,18 @@ if args.training:
     test_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
     test_dataset = test_dataset.batch(batch_size).map(lambda x, y: (data_resize(x), y))
 
-    model =build_model(image_size,patch_size=2,embed_dim=64,num_heads=8,window_size=2,mlp_size=256,qkv_bias=True,dropout_rate=0.03,num_classes=100)
+    model = DeepViT(
+    image_size = 256,
+    patch_size = 32,
+    num_classes = 1000,
+    dim = 1024,
+    depth = 6,
+    heads = 8,
+    mlp_dim = 1024,
+    dropout = 0.1,
+    emb_dropout = 0.1
+)
+
 
     
     optimizer = tfa.optimizers.AdamW(

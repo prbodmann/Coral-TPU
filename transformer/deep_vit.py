@@ -25,7 +25,7 @@ import tensorflow.keras.layers as nn
 
 from einops import rearrange, repeat
 from einops.layers.tensorflow import Rearrange
-
+from vit import MultiHeadAttention
 class PreNorm(Layer):
     def __init__(self, fn):
         super(PreNorm, self).__init__()
