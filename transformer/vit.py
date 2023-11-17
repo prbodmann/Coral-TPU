@@ -108,6 +108,25 @@ class CreatePatches( tf.keras.layers.Layer ):
     
     return  tf.concat(patches,axis=-2)
 
+class Patches2(layers.Layer):
+    """Create a a set of image patches from input. The patches all have
+    a size of patch_size * patch_size.
+    """
+
+    def __init__(self, patch_size,num_patches,input_image_size):
+        super(Patches2, self).__init__()
+        self.patch_size = patch_size
+        self.patches_layer = CreatePatches(patch_size = patch_size, num_patches = num_patches,input_image_size=input_image_size)
+        self.num_patches = num_patches
+    def call(self, images):
+        #batch_size = tf.shape(images)[0]
+        patches = self.patches_layer(images)
+        patches = tf.keras.layers.Reshape([self.patch_size*self.patch_size,self.num_patches*3])(patches)#tf.reshape(patches,[batch_size,self.patch_size,self.patch_size,self.num_patches*3])
+        #print(patches.shape)
+        #patches = tf.keras.layers.Reshape([ self.patch_size*self.patch_size, self.num_patches*3])(patches)
+        #patch_dims = self.num_patches * 3
+        #patches = tf.reshape(patches, [batch_size, self.patch_size*self.patch_size, patch_dims])
+        return patches
 
 class Mlp( tf.keras.layers.Layer ):
     """Multi-Layer Perceptron
@@ -132,25 +151,7 @@ class Mlp( tf.keras.layers.Layer ):
     def call(self, x, training=True):
         return self.net(x, training=training)
 
-class Patches2(layers.Layer):
-    """Create a a set of image patches from input. The patches all have
-    a size of patch_size * patch_size.
-    """
 
-    def __init__(self, patch_size,num_patches,input_image_size):
-        super(Patches2, self).__init__()
-        self.patch_size = patch_size
-        self.patches_layer = CreatePatches(patch_size = patch_size, num_patches = num_patches,input_image_size=input_image_size)
-        self.num_patches = num_patches
-    def call(self, images):
-        #batch_size = tf.shape(images)[0]
-        patches = self.patches_layer(images)
-        patches = tf.keras.layers.Reshape([self.patch_size*self.patch_size,self.num_patches*3])(patches)#tf.reshape(patches,[batch_size,self.patch_size,self.patch_size,self.num_patches*3])
-        #print(patches.shape)
-        #patches = tf.keras.layers.Reshape([ self.patch_size*self.patch_size, self.num_patches*3])(patches)
-        #patch_dims = self.num_patches * 3
-        #patches = tf.reshape(patches, [batch_size, self.patch_size*self.patch_size, patch_dims])
-        return patches
 
 class PatchEncoder(layers.Layer):
     """The `PatchEncoder` layer will linearly transform a patch by projecting it into a
