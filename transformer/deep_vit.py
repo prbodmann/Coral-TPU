@@ -114,7 +114,7 @@ class Transformer(Layer):
 
         for _ in range(depth):
             self.layers.append([
-                PreNorm(MultiHeadAttention( h=heads),
+                PreNorm(MultiHeadAttention( h=heads)),
                 PreNorm(MLP(dim, mlp_dim, dropout=dropout))
             ])
 
