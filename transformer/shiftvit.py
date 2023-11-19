@@ -439,7 +439,7 @@ class ShiftViTModel(keras.Model):
             )
         self.global_avg_pool = layers.GlobalAveragePooling2D()
 
-        self.classifier = layers.Dense(config.num_classes)
+        self.classifier = layers.Dense(config.num_classes,activation='softmax')
 
     def get_config(self):
         config = super().get_config()
@@ -733,10 +733,10 @@ optimizer = tfa.optimizers.AdamW(
 # Compile and pretrain the model.
 model.compile(
     optimizer=optimizer,
-    loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+    loss=keras.losses.CategoricalCrossentropy(from_logits=True),
     metrics=[
-        keras.metrics.SparseCategoricalAccuracy(name="accuracy"),
-        keras.metrics.SparseTopKCategoricalAccuracy(5, name="top-5-accuracy"),
+        keras.metrics.CategoricalAccuracy(name="accuracy"),
+        keras.metrics.TopKCategoricalAccuracy(5, name="top-5-accuracy"),
     ],
 )
 
