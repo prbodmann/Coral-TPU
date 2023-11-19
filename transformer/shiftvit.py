@@ -694,9 +694,9 @@ results = 0
 model_name = "shiftvit.py"
 
 train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
-train_dataset = train_dataset.batch(batch_size).map(lambda x, y: (data_resize_aug(x), y))
+train_dataset = train_dataset.batch(config.batch_size).map(lambda x, y: (data_resize_aug(x), y))
 test_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
-test_dataset = test_dataset.batch(batch_size).map(lambda x, y: (data_resize(x), y))
+test_dataset = test_dataset.batch(config.batch_size).map(lambda x, y: (data_resize(x), y))
 
 
 
