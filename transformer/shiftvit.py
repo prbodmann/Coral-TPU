@@ -654,11 +654,12 @@ class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):
 #y_test = tf.cast(y_test,tf.float32)
 y_train = to_categorical(y_train)
 y_test = to_categorical(y_test)
+config = Config()
 
 data_resize_aug = tf.keras.Sequential(
             [               
                 layers.Normalization(),
-                layers.Resizing(image_size, image_size),
+                layers.Resizing(config.image_size, config.image_size),
                 layers.RandomFlip("horizontal"),
                 layers.RandomRotation(factor=0.02),
                 layers.RandomZoom(
@@ -673,7 +674,7 @@ data_resize_aug.layers[0].adapt(x_train)
 data_resize = tf.keras.Sequential(
             [               
                 layers.Normalization(),
-                layers.Resizing(image_size, image_size),               
+                layers.Resizing(config.image_size, config.image_size),               
             ],
             name="data_resize",
         )
@@ -697,7 +698,7 @@ train_dataset = train_dataset.batch(batch_size).map(lambda x, y: (data_resize_au
 test_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
 test_dataset = test_dataset.batch(batch_size).map(lambda x, y: (data_resize(x), y))
 
-config = Config()
+
 
 model = ShiftViTModel(
     projected_dim=config.projected_dim,
@@ -753,11 +754,11 @@ history = model.fit(
     ],
 )
 
-model.build((batch_size, image_size, image_size, 3))
+model.build((batch_size, config.image_size, config.image_size, 3))
 model.summary()
 results= model.evaluate(test_dataset,batch_size=batch_size)
 
-img = tf.random.normal(shape=[1, image_size, image_size, 3])
+img = tf.random.normal(shape=[1, config.image_size, config.image_size, 3])
 preds = model(img) 
 print(model_name)
 model.save(model_name)
@@ -770,12 +771,12 @@ train_dataset = train_dataset.batch(1).map(lambda x, y: (data_resize_aug(x), y))
 test_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
 test_dataset = test_dataset.batch(1).map(lambda x, y: (data_resize(x), y))
 
-newInput = layers.Input(batch_shape=(1,image_size,image_size,3))
+newInput = layers.Input(batch_shape=(1,config.image_size,config.image_size,3))
 newOutputs = model(newInput)
 newModel = Model(newInput,newOutputs)
 newModel.set_weights(model.get_weights())
 model = newModel
-X = np.random.rand(1, image_size, image_size, 3)
+X = np.random.rand(1, config.image_size, config.image_size, 3)
 y_pred = model.predict(X)
 
 model.summary()
@@ -787,7 +788,7 @@ def representative_data_gen():
         yield [tf.dtypes.cast(input_value[0],tf.float32)]
 
 converter_quant = tf.lite.TFLiteConverter.from_keras_model(model) 
-converter_quant.input_shape=(1,image_size,image_size,3)
+converter_quant.input_shape=(1,config.image_size,config.image_size,3)
 converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
 converter_quant.representative_dataset = representative_data_gen
 converter_quant.target_spec.supported_ops = [
