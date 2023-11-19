@@ -742,9 +742,9 @@ model.compile(
 
 # Train the model
 history = model.fit(
-    train_ds,
+    train_dataset,
     epochs=config.epochs,
-    validation_data=val_ds,
+    validation_data=test_dataset,
     callbacks=[
         keras.callbacks.EarlyStopping(
             monitor="val_accuracy",
