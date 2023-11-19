@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 import tensorflow as tf
 from tensorflow import keras
-from tensorflow.keras import layers
+from tensorflow.keras import layers, Model
 import tensorflow_addons as tfa
 from tensorflow.keras import datasets
 import pathlib
