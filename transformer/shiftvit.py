@@ -9,7 +9,7 @@ from tensorflow.keras import datasets
 import pathlib
 import glob
 from tensorflow.keras.utils import to_categorical
-
+from vit import other_gelu
 class MLP(layers.Layer):
     """Get the MLP layer for each shift block.
 
@@ -31,7 +31,7 @@ class MLP(layers.Layer):
             [
                 layers.Dense(
                     units=initial_filters,
-                    activation=tf.nn.gelu,
+                    activation=other_gelu,
                 ),
                 layers.Dropout(rate=self.mlp_dropout_rate),
                 layers.Dense(units=input_channels),
@@ -657,11 +657,11 @@ y_test = to_categorical(y_test)
 
 data_resize_aug = tf.keras.Sequential(
             [               
-                nn.Normalization(),
-                nn.Resizing(image_size, image_size),
-                nn.RandomFlip("horizontal"),
-                nn.RandomRotation(factor=0.02),
-                nn.RandomZoom(
+                layers.Normalization(),
+                layers.Resizing(image_size, image_size),
+                layers.RandomFlip("horizontal"),
+                layers.RandomRotation(factor=0.02),
+                layers.RandomZoom(
                     height_factor=0.2, width_factor=0.2
                 ),
             ],
@@ -672,8 +672,8 @@ data_resize_aug.layers[0].adapt(x_train)
 
 data_resize = tf.keras.Sequential(
             [               
-                nn.Normalization(),
-                nn.Resizing(image_size, image_size),               
+                layers.Normalization(),
+                layers.Resizing(image_size, image_size),               
             ],
             name="data_resize",
         )
@@ -770,7 +770,7 @@ train_dataset = train_dataset.batch(1).map(lambda x, y: (data_resize_aug(x), y))
 test_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
 test_dataset = test_dataset.batch(1).map(lambda x, y: (data_resize(x), y))
 
-newInput = nn.Input(batch_shape=(1,image_size,image_size,3))
+newInput = layers.Input(batch_shape=(1,image_size,image_size,3))
 newOutputs = model(newInput)
 newModel = Model(newInput,newOutputs)
 newModel.set_weights(model.get_weights())
