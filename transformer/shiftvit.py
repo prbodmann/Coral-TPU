@@ -691,7 +691,7 @@ data_resize.layers[0].adapt(x_test)
 #x_test = x_test / 255.0
 
 results = 0
-model_name = "shiftvit.py"
+model_name = "shiftvit"
 
 train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
 train_dataset = train_dataset.batch(config.batch_size).map(lambda x, y: (data_resize_aug(x), y))
