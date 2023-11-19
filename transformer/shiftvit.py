@@ -521,7 +521,7 @@ class Config(object):
     batch_size = 256
     buffer_size = batch_size * 2
     input_shape = (64, 64, 3)
-    num_classes = 10
+    num_classes = 100
 
     # AUGMENTATION
     image_size = 64
