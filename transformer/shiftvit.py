@@ -1,41 +1,3 @@
-"""
-Title: A Vision Transformer without Attention
-Author: [Aritra Roy Gosthipaty](https://twitter.com/ariG23498), [Ritwik Raha](https://twitter.com/ritwik_raha), [Shivalika Singh](https://www.linkedin.com/in/shivalika-singh/)
-Date created: 2022/02/24
-Last modified: 2022/10/15
-Description: A minimal implementation of ShiftViT.
-"""
-"""
-## Introduction
-
-[Vision Transformers](https://arxiv.org/abs/2010.11929) (ViTs) have sparked a wave of
-research at the intersection of Transformers and Computer Vision (CV).
-
-ViTs can simultaneously model long- and short-range dependencies, thanks to
-the Multi-Head Self-Attention mechanism in the Transformer block. Many researchers believe
-that the success of ViTs are purely due to the attention layer, and they seldom
-think about other parts of the ViT model.
-
-In the academic paper
-[When Shift Operation Meets Vision Transformer: An Extremely Simple Alternative to Attention Mechanism](https://arxiv.org/abs/2201.10801)
-the authors propose to demystify the success of ViTs with the introduction of a **NO
-PARAMETER** operation in place of the attention operation. They swap the attention
-operation with a shifting operation.
-
-In this example, we minimally implement the paper with close alignement to the author's
-[official implementation](https://github.com/microsoft/SPACH/blob/main/models/shiftvit.py).
-
-This example requires TensorFlow 2.9 or higher, as well as TensorFlow Addons, which can
-be installed using the following command:
-"""
-"""shell
-pip install -qq -U tensorflow-addons
-"""
-
-"""
-## Setup and imports
-"""
-
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -46,144 +8,6 @@ import tensorflow_addons as tfa
 
 import pathlib
 import glob
-import os
-from vit import other_gelu
-# Setting seed for reproducibiltiy
-SEED = 42
-keras.utils.set_random_seed(SEED)
-
-"""
-## Hyperparameters
-
-These are the hyperparameters that we have chosen for the experiment.
-Please feel free to tune them.
-"""
-
-
-class Config(object):
-    # DATA
-    batch_size = 256
-    buffer_size = batch_size * 2
-    input_shape = (32, 32, 3)
-    num_classes = 10
-
-    # AUGMENTATION
-    image_size = 48
-
-    # ARCHITECTURE
-    patch_size = 4
-    projected_dim = 96
-    num_shift_blocks_per_stages = [2, 4, 8, 2]
-    epsilon = 1e-5
-    stochastic_depth_rate = 0.2
-    mlp_dropout_rate = 0.2
-    num_div = 12
-    shift_pixel = 1
-    mlp_expand_ratio = 2
-
-    # OPTIMIZER
-    lr_start = 1e-5
-    lr_max = 1e-3
-    weight_decay = 1e-4
-
-    # TRAINING
-    epochs = 100
-
-    # INFERENCE
-    label_map = {
-        0: "airplane",
-        1: "automobile",
-        2: "bird",
-        3: "cat",
-        4: "deer",
-        5: "dog",
-        6: "frog",
-        7: "horse",
-        8: "ship",
-        9: "truck",
-    }
-    tf_ds_batch_size = 20
-
-
-
-
-"""
-## Data Augmentation
-
-The augmentation pipeline consists of:
-
-- Rescaling
-- Resizing
-- Random cropping
-- Random horizontal flipping
-
-_Note_: The image data augmentation layers do not apply
-data transformations at inference time. This means that
-when these layers are called with `training=False` theyfig.
-behave differently. Refer to the
-[documentation](https://keras.io/api/layers/preprocessing_layers/image_augmentation/)
-for more details.
-"""
-
-
-
-
-
-"""
-## The ShiftViT architecture
-
-In this section, we build the architecture proposed in
-[the ShiftViT paper](https://arxiv.org/abs/2201.10801).
-
-| ![ShiftViT Architecture](https://i.imgur.com/CHU40HX.png) |
-| :--: |
-| Figure 1: The entire architecutre of ShiftViT.
-[Source](https://arxiv.org/abs/2201.10801) |
-
-The architecture as shown in Fig. 1, is inspired by
-[Swin Transformer: Hierarchical Vision Transformer using Shifted Windows](https://arxiv.org/abs/2103.14030).
-Here the authors propose a modular architecture with 4 stages. Each stage works on its
-own spatial size, creating a hierarchical architecture.
-
-An input image of size `HxWx3` is split into non-overlapping patches of size `4x4`.
-This is done via the patchify layer which results in individual tokens of feature size `48`
-(`4x4x3`). Each stage comprises two parts:
-
-1. Embedding Generation
-2. Stacked Shift Blocks
-
-We discuss the stages and the modules in detail in what follows.
-
-_Note_: Compared to the [official implementation](https://github.com/microsoft/SPACH/blob/main/models/shiftvit.py)
-we restructure some key components to better fit the Keras API.
-"""
-
-"""
-### The ShiftViT Block
-
-| ![ShiftViT block](https://i.imgur.com/IDe35vo.gif) |
-| :--: |
-| Figure 2: From the Model to a Shift Block. |
-
-Each stage in the ShiftViT architecture comprises of a Shift Block as shown in Fig 2.
-
-| ![Shift Vit Block](https://i.imgur.com/0q13pLu.png) |
-| :--: |
-| Figure 3: The Shift ViT Block. [Source](https://arxiv.org/abs/2201.10801) |
-
-The Shift Block as shown in Fig. 3, comprises of the following:
-
-1. Shift Operation
-2. Linear Normalization
-3. MLP Layer
-"""
-
-"""
-#### The MLP block
-
-The MLP block is intended to be a stack of densely-connected layers
-"""
-
 
 class MLP(layers.Layer):
     """Get the MLP layer for each shift block.
@@ -206,7 +30,7 @@ class MLP(layers.Layer):
             [
                 layers.Dense(
                     units=initial_filters,
-                    activation=other_gelu,
+                    activation=tf.nn.gelu,
                 ),
                 layers.Dropout(rate=self.mlp_dropout_rate),
                 layers.Dense(units=input_channels),
@@ -452,6 +276,7 @@ with the patch merging layer as well. Combining the two operations (shift ViT
 block and patch merging) is a design choice we picked for better code reusability.
 """
 
+
 # Note: This layer will have a different depth of stacking
 # for different stages on the model.
 class StackedShiftBlocks(layers.Layer):
@@ -555,7 +380,7 @@ class ShiftViTModel(keras.Model):
     """The ShiftViT Model.
 
     Args:
-        data_augmentation (keras.Model): A data augmentation model.
+        
         projected_dim (int): The dimension to which the patches of the image are
             projected.
         patch_size (int): The patch size of the images.
@@ -582,11 +407,9 @@ class ShiftViTModel(keras.Model):
         num_div=12,
         shift_pixel=1,
         mlp_expand_ratio=2,
-        num_classes=100,
         **kwargs,
     ):
         super().__init__(**kwargs)
-       
         self.patch_projection = layers.Conv2D(
             filters=projected_dim,
             kernel_size=patch_size,
@@ -615,13 +438,12 @@ class ShiftViTModel(keras.Model):
             )
         self.global_avg_pool = layers.GlobalAveragePooling2D()
 
-        self.classifier = layers.Dense(num_classes,activation='softmax')
+        self.classifier = layers.Dense(config.num_classes)
 
     def get_config(self):
         config = super().get_config()
         config.update(
             {
-                "data_augmentation": self.data_augmentation,
                 "patch_projection": self.patch_projection,
                 "stages": self.stages,
                 "global_avg_pool": self.global_avg_pool,
@@ -633,11 +455,9 @@ class ShiftViTModel(keras.Model):
     def _calculate_loss(self, data, training=False):
         (images, labels) = data
 
-        # Augment the images
-        augmented_images = images
 
         # Create patches and project the pathces.
-        projected_patches = self.patch_projection(augmented_images)
+        projected_patches = self.patch_projection(images)
 
         # Pass through the stages
         x = projected_patches
@@ -669,7 +489,7 @@ class ShiftViTModel(keras.Model):
         # Optimize the gradients.
         grads = tape.gradient(total_loss, train_vars)
         trainable_variable_list = []
-        for (grad, var) in zip(grads, train_vars):
+        for grad, var in zip(grads, train_vars):
             for g, v in zip(grad, var):
                 trainable_variable_list.append((g, v))
         self.optimizer.apply_gradients(trainable_variable_list)
@@ -686,33 +506,48 @@ class ShiftViTModel(keras.Model):
         return {m.name: m.result() for m in self.metrics}
 
     def call(self, images):
-        augmented_images =images
-        x = self.patch_projection(augmented_images)
+
+        x = self.patch_projection(images)
         for stage in self.stages:
             x = stage(x, training=False)
-        lol = x.shape
-        x = layers.AvgPool2D(pool_size=(lol[-2],lol[-3]),padding='valid')(x)
+        x = self.global_avg_pool(x)
         logits = self.classifier(x)
         return logits
 
 
-"""
-## Instantiate the model
-"""
-'''
-model = ShiftViTModel(
-    data_augmentation=get_augmentation_model(),
-    projected_dim=config.projected_dim,
-    patch_size=config.patch_size,
-    num_shift_blocks_per_stages=config.num_shift_blocks_per_stages,
-    epsilon=config.epsilon,
-    mlp_dropout_rate=config.mlp_dropout_rate,
-    stochastic_depth_rate=config.stochastic_depth_rate,
-    num_div=config.num_div,
-    shift_pixel=config.shift_pixel,
-    mlp_expand_ratio=config.mlp_expand_ratio,
-)
-'''
+class Config(object):
+    # DATA
+    batch_size = 256
+    buffer_size = batch_size * 2
+    input_shape = (64, 64, 3)
+    num_classes = 10
+
+    # AUGMENTATION
+    image_size = 64
+
+    # ARCHITECTURE
+    patch_size = 4
+    projected_dim = 96
+    num_shift_blocks_per_stages = [2, 4, 8, 2]
+    epsilon = 1e-5
+    stochastic_depth_rate = 0.2
+    mlp_dropout_rate = 0.2
+    num_div = 12
+    shift_pixel = 1
+    mlp_expand_ratio = 2
+
+    # OPTIMIZER
+    lr_start = 1e-5
+    lr_max = 1e-3
+    weight_decay = 1e-4
+
+    # TRAINING
+    epochs = 2
+
+    tf_ds_batch_size = 20
+
+
+
 """
 ## Learning rate schedule
 
@@ -721,6 +556,7 @@ and then cool down the model with a slowly decaying learning rate. In the warmup
 decay, the learning rate linearly increases for the warmup steps and then decays with a
 cosine decay.
 """
+
 
 # Some code is taken from:
 # https://www.kaggle.com/ashusma/training-rfcx-tensorflow-tpu-effnet-b2.
@@ -807,16 +643,185 @@ class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):
         }
         return config
 
-def get_warmup(len_xtrain,batch_size,epochs):
-    total_steps = int((len_xtrain / batch_size) * epochs)
 
-    # Calculate the number of steps for warmup.
-    warmup_epoch_percentage = 0.15
-    warmup_steps = int(total_steps * warmup_epoch_percentage)
-    return  WarmUpCosine(
-        lr_start=1e-5,
-        lr_max=1e-3,
-        warmup_steps=warmup_steps,
-        total_steps=total_steps,
+
+
+(x_train, y_train), (x_test, y_test) = datasets.cifar100.load_data()
+#x_train = tf.cast(x_train,tf.float32)
+#x_test = tf.cast(x_test,tf.float32)
+#y_train = tf.cast(y_train,tf.float32)
+#y_test = tf.cast(y_test,tf.float32)
+y_train = to_categorical(y_train)
+y_test = to_categorical(y_test)
+
+data_resize_aug = tf.keras.Sequential(
+            [               
+                nn.Normalization(),
+                nn.Resizing(image_size, image_size),
+                nn.RandomFlip("horizontal"),
+                nn.RandomRotation(factor=0.02),
+                nn.RandomZoom(
+                    height_factor=0.2, width_factor=0.2
+                ),
+            ],
+            name="data_resize_aug",
         )
+
+data_resize_aug.layers[0].adapt(x_train)
+
+data_resize = tf.keras.Sequential(
+            [               
+                nn.Normalization(),
+                nn.Resizing(image_size, image_size),               
+            ],
+            name="data_resize",
+        )
+data_resize.layers[0].adapt(x_test)
+
+
+# one hot encode target values
+
+# convert from integers to floats
+
+#train_dataset = train_dataset.astype('float32')
+#test_dataset = test_dataset.astype('float32')
+#x_train = x_train / 255.0
+#x_test = x_test / 255.0
+
+results = 0
+
+train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+train_dataset = train_dataset.batch(batch_size).map(lambda x, y: (data_resize_aug(x), y))
+test_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+test_dataset = test_dataset.batch(batch_size).map(lambda x, y: (data_resize(x), y))
+
+config = Config()
+
+model = ShiftViTModel(
+    projected_dim=config.projected_dim,
+    patch_size=config.patch_size,
+    num_shift_blocks_per_stages=config.num_shift_blocks_per_stages,
+    epsilon=config.epsilon,
+    mlp_dropout_rate=config.mlp_dropout_rate,
+    stochastic_depth_rate=config.stochastic_depth_rate,
+    num_div=config.num_div,
+    shift_pixel=config.shift_pixel,
+    mlp_expand_ratio=config.mlp_expand_ratio,
+)
+total_steps = int((len(x_train) / config.batch_size) * config.epochs)
+
+# Calculate the number of steps for warmup.
+warmup_epoch_percentage = 0.15
+warmup_steps = int(total_steps * warmup_epoch_percentage)
+
+# Initialize the warmupcosine schedule.
+scheduled_lrs = WarmUpCosine(
+    lr_start=1e-5,
+    lr_max=1e-3,
+    warmup_steps=warmup_steps,
+    total_steps=total_steps,
+)
+
+# Get the optimizer.
+optimizer = tfa.optimizers.AdamW(
+    learning_rate=scheduled_lrs, weight_decay=config.weight_decay
+)
+
+# Compile and pretrain the model.
+model.compile(
+    optimizer=optimizer,
+    loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+    metrics=[
+        keras.metrics.SparseCategoricalAccuracy(name="accuracy"),
+        keras.metrics.SparseTopKCategoricalAccuracy(5, name="top-5-accuracy"),
+    ],
+)
+
+# Train the model
+history = model.fit(
+    train_ds,
+    epochs=config.epochs,
+    validation_data=val_ds,
+    callbacks=[
+        keras.callbacks.EarlyStopping(
+            monitor="val_accuracy",
+            patience=5,
+            mode="auto",
+        )
+    ],
+)
+
+model.build((batch_size, image_size, image_size, 3))
+model.summary()
+results= model.evaluate(test_dataset,batch_size=batch_size)
+
+img = tf.random.normal(shape=[1, image_size, image_size, 3])
+preds = model(img) 
+print(model_name)
+model.save(model_name)
+print(results)
+
+
+batch_size=1
+train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+train_dataset = train_dataset.batch(1).map(lambda x, y: (data_resize_aug(x), y))
+test_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+test_dataset = test_dataset.batch(1).map(lambda x, y: (data_resize(x), y))
+
+newInput = nn.Input(batch_shape=(1,image_size,image_size,3))
+newOutputs = model(newInput)
+newModel = Model(newInput,newOutputs)
+newModel.set_weights(model.get_weights())
+model = newModel
+X = np.random.rand(1, image_size, image_size, 3)
+y_pred = model.predict(X)
+
+model.summary()
+
+
+#print([tf.expand_dims(tf.dtypes.cast(x_train[0], tf.float32),0)])
+def representative_data_gen():
+    for input_value in train_dataset.take(1000):
+        yield [tf.dtypes.cast(input_value[0],tf.float32)]
+
+converter_quant = tf.lite.TFLiteConverter.from_keras_model(model) 
+converter_quant.input_shape=(1,image_size,image_size,3)
+converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
+converter_quant.representative_dataset = representative_data_gen
+converter_quant.target_spec.supported_ops = [
+  tf.lite.OpsSet.TFLITE_BUILTINS_INT8, # enable TensorFlow Lite ops.
+  tf.lite.OpsSet.SELECT_TF_OPS # enable TensorFlow ops.
+]
+converter_quant.target_spec.supported_types = [tf.int8]
+converter_quant.experimental_new_converter = True
+converter_quant.allow_custom_ops=True
+converter_quant._experimental_new_quantizer = True
+print('what')
+
+tflite_model = converter_quant.convert()
+print("finished converting")
+print(results)
+open(model_name+".tflite", "wb").write(tflite_model)
+interpreter = tf.lite.Interpreter(model_path=model_name+".tflite")
+interpreter.allocate_tensors()
+
+# Get input and output tensors.
+input_details = interpreter.get_input_details()
+output_details = interpreter.get_output_details()
+
+# Test model on random input data.
+input_shape = input_details[0]['shape']
+input_data = np.array(np.random.random_sample(input_shape), dtype=np.float32)
+interpreter.set_tensor(input_details[0]['index'], input_data)
+
+interpreter.invoke()
+
+# The function `get_tensor()` returns a copy of the tensor data.
+# Use `tensor()` in order to get a pointer to the tensor.
+output_data = interpreter.get_tensor(output_details[0]['index'])
+print(output_data)
+
+
+
+
 
