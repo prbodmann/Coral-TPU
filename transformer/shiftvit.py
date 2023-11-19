@@ -10,6 +10,7 @@ import pathlib
 import glob
 from tensorflow.keras.utils import to_categorical
 from vit import other_gelu
+
 class MLP(layers.Layer):
     """Get the MLP layer for each shift block.
 
@@ -528,7 +529,7 @@ class Config(object):
 
     # ARCHITECTURE
     patch_size = 4
-    projected_dim = 96
+    projected_dim = 64
     num_shift_blocks_per_stages = [2, 4, 8, 2]
     epsilon = 1e-5
     stochastic_depth_rate = 0.2
