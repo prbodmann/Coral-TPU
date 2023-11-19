@@ -534,7 +534,7 @@ class Config(object):
     epsilon = 1e-5
     stochastic_depth_rate = 0.2
     mlp_dropout_rate = 0.2
-    num_div = 12
+    num_div = 16
     shift_pixel = 1
     mlp_expand_ratio = 2
 
