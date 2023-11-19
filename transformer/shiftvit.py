@@ -754,7 +754,7 @@ history = model.fit(
     ],
 )
 
-model.build((batch_size, config.image_size, config.image_size, 3))
+model.build((config.batch_size, config.image_size, config.image_size, 3))
 model.summary()
 results= model.evaluate(test_dataset,batch_size=batch_size)
 
