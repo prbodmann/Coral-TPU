@@ -8,6 +8,7 @@ import tensorflow_addons as tfa
 from tensorflow.keras import datasets
 import pathlib
 import glob
+from tensorflow.keras.utils import to_categorical
 
 class MLP(layers.Layer):
     """Get the MLP layer for each shift block.
