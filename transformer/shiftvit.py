@@ -465,7 +465,7 @@ class ShiftViTModel(keras.Model):
             x = stage(x, training=training)
 
         # Get the logits.
-        x = layers.AveragePooling2D(pool_size=(x.shape[-2],x.shape[-1]))
+        x = layers.AveragePooling2D(pool_size=(x.shape[-2],x.shape[-1]))(x)
         x = layers.Flatten()(x)
         logits = self.classifier(x)
 
@@ -511,7 +511,7 @@ class ShiftViTModel(keras.Model):
         x = self.patch_projection(images)
         for stage in self.stages:
             x = stage(x, training=False)
-        x = layers.AveragePooling2D(pool_size=(x.shape[-2],x.shape[-1]))
+        x = layers.AveragePooling2D(pool_size=(x.shape[-2],x.shape[-1]))(x)
         x = layers.Flatten()(x)
         logits = self.classifier(x)
         return logits
