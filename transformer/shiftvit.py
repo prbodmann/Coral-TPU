@@ -465,6 +465,7 @@ class ShiftViTModel(keras.Model):
             x = stage(x, training=training)
 
         # Get the logits.
+        print("ol: "+str(x.shape))
         x = layers.AveragePooling2D(pool_size=(x.shape[-2],x.shape[-1]))(x)
         x = layers.Flatten()(x)
         logits = self.classifier(x)
