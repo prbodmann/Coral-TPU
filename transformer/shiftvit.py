@@ -438,7 +438,7 @@ class ShiftViTModel(keras.Model):
                     mlp_expand_ratio=mlp_expand_ratio,
                 )
             )
-
+         self.global_avg_pool = layers.AveragePooling2D(pools_size=(2,2))
         self.classifier = layers.Dense(config.num_classes,activation='softmax')
 
     def get_config(self):
@@ -448,6 +448,7 @@ class ShiftViTModel(keras.Model):
                 "patch_projection": self.patch_projection,
                 "stages": self.stages,
                 "classifier": self.classifier,
+                "global_avg_pool": self.global_avg_pool,   
             }
         )
         return config
@@ -465,9 +466,7 @@ class ShiftViTModel(keras.Model):
             x = stage(x, training=training)
 
         # Get the logits.
-        print("ol: "+str(x.shape))
-        x = layers.AveragePooling2D(pool_size=(2,2))(x)
-        x = layers.Flatten()(x)
+         x = self.global_avg_pool(x)
         logits = self.classifier(x)
 
         # Calculate the loss and return it.
@@ -483,7 +482,7 @@ class ShiftViTModel(keras.Model):
         # Apply gradients.
         train_vars = [
             self.patch_projection.trainable_variables,
-
+            self.global_avg_pool.trainable_variables,
             self.classifier.trainable_variables,
         ]
         train_vars = train_vars + [stage.trainable_variables for stage in self.stages]
@@ -512,8 +511,7 @@ class ShiftViTModel(keras.Model):
         x = self.patch_projection(images)
         for stage in self.stages:
             x = stage(x, training=False)
-        x = layers.AveragePooling2D(pool_size=(2,2))(x)
-        x = layers.Flatten()(x)
+        x = self.global_avg_pool(x)
         logits = self.classifier(x)
         return logits
 
