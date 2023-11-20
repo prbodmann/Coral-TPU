@@ -466,6 +466,7 @@ class ShiftViTModel(keras.Model):
 
         # Get the logits.
         x = layers.AveragePooling2D(pool_size=(x.shape[-2],x.shape[-1]))
+        x = layers.Flatten()(x)
         logits = self.classifier(x)
 
         # Calculate the loss and return it.
@@ -511,6 +512,7 @@ class ShiftViTModel(keras.Model):
         for stage in self.stages:
             x = stage(x, training=False)
         x = layers.AveragePooling2D(pool_size=(x.shape[-2],x.shape[-1]))
+        x = layers.Flatten()(x)
         logits = self.classifier(x)
         return logits
 
