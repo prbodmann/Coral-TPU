@@ -10,6 +10,11 @@ import os
 import tensorflow_datasets as tfds
 from keras.utils import CustomObjectScope
 from vit import MultiHeadAttention, other_gelu
+from tensorflow.keras.models import Model
+import numpy as np
+from tensorflow.keras import datasets
+from tensorflow.keras.utils import to_categorical
+import tensorflow.keras.layers as nn
 
 class multiheadattention(layers.Layer):
     """
@@ -330,102 +335,511 @@ def efficientformer_l1_custom(num_classes, eff_width=EfficientFormer_width['l1']
                               image_height=224, image_width=224, channels=3):
     return EfficientFormer(num_classes=num_classes, distillation=use_distillation, height=image_height, width=image_width,
                            eff_width=width, channels=channels)
-'''
-image_size=224
-batch_size = 32
-network_size = 'l7'
-resize_bigger = 380
-num_classes = 5
-learning_rate = 0.002
-label_smoothing_factor = 0.1
-import argparse
-parser = argparse.ArgumentParser(description='Process some integers.')
-parser.add_argument('--training', action = 'store_const', dest = 'training',
-                           default = False, required = False,const=True)
-args = parser.parse_args()
 
-def preprocess_dataset(is_training=True):
-    def _pp(image, label):
-        if is_training:
-            # Resize to a bigger spatial resolution and take the random
-            # crops.
-            image = tf.image.resize(image, (resize_bigger, resize_bigger))
-            image = tf.image.random_crop(image, (image_size, image_size, 3))
-            image = tf.image.random_flip_left_right(image)
-        else:
-            image = tf.image.resize(image, (image_size, image_size))
-        label = tf.one_hot(label, depth=num_classes)
-        return image, label
+num_classes=100
+learning_rate = 0.001
+weight_decay = 0.0001
+batch_size = 256
+num_epochs = 100
+image_size = 64  # We'll resize input images to this size
+patch_size = 8
+projection_dim = 128
 
-    return _pp
+model_name="efficientformer_l1"
+model = EfficientFormer(num_classes=num_classes, distillation=use_distillation, height=image_size, width=image_size,
+                           eff_width=EfficientFormer_width['l1'], channels=3)
+
+(x_train, y_train), (x_test, y_test) = datasets.cifar100.load_data()
+#x_train = tf.cast(x_train,tf.float32)
+#x_test = tf.cast(x_test,tf.float32)
+#y_train = tf.cast(y_train,tf.float32)
+#y_test = tf.cast(y_test,tf.float32)
+y_train = to_categorical(y_train)
+y_test = to_categorical(y_test)
+
+data_resize_aug = tf.keras.Sequential(
+            [               
+                nn.Normalization(),
+                nn.Resizing(image_size, image_size),
+                nn.RandomFlip("horizontal"),
+                nn.RandomRotation(factor=0.02),
+                nn.RandomZoom(
+                    height_factor=0.2, width_factor=0.2
+                ),
+            ],
+            name="data_resize_aug",
+        )
+
+data_resize_aug.layers[0].adapt(x_train)
+
+data_resize = tf.keras.Sequential(
+            [               
+                nn.Normalization(),
+                nn.Resizing(image_size, image_size),               
+            ],
+            name="data_resize",
+        )
+data_resize.layers[0].adapt(x_test)
 
 
-def prepare_dataset(dataset, is_training=True,batch_size_=1):
-    if is_training:
-        dataset = dataset.shuffle(batch_size_ * 10)
-    dataset = dataset.map(preprocess_dataset(is_training))
-    return dataset.batch(batch_size_).prefetch(batch_size_)
+# one hot encode target values
 
-inputs = keras.Input(shape=(image_size, image_size, 3),batch_size=32)
-model = EfficientFormer(inputs,num_classes=5,eff_width=EfficientFormer_width[network_size])
+# convert from integers to floats
 
-val_dataset1, train_dataset1 = tfds.load(
-    "tf_flowers", split=["train[:352]", "train[352:]"], as_supervised=True
+#train_dataset = train_dataset.astype('float32')
+#test_dataset = test_dataset.astype('float32')
+#x_train = x_train / 255.0
+#x_test = x_test / 255.0
+
+results = 0
+
+train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+train_dataset = train_dataset.batch(batch_size).map(lambda x, y: (data_resize_aug(x), y))
+test_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+test_dataset = test_dataset.batch(batch_size).map(lambda x, y: (data_resize(x), y))
+
+
+optimizer = tfa.optimizers.AdamW(
+    learning_rate=learning_rate, weight_decay=weight_decay
 )
 
 
-#num_train = train_dataset.cardinality()
-#num_val = val_dataset.cardinality()
-#print(f"Number of training examples: {num_train}")
-#print(f"Number of validation examples: {num_val}")
+model.compile(
+    optimizer=optimizer,
+    loss=tf.keras.losses.CategoricalCrossentropy(),
+    metrics=[
+        tf.keras.metrics.CategoricalAccuracy(name="accuracy"),
+        tf.keras.metrics.TopKCategoricalAccuracy(5, name="top-5-accuracy"),
+    ],
+)
+model.build([image_size,image_size,3])
+'''
+model.compile(
+    optimizer=optimizer,
+    loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+    metrics=[
+        tf.keras.metrics.SparseCategoricalAccuracy(name="accuracy"),
+        tf.keras.metrics.SparseTopKCategoricalAccuracy(5, name="top-5-accuracy"),
+    ],
+)'''
 
+checkpoint_filepath = "/tmp/checkpoint"
+checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
+    checkpoint_filepath,
+    monitor="val_accuracy",
+    save_best_only=True,
+    save_weights_only=True,
+)
 
-
-if not args.training:
-
-    train_dataset = prepare_dataset(train_dataset1, is_training=True,batch_size_=1)
-    val_dataset = prepare_dataset(val_dataset1, is_training=False,batch_size_=1)
-    print("wat?")    
-    def representative_data_gen():
-        for x in val_dataset:    
-            print(x[0].shape)
-            yield [x[0]]
-    tf.config.experimental.disable_mlir_bridge()
-    inputs = keras.Input(shape=(image_size, image_size, 3),batch_size=1)
-    model = EfficientFormer(inputs,num_classes=5,eff_width=EfficientFormer_width[network_size])
-    model.load_weights('myModel.h5')
-    converter_quant = tf.lite.TFLiteConverter.from_keras_model(model) #("efficent")
-    converter_quant.input_shape=(1,image_size,image_size,3)
-    converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
-    converter_quant.representative_dataset = representative_data_gen
-    converter_quant.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
-    converter_quant.experimental_new_converter = True
-    converter_quant.allow_custom_ops=True
-    tflite_model = converter_quant.convert()
-    #ahoy = representative_data_gen()
-    #print(model.predict(next(ahoy)))
-    #tflite_model.summary()
-    open("efficient_"+network_size+".tflite", "wb").write(tflite_model)
-    exit()
-
-train_dataset = prepare_dataset(train_dataset1, is_training=True,batch_size_=batch_size)
-val_dataset = prepare_dataset(val_dataset1, is_training=False,batch_size_=batch_size)
-optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
-loss_fn = keras.losses.CategoricalCrossentropy(label_smoothing=label_smoothing_factor)
-model.compile(optimizer=optimizer, loss=loss_fn, metrics=["accuracy"])
-
-import tensorflow_model_optimization as tfmot
-
+#model.summary()
 
 model.fit(
-    train_dataset,
-    validation_data=val_dataset,
-    epochs=20,
-    batch_size=batch_size       
+    x=train_dataset,
+    validation_data=test_dataset,
+    epochs=num_epochs,
+    batch_size=batch_size,
+    verbose=1   
 )
+model.build((batch_size, image_size, image_size, 3))
+model.summary()
+results= model.evaluate(test_dataset,batch_size=batch_size)
+
+img = tf.random.normal(shape=[1, image_size, image_size, 3])
+preds = model(img) 
+print(model_name)
+model.save(model_name)
+print(results)
+    
+
+batch_size=1
+train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+train_dataset = train_dataset.batch(1).map(lambda x, y: (data_resize_aug(x), y))
+test_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+test_dataset = test_dataset.batch(1).map(lambda x, y: (data_resize(x), y))
+
+newInput = nn.Input(batch_shape=(1,image_size,image_size,3))
+newOutputs = model(newInput)
+newModel = Model(newInput,newOutputs)
+newModel.set_weights(model.get_weights())
+model = newModel
+X = np.random.rand(1, image_size, image_size, 3)
+y_pred = model.predict(X)
 
 model.summary()
-model.save("efficent")
-model.save_weights('myModel.h5')
-exit()
+
+
+#print([tf.expand_dims(tf.dtypes.cast(x_train[0], tf.float32),0)])
+def representative_data_gen():
+    for input_value in train_dataset.take(1000):
+        yield [tf.dtypes.cast(input_value[0],tf.float32)]
+
+converter_quant = tf.lite.TFLiteConverter.from_keras_model(model) 
+converter_quant.input_shape=(1,image_size,image_size,3)
+converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
+converter_quant.representative_dataset = representative_data_gen
+converter_quant.target_spec.supported_ops = [
+  tf.lite.OpsSet.TFLITE_BUILTINS_INT8, # enable TensorFlow Lite ops.
+  tf.lite.OpsSet.SELECT_TF_OPS # enable TensorFlow ops.
+]
+converter_quant.target_spec.supported_types = [tf.int8]
+converter_quant.experimental_new_converter = True
+converter_quant.allow_custom_ops=True
+converter_quant._experimental_new_quantizer = True
+print('what')
+
+tflite_model = converter_quant.convert()
+print("finished converting")
+print(results)
+open(model_name+".tflite", "wb").write(tflite_model)
+interpreter = tf.lite.Interpreter(model_path=model_name+".tflite")
+interpreter.allocate_tensors()
+
+# Get input and output tensors.
+input_details = interpreter.get_input_details()
+output_details = interpreter.get_output_details()
+
+# Test model on random input data.
+input_shape = input_details[0]['shape']
+input_data = np.array(np.random.random_sample(input_shape), dtype=np.float32)
+interpreter.set_tensor(input_details[0]['index'], input_data)
+
+interpreter.invoke()
+
+# The function `get_tensor()` returns a copy of the tensor data.
+# Use `tensor()` in order to get a pointer to the tensor.
+output_data = interpreter.get_tensor(output_details[0]['index'])
+print(output_data)
+
+
+model_name="efficientformer_l3"
+model = EfficientFormer(num_classes=num_classes, distillation=use_distillation, height=image_size, width=image_size,
+                           eff_width=EfficientFormer_width['l3'], channels=3)
+
+(x_train, y_train), (x_test, y_test) = datasets.cifar100.load_data()
+#x_train = tf.cast(x_train,tf.float32)
+#x_test = tf.cast(x_test,tf.float32)
+#y_train = tf.cast(y_train,tf.float32)
+#y_test = tf.cast(y_test,tf.float32)
+y_train = to_categorical(y_train)
+y_test = to_categorical(y_test)
+
+data_resize_aug = tf.keras.Sequential(
+            [               
+                nn.Normalization(),
+                nn.Resizing(image_size, image_size),
+                nn.RandomFlip("horizontal"),
+                nn.RandomRotation(factor=0.02),
+                nn.RandomZoom(
+                    height_factor=0.2, width_factor=0.2
+                ),
+            ],
+            name="data_resize_aug",
+        )
+
+data_resize_aug.layers[0].adapt(x_train)
+
+data_resize = tf.keras.Sequential(
+            [               
+                nn.Normalization(),
+                nn.Resizing(image_size, image_size),               
+            ],
+            name="data_resize",
+        )
+data_resize.layers[0].adapt(x_test)
+
+
+# one hot encode target values
+
+# convert from integers to floats
+
+#train_dataset = train_dataset.astype('float32')
+#test_dataset = test_dataset.astype('float32')
+#x_train = x_train / 255.0
+#x_test = x_test / 255.0
+
+results = 0
+
+train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+train_dataset = train_dataset.batch(batch_size).map(lambda x, y: (data_resize_aug(x), y))
+test_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+test_dataset = test_dataset.batch(batch_size).map(lambda x, y: (data_resize(x), y))
+
+
+optimizer = tfa.optimizers.AdamW(
+    learning_rate=learning_rate, weight_decay=weight_decay
+)
+
+
+model.compile(
+    optimizer=optimizer,
+    loss=tf.keras.losses.CategoricalCrossentropy(),
+    metrics=[
+        tf.keras.metrics.CategoricalAccuracy(name="accuracy"),
+        tf.keras.metrics.TopKCategoricalAccuracy(5, name="top-5-accuracy"),
+    ],
+)
+model.build([image_size,image_size,3])
 '''
+model.compile(
+    optimizer=optimizer,
+    loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+    metrics=[
+        tf.keras.metrics.SparseCategoricalAccuracy(name="accuracy"),
+        tf.keras.metrics.SparseTopKCategoricalAccuracy(5, name="top-5-accuracy"),
+    ],
+)'''
+
+checkpoint_filepath = "/tmp/checkpoint"
+checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
+    checkpoint_filepath,
+    monitor="val_accuracy",
+    save_best_only=True,
+    save_weights_only=True,
+)
+
+#model.summary()
+
+model.fit(
+    x=train_dataset,
+    validation_data=test_dataset,
+    epochs=num_epochs,
+    batch_size=batch_size,
+    verbose=1   
+)
+model.build((batch_size, image_size, image_size, 3))
+model.summary()
+results= model.evaluate(test_dataset,batch_size=batch_size)
+
+img = tf.random.normal(shape=[1, image_size, image_size, 3])
+preds = model(img) 
+print(model_name)
+model.save(model_name)
+print(results)
+    
+
+batch_size=1
+train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+train_dataset = train_dataset.batch(1).map(lambda x, y: (data_resize_aug(x), y))
+test_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+test_dataset = test_dataset.batch(1).map(lambda x, y: (data_resize(x), y))
+
+newInput = nn.Input(batch_shape=(1,image_size,image_size,3))
+newOutputs = model(newInput)
+newModel = Model(newInput,newOutputs)
+newModel.set_weights(model.get_weights())
+model = newModel
+X = np.random.rand(1, image_size, image_size, 3)
+y_pred = model.predict(X)
+
+model.summary()
+
+
+#print([tf.expand_dims(tf.dtypes.cast(x_train[0], tf.float32),0)])
+def representative_data_gen():
+    for input_value in train_dataset.take(1000):
+        yield [tf.dtypes.cast(input_value[0],tf.float32)]
+
+converter_quant = tf.lite.TFLiteConverter.from_keras_model(model) 
+converter_quant.input_shape=(1,image_size,image_size,3)
+converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
+converter_quant.representative_dataset = representative_data_gen
+converter_quant.target_spec.supported_ops = [
+  tf.lite.OpsSet.TFLITE_BUILTINS_INT8, # enable TensorFlow Lite ops.
+  tf.lite.OpsSet.SELECT_TF_OPS # enable TensorFlow ops.
+]
+converter_quant.target_spec.supported_types = [tf.int8]
+converter_quant.experimental_new_converter = True
+converter_quant.allow_custom_ops=True
+converter_quant._experimental_new_quantizer = True
+print('what')
+
+tflite_model = converter_quant.convert()
+print("finished converting")
+print(results)
+open(model_name+".tflite", "wb").write(tflite_model)
+interpreter = tf.lite.Interpreter(model_path=model_name+".tflite")
+interpreter.allocate_tensors()
+
+# Get input and output tensors.
+input_details = interpreter.get_input_details()
+output_details = interpreter.get_output_details()
+
+# Test model on random input data.
+input_shape = input_details[0]['shape']
+input_data = np.array(np.random.random_sample(input_shape), dtype=np.float32)
+interpreter.set_tensor(input_details[0]['index'], input_data)
+
+interpreter.invoke()
+
+# The function `get_tensor()` returns a copy of the tensor data.
+# Use `tensor()` in order to get a pointer to the tensor.
+output_data = interpreter.get_tensor(output_details[0]['index'])
+print(output_data)
+
+model_name="efficientformer_l7"
+model = EfficientFormer(num_classes=num_classes, distillation=use_distillation, height=image_size, width=image_size,
+                           eff_width=EfficientFormer_width['l7'], channels=3)
+
+(x_train, y_train), (x_test, y_test) = datasets.cifar100.load_data()
+#x_train = tf.cast(x_train,tf.float32)
+#x_test = tf.cast(x_test,tf.float32)
+#y_train = tf.cast(y_train,tf.float32)
+#y_test = tf.cast(y_test,tf.float32)
+y_train = to_categorical(y_train)
+y_test = to_categorical(y_test)
+
+data_resize_aug = tf.keras.Sequential(
+            [               
+                nn.Normalization(),
+                nn.Resizing(image_size, image_size),
+                nn.RandomFlip("horizontal"),
+                nn.RandomRotation(factor=0.02),
+                nn.RandomZoom(
+                    height_factor=0.2, width_factor=0.2
+                ),
+            ],
+            name="data_resize_aug",
+        )
+
+data_resize_aug.layers[0].adapt(x_train)
+
+data_resize = tf.keras.Sequential(
+            [               
+                nn.Normalization(),
+                nn.Resizing(image_size, image_size),               
+            ],
+            name="data_resize",
+        )
+data_resize.layers[0].adapt(x_test)
+
+
+# one hot encode target values
+
+# convert from integers to floats
+
+#train_dataset = train_dataset.astype('float32')
+#test_dataset = test_dataset.astype('float32')
+#x_train = x_train / 255.0
+#x_test = x_test / 255.0
+
+results = 0
+
+train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+train_dataset = train_dataset.batch(batch_size).map(lambda x, y: (data_resize_aug(x), y))
+test_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+test_dataset = test_dataset.batch(batch_size).map(lambda x, y: (data_resize(x), y))
+
+
+optimizer = tfa.optimizers.AdamW(
+    learning_rate=learning_rate, weight_decay=weight_decay
+)
+
+
+model.compile(
+    optimizer=optimizer,
+    loss=tf.keras.losses.CategoricalCrossentropy(),
+    metrics=[
+        tf.keras.metrics.CategoricalAccuracy(name="accuracy"),
+        tf.keras.metrics.TopKCategoricalAccuracy(5, name="top-5-accuracy"),
+    ],
+)
+model.build([image_size,image_size,3])
+'''
+model.compile(
+    optimizer=optimizer,
+    loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+    metrics=[
+        tf.keras.metrics.SparseCategoricalAccuracy(name="accuracy"),
+        tf.keras.metrics.SparseTopKCategoricalAccuracy(5, name="top-5-accuracy"),
+    ],
+)'''
+
+checkpoint_filepath = "/tmp/checkpoint"
+checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
+    checkpoint_filepath,
+    monitor="val_accuracy",
+    save_best_only=True,
+    save_weights_only=True,
+)
+
+#model.summary()
+
+model.fit(
+    x=train_dataset,
+    validation_data=test_dataset,
+    epochs=num_epochs,
+    batch_size=batch_size,
+    verbose=1   
+)
+model.build((batch_size, image_size, image_size, 3))
+model.summary()
+results= model.evaluate(test_dataset,batch_size=batch_size)
+
+img = tf.random.normal(shape=[1, image_size, image_size, 3])
+preds = model(img) 
+print(model_name)
+model.save(model_name)
+print(results)
+    
+
+batch_size=1
+train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+train_dataset = train_dataset.batch(1).map(lambda x, y: (data_resize_aug(x), y))
+test_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+test_dataset = test_dataset.batch(1).map(lambda x, y: (data_resize(x), y))
+
+newInput = nn.Input(batch_shape=(1,image_size,image_size,3))
+newOutputs = model(newInput)
+newModel = Model(newInput,newOutputs)
+newModel.set_weights(model.get_weights())
+model = newModel
+X = np.random.rand(1, image_size, image_size, 3)
+y_pred = model.predict(X)
+
+model.summary()
+
+
+#print([tf.expand_dims(tf.dtypes.cast(x_train[0], tf.float32),0)])
+def representative_data_gen():
+    for input_value in train_dataset.take(1000):
+        yield [tf.dtypes.cast(input_value[0],tf.float32)]
+
+converter_quant = tf.lite.TFLiteConverter.from_keras_model(model) 
+converter_quant.input_shape=(1,image_size,image_size,3)
+converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
+converter_quant.representative_dataset = representative_data_gen
+converter_quant.target_spec.supported_ops = [
+  tf.lite.OpsSet.TFLITE_BUILTINS_INT8, # enable TensorFlow Lite ops.
+  tf.lite.OpsSet.SELECT_TF_OPS # enable TensorFlow ops.
+]
+converter_quant.target_spec.supported_types = [tf.int8]
+converter_quant.experimental_new_converter = True
+converter_quant.allow_custom_ops=True
+converter_quant._experimental_new_quantizer = True
+print('what')
+
+tflite_model = converter_quant.convert()
+print("finished converting")
+print(results)
+open(model_name+".tflite", "wb").write(tflite_model)
+interpreter = tf.lite.Interpreter(model_path=model_name+".tflite")
+interpreter.allocate_tensors()
+
+# Get input and output tensors.
+input_details = interpreter.get_input_details()
+output_details = interpreter.get_output_details()
+
+# Test model on random input data.
+input_shape = input_details[0]['shape']
+input_data = np.array(np.random.random_sample(input_shape), dtype=np.float32)
+interpreter.set_tensor(input_details[0]['index'], input_data)
+
+interpreter.invoke()
+
+# The function `get_tensor()` returns a copy of the tensor data.
+# Use `tensor()` in order to get a pointer to the tensor.
+output_data = interpreter.get_tensor(output_details[0]['index'])
+print(output_data)
+
+
+

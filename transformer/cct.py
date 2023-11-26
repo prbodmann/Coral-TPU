@@ -50,6 +50,12 @@ import tensorflow_addons as tfa
 import tensorflow as tf
 import numpy as np
 from vit import Mlp,MultiHeadAttention
+from tensorflow.keras.models import Model
+import numpy as np
+from tensorflow.keras import datasets
+from tensorflow.keras.utils import to_categorical
+import tensorflow.keras.layers as nn
+
 """
 ## Hyperparameters and constants
 """
@@ -177,7 +183,7 @@ this example, we do classification).
 def create_cct_model(
     image_size=64,
     input_shape=[64,64,3],
-    num_heads=2,
+    num_heads=8,
     projection_dim=128,
     transformer_units=[128,128],
     num_classes=100
@@ -283,7 +289,185 @@ def run_experiment(model):
 
     return history
 
+num_classes=100
+learning_rate = 0.001
+weight_decay = 0.0001
+batch_size = 256
+num_epochs = 100
+image_size = 64  # We'll resize input images to this size
+patch_size = 8
+projection_dim = 128
 
+model_name="cct"
+model = create_cct_model(
+    image_size=image_size,
+    input_shape=[image_size,image_size,3],
+    num_heads=8,
+    projection_dim=128,
+    transformer_units=[128,128],
+    num_classes=100
+)
+
+(x_train, y_train), (x_test, y_test) = datasets.cifar100.load_data()
+#x_train = tf.cast(x_train,tf.float32)
+#x_test = tf.cast(x_test,tf.float32)
+#y_train = tf.cast(y_train,tf.float32)
+#y_test = tf.cast(y_test,tf.float32)
+y_train = to_categorical(y_train)
+y_test = to_categorical(y_test)
+
+data_resize_aug = tf.keras.Sequential(
+            [               
+                nn.Normalization(),
+                nn.Resizing(image_size, image_size),
+                nn.RandomFlip("horizontal"),
+                nn.RandomRotation(factor=0.02),
+                nn.RandomZoom(
+                    height_factor=0.2, width_factor=0.2
+                ),
+            ],
+            name="data_resize_aug",
+        )
+
+data_resize_aug.layers[0].adapt(x_train)
+
+data_resize = tf.keras.Sequential(
+            [               
+                nn.Normalization(),
+                nn.Resizing(image_size, image_size),               
+            ],
+            name="data_resize",
+        )
+data_resize.layers[0].adapt(x_test)
+
+
+# one hot encode target values
+
+# convert from integers to floats
+
+#train_dataset = train_dataset.astype('float32')
+#test_dataset = test_dataset.astype('float32')
+#x_train = x_train / 255.0
+#x_test = x_test / 255.0
+
+results = 0
+
+train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+train_dataset = train_dataset.batch(batch_size).map(lambda x, y: (data_resize_aug(x), y))
+test_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+test_dataset = test_dataset.batch(batch_size).map(lambda x, y: (data_resize(x), y))
+
+
+optimizer = tfa.optimizers.AdamW(
+    learning_rate=learning_rate, weight_decay=weight_decay
+)
+
+
+model.compile(
+    optimizer=optimizer,
+    loss=tf.keras.losses.CategoricalCrossentropy(),
+    metrics=[
+        tf.keras.metrics.CategoricalAccuracy(name="accuracy"),
+        tf.keras.metrics.TopKCategoricalAccuracy(5, name="top-5-accuracy"),
+    ],
+)
+model.build([image_size,image_size,3])
+'''
+model.compile(
+    optimizer=optimizer,
+    loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+    metrics=[
+        tf.keras.metrics.SparseCategoricalAccuracy(name="accuracy"),
+        tf.keras.metrics.SparseTopKCategoricalAccuracy(5, name="top-5-accuracy"),
+    ],
+)'''
+
+checkpoint_filepath = "/tmp/checkpoint"
+checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
+    checkpoint_filepath,
+    monitor="val_accuracy",
+    save_best_only=True,
+    save_weights_only=True,
+)
+
+#model.summary()
+
+model.fit(
+    x=train_dataset,
+    validation_data=test_dataset,
+    epochs=num_epochs,
+    batch_size=batch_size,
+    verbose=1   
+)
+model.build((batch_size, image_size, image_size, 3))
+model.summary()
+results= model.evaluate(test_dataset,batch_size=batch_size)
+
+img = tf.random.normal(shape=[1, image_size, image_size, 3])
+preds = model(img) 
+print(model_name)
+model.save(model_name)
+print(results)
+    
+
+batch_size=1
+train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+train_dataset = train_dataset.batch(1).map(lambda x, y: (data_resize_aug(x), y))
+test_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+test_dataset = test_dataset.batch(1).map(lambda x, y: (data_resize(x), y))
+
+newInput = nn.Input(batch_shape=(1,image_size,image_size,3))
+newOutputs = model(newInput)
+newModel = Model(newInput,newOutputs)
+newModel.set_weights(model.get_weights())
+model = newModel
+X = np.random.rand(1, image_size, image_size, 3)
+y_pred = model.predict(X)
+
+model.summary()
+
+
+#print([tf.expand_dims(tf.dtypes.cast(x_train[0], tf.float32),0)])
+def representative_data_gen():
+    for input_value in train_dataset.take(1000):
+        yield [tf.dtypes.cast(input_value[0],tf.float32)]
+
+converter_quant = tf.lite.TFLiteConverter.from_keras_model(model) 
+converter_quant.input_shape=(1,image_size,image_size,3)
+converter_quant.optimizations = [tf.lite.Optimize.DEFAULT]
+converter_quant.representative_dataset = representative_data_gen
+converter_quant.target_spec.supported_ops = [
+  tf.lite.OpsSet.TFLITE_BUILTINS_INT8, # enable TensorFlow Lite ops.
+  tf.lite.OpsSet.SELECT_TF_OPS # enable TensorFlow ops.
+]
+converter_quant.target_spec.supported_types = [tf.int8]
+converter_quant.experimental_new_converter = True
+converter_quant.allow_custom_ops=True
+converter_quant._experimental_new_quantizer = True
+print('what')
+
+tflite_model = converter_quant.convert()
+print("finished converting")
+print(results)
+open(model_name+".tflite", "wb").write(tflite_model)
+interpreter = tf.lite.Interpreter(model_path=model_name+".tflite")
+interpreter.allocate_tensors()
+
+# Get input and output tensors.
+input_details = interpreter.get_input_details()
+output_details = interpreter.get_output_details()
+
+# Test model on random input data.
+input_shape = input_details[0]['shape']
+input_data = np.array(np.random.random_sample(input_shape), dtype=np.float32)
+interpreter.set_tensor(input_details[0]['index'], input_data)
+
+interpreter.invoke()
+
+# The function `get_tensor()` returns a copy of the tensor data.
+# Use `tensor()` in order to get a pointer to the tensor.
+output_data = interpreter.get_tensor(output_details[0]['index'])
+print(output_data)
 
 
 
