@@ -1,6 +1,5 @@
 import tensorflow as tf
 from tensorflow.keras import layers
-import itertools
 import math
 import string
 import tensorflow as tf
@@ -8,88 +7,15 @@ import numpy as np
 from tensorflow import keras
 import os
 import tensorflow_datasets as tfds
-from keras.utils import CustomObjectScope
+
 from vit import MultiHeadAttention, other_gelu
 from tensorflow.keras.models import Model
-import numpy as np
+
 from tensorflow.keras import datasets
 from tensorflow.keras.utils import to_categorical
-import tensorflow.keras.layers as nn
 
-class multiheadattention(layers.Layer):
-    """
-    Custom MHSA layer from paper
-    :param dim: Channels of the output
-    :param key_dim: Dimension of the key and query matrices
-    :param num_heads: Number of attention heads
-    :param attn_ratio: Ratio of each attention head
-    :param resolution: Square root of attention sequence
-    """
-    def __init__(self, dim, key_dim=32, num_heads=8,
-                 attn_ratio=4,
-                 resolution=7):
-        super(multiheadattention, self).__init__()
+import tensorflow_addons as tfa
 
-        self.num_heads = num_heads
-        self.scale = key_dim ** -0.5
-        self.key_dim = key_dim
-        self.nh_kd = nh_kd = key_dim * num_heads
-        self.d = int(attn_ratio * key_dim)
-        self.dh = int(attn_ratio * key_dim) * num_heads
-        self.attn_ratio = attn_ratio
-        h = self.dh + nh_kd * 2
-        self.qkv = layers.Dense(h)
-        self.proj = layers.Dense(dim)
-        points = list(itertools.product(range(resolution), range(resolution)))
-        N = len(points)
-        self.reshape_linear_projection_to_heads = layers.Reshape((N, self.num_heads, -1))
-        self.softmax = layers.Softmax()
-        self.reshape = layers.Reshape((N, self.d * self.num_heads))
-        attention_offsets = {}
-        idxs = []
-        for p1 in points:
-            for p2 in points:
-                offset = (abs(p1[0] - p2[0]), abs(p1[1] - p2[1]))
-                if offset not in attention_offsets:
-                    attention_offsets[offset] = len(attention_offsets)
-                idxs.append(attention_offsets[offset])
-        self.attention_biases = tf.Variable(tf.zeros((self.num_heads, resolution * resolution, resolution * resolution)), trainable=True)
-        attention_indxs = np.array(idxs)
-        attention_indxs = np.reshape(attention_indxs, (N, N))
-        self.attention_indxs = tf.Variable(attention_indxs, trainable=False) # TODO: Implement like pytorch(register_buffer)
-
-    def call(self, inputs):
-        """
-
-        :param inputs: Input vector (batch, sequence, channels)
-        :return: Output from attention
-        """
-
-        # Linear projection of batches spatial place: (key_dim * num_heads) * 2 + (int(attn_ratio * key_dim) * num_heads)
-        linear_projection = self.qkv(inputs)
-
-        # Reshape the channels to each attention head
-        attention_on_each_head = self.reshape_linear_projection_to_heads(linear_projection)
-
-        # Split the attention from each head to q, k, v matricies
-        q, k, v = tf.split(attention_on_each_head, [self.key_dim, self.key_dim, self.d], axis=-1)
-        q = tf.transpose(q, (0, 2, 1, 3))
-        k = tf.transpose(k, (0, 2, 1, 3))
-        v = tf.transpose(v, (0, 2, 1, 3))
-
-        attn = (
-            (q @ tf.transpose(k, (0, 1, 3, 2))) * self.scale
-            +
-            (self.attention_biases)
-        )
-
-        # Pass from softmax for last dim
-        attn = self.softmax(attn)
-        x = attn @ v
-        x = tf.transpose(x, (0, 2, 1, 3))
-        x = self.reshape(x)
-        x = self.proj(x)
-        return x
 
 class scale_layer(layers.Layer):
     """
@@ -219,7 +145,6 @@ def MetaBlock3D(x, out_channels, hidden_channels, num_heads=8, mlp_ratio=4., dro
     """
     x1 = layers.LayerNormalization(epsilon=1e-05)(x)
     x1 = MultiHeadAttention(h=num_heads)([x1, x1,x1])
-    #x1 = multiheadattention(dim=out_channels)(x1) # This is the custom multihead attention
     x1 = scale_layer(layer_scale_init_value=layer_scale_init_value, dim=out_channels)(x1)
     x = layers.Add()([x, x1])
     x2 = layers.LayerNormalization(epsilon=1e-05)(x)
@@ -330,21 +255,15 @@ EfficientFormer_width = {
 
 
 
-
-def efficientformer_l1_custom(num_classes, eff_width=EfficientFormer_width['l1'], use_distillation=True,
-                              image_height=224, image_width=224, channels=3):
-    return EfficientFormer(num_classes=num_classes, distillation=use_distillation, height=image_height, width=image_width,
-                           eff_width=width, channels=channels)
-
 num_classes=100
 learning_rate = 0.001
 weight_decay = 0.0001
 batch_size = 256
-num_epochs = 100
+num_epochs = 30
 image_size = 64  # We'll resize input images to this size
 patch_size = 8
 projection_dim = 128
-
+use_distillation = True
 model_name="efficientformer_l1"
 model = EfficientFormer(num_classes=num_classes, distillation=use_distillation, height=image_size, width=image_size,
                            eff_width=EfficientFormer_width['l1'], channels=3)
@@ -359,11 +278,11 @@ y_test = to_categorical(y_test)
 
 data_resize_aug = tf.keras.Sequential(
             [               
-                nn.Normalization(),
-                nn.Resizing(image_size, image_size),
-                nn.RandomFlip("horizontal"),
-                nn.RandomRotation(factor=0.02),
-                nn.RandomZoom(
+                layers.Normalization(),
+                layers.Resizing(image_size, image_size),
+                layers.RandomFlip("horizontal"),
+                layers.RandomRotation(factor=0.02),
+                layers.RandomZoom(
                     height_factor=0.2, width_factor=0.2
                 ),
             ],
@@ -374,8 +293,8 @@ data_resize_aug.layers[0].adapt(x_train)
 
 data_resize = tf.keras.Sequential(
             [               
-                nn.Normalization(),
-                nn.Resizing(image_size, image_size),               
+                layers.Normalization(),
+                layers.Resizing(image_size, image_size),               
             ],
             name="data_resize",
         )
@@ -457,7 +376,7 @@ train_dataset = train_dataset.batch(1).map(lambda x, y: (data_resize_aug(x), y))
 test_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
 test_dataset = test_dataset.batch(1).map(lambda x, y: (data_resize(x), y))
 
-newInput = nn.Input(batch_shape=(1,image_size,image_size,3))
+newInput = layers.Input(batch_shape=(1,image_size,image_size,3))
 newOutputs = model(newInput)
 newModel = Model(newInput,newOutputs)
 newModel.set_weights(model.get_weights())
@@ -510,7 +429,7 @@ interpreter.invoke()
 output_data = interpreter.get_tensor(output_details[0]['index'])
 print(output_data)
 
-
+batch_size = 256
 model_name="efficientformer_l3"
 model = EfficientFormer(num_classes=num_classes, distillation=use_distillation, height=image_size, width=image_size,
                            eff_width=EfficientFormer_width['l3'], channels=3)
@@ -525,11 +444,11 @@ y_test = to_categorical(y_test)
 
 data_resize_aug = tf.keras.Sequential(
             [               
-                nn.Normalization(),
-                nn.Resizing(image_size, image_size),
-                nn.RandomFlip("horizontal"),
-                nn.RandomRotation(factor=0.02),
-                nn.RandomZoom(
+                layers.Normalization(),
+                layers.Resizing(image_size, image_size),
+                layers.RandomFlip("horizontal"),
+                layers.RandomRotation(factor=0.02),
+                layers.RandomZoom(
                     height_factor=0.2, width_factor=0.2
                 ),
             ],
@@ -540,8 +459,8 @@ data_resize_aug.layers[0].adapt(x_train)
 
 data_resize = tf.keras.Sequential(
             [               
-                nn.Normalization(),
-                nn.Resizing(image_size, image_size),               
+                layers.Normalization(),
+                layers.Resizing(image_size, image_size),               
             ],
             name="data_resize",
         )
@@ -623,7 +542,7 @@ train_dataset = train_dataset.batch(1).map(lambda x, y: (data_resize_aug(x), y))
 test_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
 test_dataset = test_dataset.batch(1).map(lambda x, y: (data_resize(x), y))
 
-newInput = nn.Input(batch_shape=(1,image_size,image_size,3))
+newInput = layers.Input(batch_shape=(1,image_size,image_size,3))
 newOutputs = model(newInput)
 newModel = Model(newInput,newOutputs)
 newModel.set_weights(model.get_weights())
@@ -675,7 +594,7 @@ interpreter.invoke()
 # Use `tensor()` in order to get a pointer to the tensor.
 output_data = interpreter.get_tensor(output_details[0]['index'])
 print(output_data)
-
+batch_size = 256
 model_name="efficientformer_l7"
 model = EfficientFormer(num_classes=num_classes, distillation=use_distillation, height=image_size, width=image_size,
                            eff_width=EfficientFormer_width['l7'], channels=3)
@@ -690,11 +609,11 @@ y_test = to_categorical(y_test)
 
 data_resize_aug = tf.keras.Sequential(
             [               
-                nn.Normalization(),
-                nn.Resizing(image_size, image_size),
-                nn.RandomFlip("horizontal"),
-                nn.RandomRotation(factor=0.02),
-                nn.RandomZoom(
+                layers.Normalization(),
+                layers.Resizing(image_size, image_size),
+                layers.RandomFlip("horizontal"),
+                layers.RandomRotation(factor=0.02),
+                layers.RandomZoom(
                     height_factor=0.2, width_factor=0.2
                 ),
             ],
@@ -705,8 +624,8 @@ data_resize_aug.layers[0].adapt(x_train)
 
 data_resize = tf.keras.Sequential(
             [               
-                nn.Normalization(),
-                nn.Resizing(image_size, image_size),               
+                layers.Normalization(),
+                layers.Resizing(image_size, image_size),               
             ],
             name="data_resize",
         )
@@ -788,7 +707,7 @@ train_dataset = train_dataset.batch(1).map(lambda x, y: (data_resize_aug(x), y))
 test_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
 test_dataset = test_dataset.batch(1).map(lambda x, y: (data_resize(x), y))
 
-newInput = nn.Input(batch_shape=(1,image_size,image_size,3))
+newInput = layers.Input(batch_shape=(1,image_size,image_size,3))
 newOutputs = model(newInput)
 newModel = Model(newInput,newOutputs)
 newModel.set_weights(model.get_weights())
